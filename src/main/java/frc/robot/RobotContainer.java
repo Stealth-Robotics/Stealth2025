@@ -4,13 +4,17 @@
 
 package frc.robot;
 
+import edu.wpi.first.epilogue.Epilogue;
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
+@Logged
 public class RobotContainer {
 	public RobotContainer() {
 		Superstructure superstructure = new Superstructure();
 		configureBindings();
+
 	}
 
 	private void configureBindings() {

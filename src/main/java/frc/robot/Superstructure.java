@@ -1,5 +1,7 @@
 package frc.robot;
 
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -9,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Superstructure extends SubsystemBase {
+    @Logged(name = "Level", importance = Importance.CRITICAL)
     private ScoringLevel selectedLevel;
 
     private final GenericEntry[] levelButtons = new GenericEntry[4];

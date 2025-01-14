@@ -11,8 +11,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 
 @Logged
 public class RobotContainer {
+	Superstructure superstructure = new Superstructure();
+
 	public RobotContainer() {
-		Superstructure superstructure = new Superstructure();
 		configureBindings();
 
 	}

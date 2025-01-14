@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 
 public class RobotContainer {
   public RobotContainer() {
+    Superstructure superstructure = new Superstructure();
     configureBindings();
   }
 

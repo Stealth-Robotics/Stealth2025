@@ -1,4 +1,5 @@
 package frc.robot;
+
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -7,44 +8,41 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Superstructure extends SubsystemBase{
+public class Superstructure extends SubsystemBase {
     private ScoringLevel selectedLevel;
 
     private final GenericEntry[] levelButtons = new GenericEntry[4];
     private final boolean[] levelBooleanArray = new boolean[4];
     private final ShuffleboardTab tab = Shuffleboard.getTab("selector");
 
-    public Superstructure(){
+    public Superstructure() {
         levelButtons[0] = tab.add("L1", false).withWidget(BuiltInWidgets.kToggleButton).getEntry();
         levelButtons[1] = tab.add("L2", false).withWidget(BuiltInWidgets.kToggleButton).getEntry();
         levelButtons[2] = tab.add("L3", false).withWidget(BuiltInWidgets.kToggleButton).getEntry();
         levelButtons[3] = tab.add("L4", false).withWidget(BuiltInWidgets.kToggleButton).getEntry();
-        
+
     }
 
-    public ScoringLevel getLevel(){
+    public ScoringLevel getLevel() {
         return selectedLevel;
     }
 
-    public Command goToPositionCommand(){
-        //can get elevator or arm level like this
+    public Command goToPositionCommand() {
+        // can get elevator or arm level like this
         double elevatorLevel = selectedLevel.elevatorLevel;
         return Commands.none();
     }
 
-
-
-
-
-    public enum ScoringLevel{
+    public enum ScoringLevel {
         L1(0.0, 0.0),
-        L2(0.0, 0.0), 
-        L3(0.0, 0.0), 
+        L2(0.0, 0.0),
+        L3(0.0, 0.0),
         L4(0.0, 0.0);
 
         private final double elevatorLevel;
         private final double armPosition;
-        private ScoringLevel(double elevatorLevel, double armPosition){
+
+        private ScoringLevel(double elevatorLevel, double armPosition) {
             this.elevatorLevel = elevatorLevel;
             this.armPosition = armPosition;
         }
@@ -52,7 +50,7 @@ public class Superstructure extends SubsystemBase{
 
     @Override
     public void periodic() {
-
+        // logic for shuffleboard buttons, makes sure only one can be pressed at a time
         for (int i = 0; i < 4; i++) {
             if (levelButtons[i].getBoolean(false) != levelBooleanArray[i] & levelButtons[i].getBoolean(false)) {
                 levelButtons[0].setBoolean(false);
@@ -69,20 +67,21 @@ public class Superstructure extends SubsystemBase{
                 levelBooleanArray[i] = false;
             }
         }
-        if(levelButtons[0].getBoolean(false)){
+        // updates selected level based on dashboard button state
+        if (levelButtons[0].getBoolean(false)) {
             selectedLevel = ScoringLevel.L1;
         }
-        if(levelButtons[1].getBoolean(false)){
+        if (levelButtons[1].getBoolean(false)) {
             selectedLevel = ScoringLevel.L2;
         }
-        if(levelButtons[2].getBoolean(false)){
+        if (levelButtons[2].getBoolean(false)) {
             selectedLevel = ScoringLevel.L3;
         }
-        if(levelButtons[3].getBoolean(false)){
+        if (levelButtons[3].getBoolean(false)) {
             selectedLevel = ScoringLevel.L4;
         }
         System.out.println("scoring level: " + selectedLevel);
-        
+
     }
-    
+
 }

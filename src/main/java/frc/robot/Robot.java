@@ -19,6 +19,7 @@ public class Robot extends TimedRobot {
 
   public Robot() {
     m_robotContainer = new RobotContainer();
+    // todo: find path for logging to USB drive
     DataLogManager.start();
     Epilogue.bind(this);
 

@@ -3,6 +3,8 @@ import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Superstructure extends SubsystemBase{
@@ -19,12 +21,15 @@ public class Superstructure extends SubsystemBase{
         levelButtons[3] = tab.add("L4", false).withWidget(BuiltInWidgets.kToggleButton).getEntry();
         
     }
-    public void selectLevel(ScoringLevel level){
-        this.selectedLevel = level;
-    }
 
     public ScoringLevel getLevel(){
         return selectedLevel;
+    }
+
+    public Command goToPositionCommand(){
+        //can get elevator or arm level like this
+        double elevatorLevel = selectedLevel.elevatorLevel;
+        return Commands.none();
     }
 
 
@@ -32,10 +37,17 @@ public class Superstructure extends SubsystemBase{
 
 
     public enum ScoringLevel{
-        L1,
-        L2, 
-        L3, 
-        L4
+        L1(0.0, 0.0),
+        L2(0.0, 0.0), 
+        L3(0.0, 0.0), 
+        L4(0.0, 0.0);
+
+        private final double elevatorLevel;
+        private final double armPosition;
+        private ScoringLevel(double elevatorLevel, double armPosition){
+            this.elevatorLevel = elevatorLevel;
+            this.armPosition = armPosition;
+        }
     }
 
     @Override

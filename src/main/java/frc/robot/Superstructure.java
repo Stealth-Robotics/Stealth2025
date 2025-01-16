@@ -1,6 +1,9 @@
 package frc.robot;
 
+import com.ctre.phoenix6.hardware.TalonFX;
+
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
@@ -10,9 +13,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+@Logged
 public class Superstructure extends SubsystemBase {
     @Logged(name = "Level", importance = Importance.CRITICAL)
     private ScoringLevel selectedLevel;
+
+    TalonFX motor = new TalonFX(0);
 
     private final GenericEntry[] levelButtons = new GenericEntry[4];
     private final boolean[] levelBooleanArray = new boolean[4];

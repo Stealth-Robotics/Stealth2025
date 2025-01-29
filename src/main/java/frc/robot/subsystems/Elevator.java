@@ -11,6 +11,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.LEDPattern.GradientType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -92,12 +93,12 @@ public class Elevator extends SubsystemBase {
     }
 
     private Command goToPosition(DoubleSupplier rot) {
-        return this.runOnce(() -> setElevatorTargetPositionInches(rot.getAsDouble()))
-                .andThen(new WaitUntilCommand(() -> isElevatorAtTarget()));
+        // removed wait until for use with superstructure logic stuff
+        return this.runOnce(() -> setElevatorTargetPositionInches(rot.getAsDouble()));
     }
 
-    private boolean isElevatorAtTarget() {
-        return abs(motor1.getPosition().getValueAsDouble() - motionMagicVoltage.Position) <= TOLERANCE;
+    public boolean isElevatorAtTarget() {
+        return MathUtil.isNear(motionMagicVoltage.Position, motor1.getPosition().getValueAsDouble(), TOLERANCE);
     }
 
     private void setElevatorTargetPositionInches(double pos) {

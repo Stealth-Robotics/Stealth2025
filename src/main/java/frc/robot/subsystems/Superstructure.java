@@ -85,10 +85,29 @@ public class Superstructure {
                 .and(preScoreTrigger)
                 .onTrue(this.forceState(SuperState.PRE_L4));
 
-        // send elevator to correct level for pre-level scoring, transitions state when
+        // send elevator/arm to correct level for pre-level scoring, transitions state
+        // when
         // driver presses scoring button
         stateTriggers.get(SuperState.PRE_L1)
                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_L1_INCHES))
+                .and(() -> elevator.isElevatorAtTarget())
+                .and(scoreTrigger)
+                .onTrue(this.forceState(SuperState.SCORE_CORAL));
+
+        stateTriggers.get(SuperState.PRE_L2)
+                .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_L2_INCHES))
+                .and(() -> elevator.isElevatorAtTarget())
+                .and(scoreTrigger)
+                .onTrue(this.forceState(SuperState.SCORE_CORAL));
+
+        stateTriggers.get(SuperState.PRE_L3)
+                .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_L3_INCHES))
+                .and(() -> elevator.isElevatorAtTarget())
+                .and(scoreTrigger)
+                .onTrue(this.forceState(SuperState.SCORE_CORAL));
+
+        stateTriggers.get(SuperState.PRE_L4)
+                .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_L4_INCHES))
                 .and(() -> elevator.isElevatorAtTarget())
                 .and(scoreTrigger)
                 .onTrue(this.forceState(SuperState.SCORE_CORAL));
@@ -100,6 +119,31 @@ public class Superstructure {
                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.SCORE_L1_INCHES))
                 .and(() -> elevator.isElevatorAtTarget())
                 .onTrue(this.forceState(SuperState.SPIT_CORAL));
+
+        stateTriggers.get(SuperState.SCORE_CORAL)
+                .and(() -> levelTarget.get() == LevelTarget.L2)
+                .whileTrue(elevator.goToPositionInInches(() -> Elevator.SCORE_L2_INCHES))
+                .and(() -> elevator.isElevatorAtTarget())
+                .onTrue(this.forceState(SuperState.SPIT_CORAL));
+
+        stateTriggers.get(SuperState.SCORE_CORAL)
+                .and(() -> levelTarget.get() == LevelTarget.L3)
+                .whileTrue(elevator.goToPositionInInches(() -> Elevator.SCORE_L3_INCHES))
+                .and(() -> elevator.isElevatorAtTarget())
+                .onTrue(this.forceState(SuperState.SPIT_CORAL));
+
+        stateTriggers.get(SuperState.SCORE_CORAL)
+                .and(() -> levelTarget.get() == LevelTarget.L4)
+                .whileTrue(elevator.goToPositionInInches(() -> Elevator.SCORE_L4_INCHES))
+                .and(() -> elevator.isElevatorAtTarget())
+                .onTrue(this.forceState(SuperState.SPIT_CORAL));
+
+        stateTriggers.get(SuperState.SPIT_CORAL)
+                // make it eject coral with rollers once we have code for that
+                .whileTrue(Commands.none())
+                // make it check when beambreak is unbroken, meaning gamepiece is gone
+                .and(() -> true)
+                .onTrue(this.forceState(SuperState.IDLE));
 
     }
 

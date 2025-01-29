@@ -10,6 +10,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.wpilibj.LEDPattern.GradientType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -22,27 +23,33 @@ import java.util.function.DoubleSupplier;
 
 @Logged
 public class Elevator extends SubsystemBase {
-    
+
     private final TalonFX motor1;
     private final TalonFX motor2;
-    
+
     private final double kP = 0.0;
     private final double kI = 0.0;
-    private final double kD = 0.0;    
+    private final double kD = 0.0;
 
     private final double kS = 0.0;
     private final double kV = 0.0;
     private final double kG = 0.0;
 
+    // TODO tune
     private final double MOTION_MAGIC_JERK = 7;
     private final double MOTION_MAGIC_ACCELERATION = 2;
     private final double MOTION_MAGIC_CRUISE_VELOCITY = 0.5;
 
-    private final double TOLERANCE = 0.0; //todo tune
+    private final double TOLERANCE = 0.0; // todo tune
 
-    private final double MAX_EXTENSION_IN_INCHES = 0.0;
-    private final double MAX_EXTENSION_IN_ROTATIONS = 0.0;
-    private final double ROTATIONS_PER_INCH = MAX_EXTENSION_IN_ROTATIONS / MAX_EXTENSION_IN_INCHES;
+    @NotLogged
+    private final double MAX_EXTENSION_IN_INCHES = 0.0,
+            MAX_EXTENSION_IN_ROTATIONS = 0.0,
+            ROTATIONS_PER_INCH = MAX_EXTENSION_IN_ROTATIONS / MAX_EXTENSION_IN_INCHES;
+
+    // keep track of target position for logging purposes, this value gets updated
+    // in setposition command
+    private double elevatorTargetPositionInches;
 
     private final TalonFXConfiguration config = new TalonFXConfiguration();
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
@@ -50,6 +57,7 @@ public class Elevator extends SubsystemBase {
     public Elevator() {
         motor1 = new TalonFX(0);
         motor2 = new TalonFX(0);
+        elevatorTargetPositionInches = motor1.getPosition().getValueAsDouble();
         applyConfigs();
     }
 
@@ -66,7 +74,7 @@ public class Elevator extends SubsystemBase {
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
 
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; //todo change
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // todo change
 
         config.MotionMagic.MotionMagicAcceleration = MOTION_MAGIC_ACCELERATION;
         config.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
@@ -79,19 +87,20 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command goToPositionInInches(DoubleSupplier inches) {
-        return goToPosition(() -> inches.getAsDouble() * ROTATIONS_PER_INCH);
+        elevatorTargetPositionInches = inches.getAsDouble();
+        return goToPosition(() -> (inches.getAsDouble() * ROTATIONS_PER_INCH));
     }
 
     private Command goToPosition(DoubleSupplier rot) {
-        return this.runOnce(() -> setElevatorTargetPosition(rot.getAsDouble()))
-            .andThen(new WaitUntilCommand(() -> isElevatorAtTarget()));
+        return this.runOnce(() -> setElevatorTargetPositionInches(rot.getAsDouble()))
+                .andThen(new WaitUntilCommand(() -> isElevatorAtTarget()));
     }
 
     private boolean isElevatorAtTarget() {
         return abs(motor1.getPosition().getValueAsDouble() - motionMagicVoltage.Position) <= TOLERANCE;
     }
 
-    private void setElevatorTargetPosition(double pos) {
+    private void setElevatorTargetPositionInches(double pos) {
         motionMagicVoltage.Position = pos;
         motor1.setControl(motionMagicVoltage);
     }

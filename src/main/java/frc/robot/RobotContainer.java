@@ -11,11 +11,17 @@ import edu.wpi.first.wpilibj2.command.Commands;
 
 @Logged
 public class RobotContainer {
-	Superstructure superstructure = new Superstructure();
 
 	public RobotContainer() {
 		configureBindings();
 
+	}
+
+	public enum LevelTarget {
+		L1,
+		L2,
+		L3,
+		L4
 	}
 
 	private void configureBindings() {

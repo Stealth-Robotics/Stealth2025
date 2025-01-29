@@ -36,16 +36,17 @@ public class Elevator extends SubsystemBase {
     private final double kV = 0.0;
     private final double kG = 0.0;
 
-    public static final double INTAKE_HP_INCHES = 0.0; // todo tune
-    public static final double PRE_L1_INCHES = 0.0; // todo tune
-    public static final double PRE_L2_INCHES = 0.0; // todo tune
-    public static final double PRE_L3_INCHES = 0.0; // todo tune
-    public static final double PRE_L4_INCHES = 0.0; // todo tune
-    public static final double SCORE_L1_INCHES = 0.0; // todo tune
-    public static final double SCORE_L2_INCHES = 0.0; // todo tune
-    public static final double SCORE_L3_INCHES = 0.0; // todo tune
-    public static final double SCORE_L4_INCHES = 0.0; // todo tune
-    public static final double STOWED_INCHES = 0.0; // todo tune
+    @NotLogged
+    public static final double INTAKE_HP_INCHES = 0.0, // todo tune
+            PRE_L1_INCHES = 0.0, // todo tune
+            PRE_L2_INCHES = 0.0, // todo tune
+            PRE_L3_INCHES = 0.0, // todo tune
+            PRE_L4_INCHES = 0.0, // todo tune
+            SCORE_L1_INCHES = 0.0, // todo tune
+            SCORE_L2_INCHES = 0.0, // todo tune
+            SCORE_L3_INCHES = 0.0, // todo tune
+            SCORE_L4_INCHES = 0.0, // todo tune
+            STOWED_INCHES = 0.0; // todo tune
 
     // TODO tune
     private final double MOTION_MAGIC_JERK = 7;

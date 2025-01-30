@@ -32,6 +32,7 @@ public class Superstructure {
         private final Trigger scoreTrigger;
         private final Trigger intakeTrigger;
         private final Trigger outtakeTrigger;
+        private final Trigger missedScoreTrigger;
         @Logged
         private SuperState state = SuperState.IDLE;
         @Logged
@@ -42,13 +43,15 @@ public class Superstructure {
         private final Elevator elevator;
 
         public Superstructure(Elevator elevator, Supplier<LevelTarget> levelTarget, Trigger preScoreTrigger,
-                        Trigger scoreTrigger, Trigger intakeTrigger, Trigger outtakeTrigger) {
+                        Trigger scoreTrigger, Trigger intakeTrigger, Trigger outtakeTrigger,
+                        Trigger missedScoreTrigger) {
                 this.elevator = elevator;
                 this.levelTarget = levelTarget;
                 this.preScoreTrigger = preScoreTrigger;
                 this.scoreTrigger = scoreTrigger;
                 this.intakeTrigger = intakeTrigger;
                 this.outtakeTrigger = outtakeTrigger;
+                this.missedScoreTrigger = missedScoreTrigger;
 
                 // add all states to stateTriggers map
                 // for each state in the enum, construct a new trigger that will return true
@@ -150,6 +153,27 @@ public class Superstructure {
                                 .and(outtakeTrigger)
                                 .onTrue(this.forceState(SuperState.SPIT_CORAL));
 
+                // section for missed score, go back to pre state
+                stateTriggers.get(SuperState.SCORE_CORAL)
+                                .and(() -> levelTarget.get() == LevelTarget.L1)
+                                .and(missedScoreTrigger)
+                                .onTrue(this.forceState(SuperState.PRE_L1));
+
+                stateTriggers.get(SuperState.SCORE_CORAL)
+                                .and(() -> levelTarget.get() == LevelTarget.L2)
+                                .and(missedScoreTrigger)
+                                .onTrue(this.forceState(SuperState.PRE_L2));
+
+                stateTriggers.get(SuperState.SCORE_CORAL)
+                                .and(() -> levelTarget.get() == LevelTarget.L3)
+                                .and(missedScoreTrigger)
+                                .onTrue(this.forceState(SuperState.PRE_L3));
+
+                stateTriggers.get(SuperState.SCORE_CORAL)
+                                .and(() -> levelTarget.get() == LevelTarget.L4)
+                                .and(missedScoreTrigger)
+                                .onTrue(this.forceState(SuperState.PRE_L4));
+
                 stateTriggers.get(SuperState.SPIT_CORAL)
                                 // make it eject coral with rollers once we have code for that
                                 .whileTrue(Commands.none())
@@ -163,10 +187,15 @@ public class Superstructure {
                 System.out.println(levelTarget.get());
         }
 
+        public SuperState getPrevState() {
+                return prevState;
+        }
+
         public Command forceState(SuperState nextState) {
                 return Commands.runOnce(() -> {
                         this.prevState = this.state;
                         this.state = nextState;
                 });
         }
+
 }

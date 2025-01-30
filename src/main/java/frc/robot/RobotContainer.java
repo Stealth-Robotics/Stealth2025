@@ -32,7 +32,7 @@ public class RobotContainer {
 		elevator = new Elevator(operatorController.povDown());
 		superstructure = new Superstructure(
 				elevator, () -> target, operatorController.L1(), operatorController.L1(),
-				operatorController.R1(), operatorController.povUp());
+				operatorController.R1(), operatorController.povUp(), operatorController.povLeft());
 
 	}
 

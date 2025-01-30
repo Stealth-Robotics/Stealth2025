@@ -8,10 +8,14 @@ import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import frc.robot.subsystems.Rollers;
 
 @Logged
 public class RobotContainer {
+	CommandPS5Controller controller = new CommandPS5Controller(1);
 	Superstructure superstructure = new Superstructure();
+	Rollers rollers = new Rollers(controller.square());
 
 	public RobotContainer() {
 		configureBindings();

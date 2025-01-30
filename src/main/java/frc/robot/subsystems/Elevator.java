@@ -13,10 +13,13 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.LEDPattern.GradientType;
+import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Robot;
 
 import static java.lang.Math.abs;
 
@@ -60,6 +63,10 @@ public class Elevator extends SubsystemBase {
             MAX_EXTENSION_IN_ROTATIONS = 0.0,
             ROTATIONS_PER_INCH = MAX_EXTENSION_IN_ROTATIONS / MAX_EXTENSION_IN_INCHES;
 
+    private Trigger atPositionTrigger;
+
+    boolean atPosition;
+
     // keep track of target position for logging purposes, this value gets updated
     // in setposition command
     private double elevatorTargetPositionInches;
@@ -72,6 +79,12 @@ public class Elevator extends SubsystemBase {
         motor2 = new TalonFX(0);
         elevatorTargetPositionInches = motor1.getPosition().getValueAsDouble();
         applyConfigs();
+    }
+
+    public Elevator(Trigger atPositionTrigger) {
+        this();
+        this.atPositionTrigger = atPositionTrigger;
+
     }
 
     private void applyConfigs() {
@@ -110,12 +123,19 @@ public class Elevator extends SubsystemBase {
     }
 
     public boolean isElevatorAtTarget() {
+        if (Robot.isSimulation()) {
+            return atPosition;
+        }
         return MathUtil.isNear(motionMagicVoltage.Position, motor1.getPosition().getValueAsDouble(), TOLERANCE);
     }
 
     private void setElevatorTargetPositionInches(double pos) {
         motionMagicVoltage.Position = pos;
         motor1.setControl(motionMagicVoltage);
+    }
+
+    public void togglePosition() {
+        atPosition = !atPosition;
     }
 
     @Override

@@ -30,7 +30,8 @@ public class Superstructure {
         // buttons that change target level
         private final Trigger preScoreTrigger;
         private final Trigger scoreTrigger;
-
+        private final Trigger intakeTrigger;
+        private final Trigger outtakeTrigger;
         @Logged
         private SuperState state = SuperState.IDLE;
         @Logged
@@ -41,11 +42,13 @@ public class Superstructure {
         private final Elevator elevator;
 
         public Superstructure(Elevator elevator, Supplier<LevelTarget> levelTarget, Trigger preScoreTrigger,
-                        Trigger scoreTrigger) {
+                        Trigger scoreTrigger, Trigger intakeTrigger, Trigger outtakeTrigger) {
                 this.elevator = elevator;
                 this.levelTarget = levelTarget;
                 this.preScoreTrigger = preScoreTrigger;
                 this.scoreTrigger = scoreTrigger;
+                this.intakeTrigger = intakeTrigger;
+                this.outtakeTrigger = outtakeTrigger;
 
                 // add all states to stateTriggers map
                 // for each state in the enum, construct a new trigger that will return true
@@ -57,6 +60,10 @@ public class Superstructure {
         }
 
         private void configureStateTransitions() {
+                stateTriggers.get(SuperState.IDLE)
+                                .and(intakeTrigger)
+                                .onTrue(this.forceState(SuperState.INTAKE_HP));
+
                 stateTriggers.get(SuperState.INTAKE_HP)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.INTAKE_HP_INCHES))
                                 // can supply something like () -> arm.hasgamepeice to force robot to ready to
@@ -119,33 +126,41 @@ public class Superstructure {
                                 .and(() -> levelTarget.get() == LevelTarget.L1)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.SCORE_L1_INCHES))
                                 .and(() -> elevator.isElevatorAtTarget())
+                                .and(outtakeTrigger)
                                 .onTrue(this.forceState(SuperState.SPIT_CORAL));
 
                 stateTriggers.get(SuperState.SCORE_CORAL)
                                 .and(() -> levelTarget.get() == LevelTarget.L2)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.SCORE_L2_INCHES))
                                 .and(() -> elevator.isElevatorAtTarget())
+                                .and(outtakeTrigger)
                                 .onTrue(this.forceState(SuperState.SPIT_CORAL));
 
                 stateTriggers.get(SuperState.SCORE_CORAL)
                                 .and(() -> levelTarget.get() == LevelTarget.L3)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.SCORE_L3_INCHES))
                                 .and(() -> elevator.isElevatorAtTarget())
+                                .and(outtakeTrigger)
                                 .onTrue(this.forceState(SuperState.SPIT_CORAL));
 
                 stateTriggers.get(SuperState.SCORE_CORAL)
                                 .and(() -> levelTarget.get() == LevelTarget.L4)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.SCORE_L4_INCHES))
                                 .and(() -> elevator.isElevatorAtTarget())
+                                .and(outtakeTrigger)
                                 .onTrue(this.forceState(SuperState.SPIT_CORAL));
 
                 stateTriggers.get(SuperState.SPIT_CORAL)
                                 // make it eject coral with rollers once we have code for that
                                 .whileTrue(Commands.none())
                                 // make it check when beambreak is unbroken, meaning gamepiece is gone
-                                .and(() -> true)
+                                .and(() -> false)
                                 .onTrue(this.forceState(SuperState.IDLE));
 
+        }
+
+        public void printState() {
+                System.out.println(levelTarget.get());
         }
 
         public Command forceState(SuperState nextState) {

@@ -14,6 +14,9 @@ import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.LEDPattern.GradientType;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -71,6 +74,11 @@ public class Elevator extends SubsystemBase {
     // in setposition command
     private double elevatorTargetPositionInches;
 
+    private final Mechanism2d mechanism = new Mechanism2d(20, 50);
+    private final MechanismRoot2d root = mechanism.getRoot("elevator root", 10, 0);
+    private final MechanismLigament2d elevator = root.append(new MechanismLigament2d("elevator", 5, 90));
+    private final MechanismLigament2d arm = elevator.append(new MechanismLigament2d("arm", 1, 90));
+
     private final TalonFXConfiguration config = new TalonFXConfiguration();
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
@@ -79,6 +87,7 @@ public class Elevator extends SubsystemBase {
         motor2 = new TalonFX(0);
         elevatorTargetPositionInches = motor1.getPosition().getValueAsDouble();
         applyConfigs();
+        SmartDashboard.putData("elevator", mechanism);
     }
 
     public Elevator(Trigger atPositionTrigger) {
@@ -136,6 +145,10 @@ public class Elevator extends SubsystemBase {
 
     public void togglePosition() {
         atPosition = !atPosition;
+    }
+
+    public void setLength(double length) {
+        elevator.setLength(length);
     }
 
     @Override

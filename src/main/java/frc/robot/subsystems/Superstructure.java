@@ -191,6 +191,10 @@ public class Superstructure {
                 return prevState;
         }
 
+        public SuperState getState() {
+                return state;
+        }
+
         public Command forceState(SuperState nextState) {
                 return Commands.runOnce(() -> {
                         this.prevState = this.state;

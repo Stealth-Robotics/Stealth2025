@@ -12,15 +12,15 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Rollers;
+import frc.robot.subsystems.Superstructure;
 
 @Logged
 public class RobotContainer {
-	CommandPS5Controller controller = new CommandPS5Controller(1);
-	Superstructure superstructure = new Superstructure();
-	Rollers rollers = new Rollers(controller.square());
-
+	CommandPS5Controller operatorController = new CommandPS5Controller(1);
 	Superstructure superstructure;
+	Rollers rollers = new Rollers(operatorController.square(), () -> superstructure.getState());
 	Elevator elevator;
 
 	LevelTarget target = LevelTarget.L1;

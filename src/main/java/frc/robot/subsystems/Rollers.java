@@ -26,6 +26,12 @@ public class Rollers extends SubsystemBase {
 
     private boolean hasGamepiece = false;
 
+    // debouncer for determining whether we have a gamepiece, will only return true
+    // when value is true for debounce time
+    /*
+     * todo tune debounce time, ideally will be as low as possible without false
+     * positives
+     */
     private final Debouncer gamepeiceDetectionCurrentDebouncer = new Debouncer(1, DebounceType.kRising);
     Trigger trigger;
 
@@ -33,7 +39,8 @@ public class Rollers extends SubsystemBase {
 
     public Rollers(Trigger trigger, Supplier<SuperState> stateSupplier) {
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // todo check
-        config.CurrentLimits.SupplyCurrentLimit = 30;
+        config.CurrentLimits.SupplyCurrentLimit = 30; // limit current so we dont draw too much when stalling rollers to
+                                                      // keep gamepeice
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
         motor.getConfigurator().apply(config);
         this.trigger = trigger;
@@ -45,6 +52,7 @@ public class Rollers extends SubsystemBase {
         // we no longer have a gamepiece if the rollers have been reversed
         if (voltage.getAsDouble() < 0) {
             hasGamepiece = false;
+            gamepeiceDetectionCurrentDebouncer.calculate(false);
         }
         return this.runOnce(() -> motor.setControl(new VoltageOut(voltage.getAsDouble())));
     }

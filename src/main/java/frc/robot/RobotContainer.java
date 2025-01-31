@@ -20,7 +20,7 @@ import frc.robot.subsystems.Superstructure;
 public class RobotContainer {
 	CommandPS5Controller operatorController = new CommandPS5Controller(1);
 	Superstructure superstructure;
-	Rollers rollers = new Rollers(operatorController.square(), () -> superstructure.getState());
+	Rollers rollers;
 	Elevator elevator;
 
 	LevelTarget target = LevelTarget.L1;
@@ -29,9 +29,12 @@ public class RobotContainer {
 
 		configureBindings();
 		elevator = new Elevator(operatorController.povDown());
+		rollers = new Rollers(operatorController.square(), () -> superstructure.getState());
 		superstructure = new Superstructure(
-				elevator, () -> target, operatorController.L1(), operatorController.L1(),
+				elevator, rollers, () -> target, operatorController.L1(), operatorController.L1(),
 				operatorController.R1(), operatorController.povUp(), operatorController.povLeft());
+
+		rollers.configureStateSupplierTrigger();
 
 	}
 
@@ -45,7 +48,8 @@ public class RobotContainer {
 	private void configureBindings() {
 		operatorController.cross().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
 		operatorController.circle().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));
-		operatorController.square().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
+		// operatorController.square().onTrue(Commands.runOnce(() -> target =
+		// LevelTarget.L3));
 		operatorController.triangle().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
 
 		operatorController.R1().onTrue(Commands.runOnce(() -> superstructure.printState()));

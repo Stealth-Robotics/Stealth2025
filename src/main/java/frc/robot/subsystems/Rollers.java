@@ -12,6 +12,7 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
@@ -32,8 +33,9 @@ public class Rollers extends SubsystemBase {
      * todo tune debounce time, ideally will be as low as possible without false
      * positives
      */
-    private final Debouncer gamepeiceDetectionCurrentDebouncer = new Debouncer(1, DebounceType.kRising);
+    private final Debouncer gamepeiceDetectionCurrentDebouncer = new Debouncer(0.1, DebounceType.kRising);
     Trigger trigger;
+    Trigger stateSupplierTrigger;
 
     private final Supplier<SuperState> stateSupplier;
 
@@ -46,15 +48,21 @@ public class Rollers extends SubsystemBase {
         this.trigger = trigger;
 
         this.stateSupplier = stateSupplier;
+
     }
 
-    public Command setRollerVoltage(DoubleSupplier voltage) {
+    public void configureStateSupplierTrigger() {
+        stateSupplierTrigger = new Trigger(() -> stateSupplier.get() == SuperState.INTAKE_HP)
+                .onTrue(Commands.runOnce(() -> this.hasGamepiece = false));
+    }
+
+    public Command setRollerVoltage(double voltage) {
         // we no longer have a gamepiece if the rollers have been reversed
-        if (voltage.getAsDouble() < 0) {
+        if (voltage < 0) {
             hasGamepiece = false;
-            gamepeiceDetectionCurrentDebouncer.calculate(false);
+            System.out.println("hello");
         }
-        return this.runOnce(() -> motor.setControl(new VoltageOut(voltage.getAsDouble())));
+        return this.runOnce(() -> motor.setControl(new VoltageOut(voltage)));
     }
 
     public boolean getHasGamepiece() {
@@ -74,8 +82,7 @@ public class Rollers extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // if we set our state to intaking, we also dont have a gamepiece
-        if (stateSupplier.get() == SuperState.INTAKE_HP) {
+        if (motor.getMotorVoltage().getValueAsDouble() < 0) {
             hasGamepiece = false;
         }
     }

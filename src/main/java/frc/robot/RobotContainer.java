@@ -27,7 +27,6 @@ public class RobotContainer {
 
 	public RobotContainer() {
 
-		configureBindings();
 		elevator = new Elevator(operatorController.povDown());
 		rollers = new Rollers(operatorController.square(), () -> superstructure.getState());
 		superstructure = new Superstructure(
@@ -35,6 +34,7 @@ public class RobotContainer {
 				operatorController.R1(), operatorController.povUp(), operatorController.povLeft());
 
 		rollers.configureStateSupplierTrigger();
+		configureBindings();
 
 	}
 

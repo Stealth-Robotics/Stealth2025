@@ -58,11 +58,13 @@ public class Rollers extends SubsystemBase {
 
     public Command setRollerVoltage(double voltage) {
         // we no longer have a gamepiece if the rollers have been reversed
-        if (voltage < 0) {
-            hasGamepiece = false;
-            System.out.println("hello");
-        }
-        return this.runOnce(() -> motor.setControl(new VoltageOut(voltage)));
+        return this.runOnce(() -> {
+            if (voltage < 0) {
+                hasGamepiece = false;
+                System.out.println("hello 2");
+            }
+            motor.setControl(new VoltageOut(voltage));
+        });
     }
 
     public boolean getHasGamepiece() {

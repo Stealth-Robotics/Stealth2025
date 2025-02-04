@@ -1,6 +1,5 @@
 package frc.robot.subsystems;
 
-import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -33,7 +32,7 @@ public class Rollers extends SubsystemBase {
      * todo tune debounce time, ideally will be as low as possible without false
      * positives
      */
-    private final Debouncer gamepeiceDetectionCurrentDebouncer = new Debouncer(0.1, DebounceType.kRising);
+    private final Debouncer gamepeiceDetectionCurrentDebouncer = new Debouncer(0.5, DebounceType.kRising);
     Trigger trigger;
     Trigger stateSupplierTrigger;
 
@@ -48,6 +47,11 @@ public class Rollers extends SubsystemBase {
         this.trigger = trigger;
 
         this.stateSupplier = stateSupplier;
+
+    }
+
+    public Rollers(Supplier<SuperState> stateSupplier) {
+        this(null, stateSupplier);
 
     }
 
@@ -68,8 +72,7 @@ public class Rollers extends SubsystemBase {
     }
 
     public boolean getHasGamepiece() {
-        if (Robot.isSimulation()) {
-
+        if (Robot.isSimulation() && trigger != null) {
             if (gamepeiceDetectionCurrentDebouncer.calculate(trigger.getAsBoolean())) {
                 hasGamepiece = true;
             }

@@ -24,7 +24,7 @@ public class RobotContainer {
 	Superstructure superstructure;
 	Rollers rollers;
 	Elevator elevator;
-	Dashboard dashboard;
+	// Dashboard dashboard;
 
 	LevelTarget target = LevelTarget.L1;
 
@@ -32,12 +32,12 @@ public class RobotContainer {
 
 		elevator = new Elevator(operatorController.povDown());
 		rollers = new Rollers(operatorController.square(), () -> superstructure.getState());
-		dashboard = new Dashboard();
+		// dashboard = new Dashboard();
 		superstructure = new Superstructure(
 				elevator,
 				rollers,
 				// TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
-				() -> dashboard.getTargetScoringLevel(),
+				() -> target,
 				operatorController.L1(),
 				operatorController.L1(),
 				operatorController.R1(), operatorController.povUp(),
@@ -69,9 +69,6 @@ public class RobotContainer {
 		operatorController.R1().onTrue(Commands.runOnce(() -> superstructure.printState()));
 
 		operatorController.povDown().onTrue(Commands.runOnce(() -> elevator.togglePosition()));
-		operatorController.button(1)
-				.onTrue(Commands.runOnce(() -> elevator.setLength(40)));
-
 	}
 
 	public Command getAutonomousCommand() {

@@ -13,6 +13,10 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.LEDPattern.GradientType;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
@@ -47,14 +51,14 @@ public class Elevator extends SubsystemBase {
 
     @NotLogged
     public static final double INTAKE_HP_INCHES = 5.0, // todo tune
-            PRE_L1_INCHES = 20, // todo tune
-            PRE_L2_INCHES = 0.0, // todo tune
-            PRE_L3_INCHES = 0.0, // todo tune
-            PRE_L4_INCHES = 0.0, // todo tune
-            SCORE_L1_INCHES = 10.0, // todo tune
-            SCORE_L2_INCHES = 0.0, // todo tune
-            SCORE_L3_INCHES = 0.0, // todo tune
-            SCORE_L4_INCHES = 0.0, // todo tune
+            PRE_L1_INCHES = 10, // todo tune
+            PRE_L2_INCHES = 20, // todo tune
+            PRE_L3_INCHES = 30, // todo tune
+            PRE_L4_INCHES = 40, // todo tune
+            SCORE_L1_INCHES = 5, // todo tune
+            SCORE_L2_INCHES = 15, // todo tune
+            SCORE_L3_INCHES = 25, // todo tune
+            SCORE_L4_INCHES = 35, // todo tune
             REMOVE_ALGAE_HIGH_INCHES = 0.0, // todo tune
             REMOVE_ALGAE_LOW_INCHES = 0.0, // todo tune
             STOWED_INCHES = 0.0; // todo tune
@@ -64,7 +68,7 @@ public class Elevator extends SubsystemBase {
     private final double MOTION_MAGIC_ACCELERATION = 2;
     private final double MOTION_MAGIC_CRUISE_VELOCITY = 0.5;
 
-    private final double TOLERANCE = 0.0; // todo tune
+    private final double TOLERANCE = 2.0; // todo tune
 
     @NotLogged
     private final double MAX_EXTENSION_IN_INCHES = 0.0,
@@ -79,10 +83,21 @@ public class Elevator extends SubsystemBase {
     // in setposition command
     private double elevatorTargetPositionInches;
 
-    private final Mechanism2d mechanism = new Mechanism2d(20, 50);
-    private final MechanismRoot2d root = mechanism.getRoot("elevator root", 10, 0);
-    private final MechanismLigament2d elevator = root.append(new MechanismLigament2d("elevator", 5, 90));
-    private final MechanismLigament2d arm = elevator.append(new MechanismLigament2d("arm", 1, 90));
+    private final Mechanism2d mechanism = new Mechanism2d(3, Units.feetToMeters(6));
+    private final MechanismRoot2d root = mechanism.getRoot("Elevator", 1, 0.3);
+    private final MechanismLigament2d carriage = new MechanismLigament2d("Carriage", 0, 90);
+
+    private final ElevatorSim sim = new ElevatorSim(
+            DCMotor.getKrakenX60(2),
+            9,
+            Units.lbsToKilograms(15),
+            Units.inchesToMeters(2.25),
+            0.0,
+            Units.inchesToMeters(60),
+            true,
+            0.0);
+    private final ProfiledPIDController controller = new ProfiledPIDController(30, 0, 0,
+            new Constraints(5, 10));
 
     private final TalonFXConfiguration config = new TalonFXConfiguration();
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
@@ -93,6 +108,7 @@ public class Elevator extends SubsystemBase {
         elevatorTargetPositionInches = motor1.getPosition().getValueAsDouble();
         applyConfigs();
         SmartDashboard.putData("elevator", mechanism);
+        root.append(carriage);
     }
 
     public Elevator(Trigger atPositionTrigger) {
@@ -128,8 +144,15 @@ public class Elevator extends SubsystemBase {
 
     public Command goToPositionInInches(DoubleSupplier inches) {
 
-        return goToPosition(() -> (inches.getAsDouble() * ROTATIONS_PER_INCH))
-                .alongWith(Commands.runOnce(() -> elevatorTargetPositionInches = inches.getAsDouble()));
+        return this.run(() -> {
+            elevatorTargetPositionInches = inches.getAsDouble();
+            double voltage = controller.calculate(sim.getPositionMeters(), Units.inchesToMeters(inches.getAsDouble()));
+            sim.setInputVoltage(voltage);
+        });
+
+        // return goToPosition(() -> (inches.getAsDouble() * ROTATIONS_PER_INCH))
+        // .alongWith(Commands.runOnce(() -> elevatorTargetPositionInches =
+        // inches.getAsDouble()));
     }
 
     private Command goToPosition(DoubleSupplier rot) {
@@ -139,7 +162,8 @@ public class Elevator extends SubsystemBase {
 
     public boolean isElevatorAtTarget() {
         if (Robot.isSimulation()) {
-            return atPosition;
+            return MathUtil.isNear(Units.metersToInches(sim.getPositionMeters()), elevatorTargetPositionInches,
+                    TOLERANCE);
         }
         return MathUtil.isNear(motionMagicVoltage.Position, motor1.getPosition().getValueAsDouble(), TOLERANCE);
     }
@@ -159,11 +183,12 @@ public class Elevator extends SubsystemBase {
     }
 
     public void setLength(double length) {
-        elevator.setLength(length);
+        carriage.setLength(length);
     }
 
     @Override
     public void periodic() {
-
+        sim.update(0.02);
+        setLength(sim.getPositionMeters());
     }
 }

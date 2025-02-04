@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Rollers;
 import frc.robot.subsystems.Superstructure;
@@ -22,6 +23,7 @@ public class RobotContainer {
 	Superstructure superstructure;
 	Rollers rollers;
 	Elevator elevator;
+	Dashboard dashboard;
 
 	LevelTarget target = LevelTarget.L1;
 
@@ -29,9 +31,20 @@ public class RobotContainer {
 
 		elevator = new Elevator(operatorController.povDown());
 		rollers = new Rollers(operatorController.square(), () -> superstructure.getState());
+		dashboard = new Dashboard();
 		superstructure = new Superstructure(
-				elevator, rollers, () -> target, operatorController.L1(), operatorController.L1(),
-				operatorController.R1(), operatorController.povUp(), operatorController.povLeft());
+				elevator,
+				rollers,
+				// TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
+				() -> dashboard.getTargetScoringLevel(),
+				operatorController.L1(),
+				operatorController.L1(),
+				operatorController.R1(), operatorController.povUp(),
+				operatorController.povLeft(),
+				// TODO: BIND TO BUTTONS
+				new Trigger(() -> false),
+				new Trigger(() -> false),
+				new Trigger(() -> false));
 
 		rollers.configureStateSupplierTrigger();
 		configureBindings();

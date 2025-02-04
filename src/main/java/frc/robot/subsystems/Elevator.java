@@ -4,6 +4,7 @@ import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -19,6 +20,8 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -43,15 +46,17 @@ public class Elevator extends SubsystemBase {
     private final double kG = 0.0;
 
     @NotLogged
-    public static final double INTAKE_HP_INCHES = 0.0, // todo tune
-            PRE_L1_INCHES = 0.0, // todo tune
+    public static final double INTAKE_HP_INCHES = 5.0, // todo tune
+            PRE_L1_INCHES = 20, // todo tune
             PRE_L2_INCHES = 0.0, // todo tune
             PRE_L3_INCHES = 0.0, // todo tune
             PRE_L4_INCHES = 0.0, // todo tune
-            SCORE_L1_INCHES = 0.0, // todo tune
+            SCORE_L1_INCHES = 10.0, // todo tune
             SCORE_L2_INCHES = 0.0, // todo tune
             SCORE_L3_INCHES = 0.0, // todo tune
             SCORE_L4_INCHES = 0.0, // todo tune
+            REMOVE_ALGAE_HIGH_INCHES = 0.0, // todo tune
+            REMOVE_ALGAE_LOW_INCHES = 0.0, // todo tune
             STOWED_INCHES = 0.0; // todo tune
 
     // TODO tune
@@ -122,8 +127,9 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command goToPositionInInches(DoubleSupplier inches) {
-        elevatorTargetPositionInches = inches.getAsDouble();
-        return goToPosition(() -> (inches.getAsDouble() * ROTATIONS_PER_INCH));
+
+        return goToPosition(() -> (inches.getAsDouble() * ROTATIONS_PER_INCH))
+                .alongWith(Commands.runOnce(() -> elevatorTargetPositionInches = inches.getAsDouble()));
     }
 
     private Command goToPosition(DoubleSupplier rot) {
@@ -138,12 +144,17 @@ public class Elevator extends SubsystemBase {
         return MathUtil.isNear(motionMagicVoltage.Position, motor1.getPosition().getValueAsDouble(), TOLERANCE);
     }
 
+    public Command stopElevator() {
+        return this.runOnce(() -> motor1.setControl(new NeutralOut()));
+    }
+
     private void setElevatorTargetPositionInches(double pos) {
         motionMagicVoltage.Position = pos;
         motor1.setControl(motionMagicVoltage);
     }
 
     public void togglePosition() {
+        System.out.println("hello from elevator");
         atPosition = !atPosition;
     }
 

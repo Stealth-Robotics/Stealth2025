@@ -13,29 +13,42 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Elevator;
-
+import frc.robot.subsystems.Rollers;
 import frc.robot.subsystems.Superstructure;
 
 @Logged
 public class RobotContainer {
-	CommandXboxController driverController = new CommandXboxController(0);
 	CommandPS5Controller operatorController = new CommandPS5Controller(1);
-
 	Superstructure superstructure;
+	Rollers rollers;
 	Elevator elevator;
+	Dashboard dashboard;
 
 	LevelTarget target = LevelTarget.L1;
 
 	public RobotContainer() {
 
-		configureBindings();
 		elevator = new Elevator(operatorController.povDown());
-
+		rollers = new Rollers(operatorController.square(), () -> superstructure.getState());
+		dashboard = new Dashboard();
 		superstructure = new Superstructure(
-				elevator, () -> target, operatorController.L1(), operatorController.L1(),
-				operatorController.R1(), operatorController.povUp());
+				elevator,
+				rollers,
+				// TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
+				() -> dashboard.getTargetScoringLevel(),
+				operatorController.L1(),
+				operatorController.L1(),
+				operatorController.R1(), operatorController.povUp(),
+				operatorController.povLeft(),
+				// TODO: BIND TO BUTTONS
+				new Trigger(() -> false),
+				new Trigger(() -> false),
+				new Trigger(() -> false));
+
+		rollers.configureStateSupplierTrigger();
+		configureBindings();
 
 	}
 
@@ -49,7 +62,8 @@ public class RobotContainer {
 	private void configureBindings() {
 		operatorController.cross().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
 		operatorController.circle().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));
-		operatorController.square().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
+		// operatorController.square().onTrue(Commands.runOnce(() -> target =
+		// LevelTarget.L3));
 		operatorController.triangle().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
 
 		operatorController.R1().onTrue(Commands.runOnce(() -> superstructure.printState()));

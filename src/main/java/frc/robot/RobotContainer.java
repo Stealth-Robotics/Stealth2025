@@ -4,21 +4,58 @@
 
 package frc.robot;
 
+import java.lang.ModuleLayer.Controller;
+
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.Rollers;
+import frc.robot.subsystems.Superstructure;
 
 @Logged
 public class RobotContainer {
-	Superstructure superstructure = new Superstructure();
+	CommandPS5Controller operatorController = new CommandPS5Controller(1);
+	Superstructure superstructure;
+	Rollers rollers;
+	Elevator elevator;
+
+	LevelTarget target = LevelTarget.L1;
 
 	public RobotContainer() {
+
+		elevator = new Elevator(operatorController.povDown());
+		rollers = new Rollers(operatorController.square(), () -> superstructure.getState());
+		superstructure = new Superstructure(
+				elevator, rollers, () -> target, operatorController.L1(), operatorController.L1(),
+				operatorController.R1(), operatorController.povUp(), operatorController.povLeft());
+
+		rollers.configureStateSupplierTrigger();
 		configureBindings();
 
 	}
 
+	public enum LevelTarget {
+		L1,
+		L2,
+		L3,
+		L4
+	}
+
 	private void configureBindings() {
+		operatorController.cross().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
+		operatorController.circle().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));
+		// operatorController.square().onTrue(Commands.runOnce(() -> target =
+		// LevelTarget.L3));
+		operatorController.triangle().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
+
+		operatorController.R1().onTrue(Commands.runOnce(() -> superstructure.printState()));
+
+		operatorController.povDown().onTrue(Commands.runOnce(() -> elevator.togglePosition()));
+
 	}
 
 	public Command getAutonomousCommand() {

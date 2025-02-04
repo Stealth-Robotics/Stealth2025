@@ -1,0 +1,95 @@
+package frc.robot.subsystems;
+
+import java.util.function.Supplier;
+
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Robot;
+import frc.robot.subsystems.Superstructure.SuperState;
+
+@Logged
+
+public class Rollers extends SubsystemBase {
+
+    private final TalonFX motor = new TalonFX(0); // todo: change the can id
+    private final TalonFXConfiguration config = new TalonFXConfiguration();
+
+    private boolean hasGamepiece = false;
+
+    // debouncer for determining whether we have a gamepiece, will only return true
+    // when value is true for debounce time
+    /*
+     * todo tune debounce time, ideally will be as low as possible without false
+     * positives
+     */
+    private final Debouncer gamepeiceDetectionCurrentDebouncer = new Debouncer(0.5, DebounceType.kRising);
+    Trigger trigger;
+    Trigger stateSupplierTrigger;
+
+    private final Supplier<SuperState> stateSupplier;
+
+    public Rollers(Trigger trigger, Supplier<SuperState> stateSupplier) {
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // todo check
+        config.CurrentLimits.SupplyCurrentLimit = 30; // limit current so we dont draw too much when stalling rollers to
+                                                      // keep gamepeice
+        config.CurrentLimits.SupplyCurrentLimitEnable = true;
+        motor.getConfigurator().apply(config);
+        this.trigger = trigger;
+
+        this.stateSupplier = stateSupplier;
+
+    }
+
+    public Rollers(Supplier<SuperState> stateSupplier) {
+        this(null, stateSupplier);
+
+    }
+
+    public void configureStateSupplierTrigger() {
+        stateSupplierTrigger = new Trigger(() -> stateSupplier.get() == SuperState.INTAKE_HP)
+                .onTrue(Commands.runOnce(() -> this.hasGamepiece = false));
+    }
+
+    public Command setRollerVoltage(double voltage) {
+        // we no longer have a gamepiece if the rollers have been reversed
+        return this.runOnce(() -> {
+            if (voltage < 0) {
+                hasGamepiece = false;
+                System.out.println("hello 2");
+            }
+            motor.setControl(new VoltageOut(voltage));
+        });
+    }
+
+    public boolean getHasGamepiece() {
+        if (Robot.isSimulation() && trigger != null) {
+            if (gamepeiceDetectionCurrentDebouncer.calculate(trigger.getAsBoolean())) {
+                hasGamepiece = true;
+            }
+        }
+
+        // if we draw enough current for long enough, we have a gamepiece.
+        if (gamepeiceDetectionCurrentDebouncer.calculate(motor.getSupplyCurrent().getValueAsDouble() > 10)) {
+            hasGamepiece = true;
+        }
+        return hasGamepiece;
+    }
+
+    @Override
+    public void periodic() {
+        if (motor.getMotorVoltage().getValueAsDouble() < 0) {
+            hasGamepiece = false;
+        }
+    }
+
+}

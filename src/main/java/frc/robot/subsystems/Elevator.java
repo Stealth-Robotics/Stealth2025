@@ -16,6 +16,8 @@ import edu.wpi.first.wpilibj.LEDPattern.GradientType;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -40,12 +42,12 @@ public class Elevator extends SubsystemBase {
     private final double kG = 0.0;
 
     @NotLogged
-    public static final double INTAKE_HP_INCHES = 0.0, // todo tune
-            PRE_L1_INCHES = 0.0, // todo tune
+    public static final double INTAKE_HP_INCHES = 5.0, // todo tune
+            PRE_L1_INCHES = 20, // todo tune
             PRE_L2_INCHES = 0.0, // todo tune
             PRE_L3_INCHES = 0.0, // todo tune
             PRE_L4_INCHES = 0.0, // todo tune
-            SCORE_L1_INCHES = 0.0, // todo tune
+            SCORE_L1_INCHES = 10.0, // todo tune
             SCORE_L2_INCHES = 0.0, // todo tune
             SCORE_L3_INCHES = 0.0, // todo tune
             SCORE_L4_INCHES = 0.0, // todo tune
@@ -113,8 +115,9 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command goToPositionInInches(DoubleSupplier inches) {
-        elevatorTargetPositionInches = inches.getAsDouble();
-        return goToPosition(() -> (inches.getAsDouble() * ROTATIONS_PER_INCH));
+
+        return goToPosition(() -> (inches.getAsDouble() * ROTATIONS_PER_INCH))
+                .alongWith(Commands.runOnce(() -> elevatorTargetPositionInches = inches.getAsDouble()));
     }
 
     private Command goToPosition(DoubleSupplier rot) {
@@ -135,6 +138,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public void togglePosition() {
+        System.out.println("hello from elevator");
         atPosition = !atPosition;
     }
 

@@ -41,11 +41,14 @@ public class Superstructure {
 
         // will need to add other subsystems here
         private final Elevator elevator;
+        private final Rollers rollers;
 
-        public Superstructure(Elevator elevator, Supplier<LevelTarget> levelTarget, Trigger preScoreTrigger,
+        public Superstructure(Elevator elevator, Rollers rollers, Supplier<LevelTarget> levelTarget,
+                        Trigger preScoreTrigger,
                         Trigger scoreTrigger, Trigger intakeTrigger, Trigger outtakeTrigger,
                         Trigger missedScoreTrigger) {
                 this.elevator = elevator;
+                this.rollers = rollers;
                 this.levelTarget = levelTarget;
                 this.preScoreTrigger = preScoreTrigger;
                 this.scoreTrigger = scoreTrigger;
@@ -69,9 +72,10 @@ public class Superstructure {
 
                 stateTriggers.get(SuperState.INTAKE_HP)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.INTAKE_HP_INCHES))
+                                .onTrue(rollers.setRollerVoltage(20))
                                 // can supply something like () -> arm.hasgamepeice to force robot to ready to
                                 // score gamepiece after intaking
-                                .and(() -> true)
+                                .and(() -> rollers.getHasGamepiece())
                                 .onTrue(this.forceState(SuperState.READY_SCORE_CORAL));
 
                 // when we are in ready mode, meaning arm has a coral, we now need to check for
@@ -176,7 +180,7 @@ public class Superstructure {
 
                 stateTriggers.get(SuperState.SPIT_CORAL)
                                 // make it eject coral with rollers once we have code for that
-                                .whileTrue(Commands.none())
+                                .onTrue(rollers.setRollerVoltage(-20))
                                 // make it check when beambreak is unbroken, meaning gamepiece is gone
                                 .and(() -> false)
                                 .onTrue(this.forceState(SuperState.IDLE));
@@ -189,6 +193,10 @@ public class Superstructure {
 
         public SuperState getPrevState() {
                 return prevState;
+        }
+
+        public SuperState getState() {
+                return state;
         }
 
         public Command forceState(SuperState nextState) {

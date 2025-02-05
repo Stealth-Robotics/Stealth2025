@@ -40,7 +40,8 @@ public class RobotContainer {
 				() -> target,
 				operatorController.L1(),
 				operatorController.L1(),
-				operatorController.R1(), operatorController.povUp(),
+				operatorController.R1(),
+				operatorController.L1(),
 				operatorController.povLeft(),
 				// TODO: BIND TO BUTTONS
 				new Trigger(() -> false),

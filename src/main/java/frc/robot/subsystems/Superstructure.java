@@ -159,25 +159,25 @@ public class Superstructure {
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_L1_INCHES))
                                 .and(() -> elevator.isElevatorAtTarget())
                                 .and(scoreTrigger)
-                                .onTrue(this.forceState(SuperState.SCORE_CORAL));
+                                .onFalse(this.forceState(SuperState.SCORE_CORAL));
 
                 stateTriggers.get(SuperState.PRE_L2)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_L2_INCHES))
                                 .and(() -> elevator.isElevatorAtTarget())
                                 .and(scoreTrigger)
-                                .onTrue(this.forceState(SuperState.SCORE_CORAL));
+                                .onFalse(this.forceState(SuperState.SCORE_CORAL));
 
                 stateTriggers.get(SuperState.PRE_L3)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_L3_INCHES))
                                 .and(() -> elevator.isElevatorAtTarget())
                                 .and(scoreTrigger)
-                                .onTrue(this.forceState(SuperState.SCORE_CORAL));
+                                .onFalse(this.forceState(SuperState.SCORE_CORAL));
 
                 stateTriggers.get(SuperState.PRE_L4)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_L4_INCHES))
                                 .and(() -> elevator.isElevatorAtTarget())
                                 .and(scoreTrigger)
-                                .onTrue(this.forceState(SuperState.SCORE_CORAL));
+                                .onFalse(this.forceState(SuperState.SCORE_CORAL));
 
                 // when driver presses button to score, we lower elevator/arm to scoring level,
                 // then command rollers to spit

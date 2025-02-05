@@ -54,6 +54,8 @@ public class Elevator extends SubsystemBase {
             SCORE_L4_INCHES = 0.0, // todo tune
             REMOVE_ALGAE_HIGH_INCHES = 0.0, // todo tune
             REMOVE_ALGAE_LOW_INCHES = 0.0, // todo tune
+            PRE_PROCESSOR_INCHES = 0.0, // todo tune
+            PRE_NET_INCHES = 0.0, // todo tune
             STOWED_INCHES = 0.0; // todo tune
 
     // TODO tune

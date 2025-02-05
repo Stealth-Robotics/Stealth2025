@@ -28,6 +28,7 @@ public class RobotContainer {
 	Dashboard dashboard;
 
 	LevelTarget target = LevelTarget.L1;
+	AlgaeTarget algaeTarget = AlgaeTarget.PROCESSOR;
 
 	public RobotContainer() {
 
@@ -39,11 +40,13 @@ public class RobotContainer {
 				rollers,
 				// TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
 				() -> dashboard.getTargetScoringLevel(),
+				() -> algaeTarget,
 				driverController.leftBumper(),
 				driverController.leftBumper(),
 				driverController.rightBumper(),
 				driverController.leftBumper(),
 				driverController.rightTrigger(),
+				driverController.rightBumper(),
 				// TODO: BIND TO BUTTONS
 				operatorController.leftBumper(),
 				operatorController.rightBumper(),
@@ -59,6 +62,11 @@ public class RobotContainer {
 		L2,
 		L3,
 		L4
+	}
+
+	public enum AlgaeTarget {
+		PROCESSOR,
+		NET
 	}
 
 	private void configureBindings() {

@@ -68,8 +68,6 @@ public class Elevator extends SubsystemBase {
             MAX_EXTENSION_IN_ROTATIONS = 0.0,
             ROTATIONS_PER_INCH = MAX_EXTENSION_IN_ROTATIONS / MAX_EXTENSION_IN_INCHES;
 
-    private Trigger atPositionTrigger;
-
     boolean atPosition;
 
     // keep track of target position for logging purposes, this value gets updated
@@ -84,12 +82,6 @@ public class Elevator extends SubsystemBase {
         motor2 = new TalonFX(0);
         elevatorTargetPositionInches = motor1.getPosition().getValueAsDouble();
         applyConfigs();
-    }
-
-    public Elevator(Trigger atPositionTrigger) {
-        this();
-        this.atPositionTrigger = atPositionTrigger;
-
     }
 
     private void applyConfigs() {

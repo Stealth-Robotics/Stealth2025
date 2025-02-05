@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Rollers;
@@ -19,7 +20,8 @@ import frc.robot.subsystems.Superstructure;
 
 @Logged
 public class RobotContainer {
-	CommandPS5Controller operatorController = new CommandPS5Controller(1);
+	CommandXboxController driverController = new CommandXboxController(0);
+	CommandXboxController operatorController = new CommandXboxController(1);
 	Superstructure superstructure;
 	Rollers rollers;
 	Elevator elevator;
@@ -29,23 +31,23 @@ public class RobotContainer {
 
 	public RobotContainer() {
 
-		elevator = new Elevator(operatorController.povDown());
-		rollers = new Rollers(operatorController.square(), () -> superstructure.getState());
+		elevator = new Elevator();
+		rollers = new Rollers(() -> superstructure.getState());
 		dashboard = new Dashboard();
 		superstructure = new Superstructure(
 				elevator,
 				rollers,
 				// TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
 				() -> dashboard.getTargetScoringLevel(),
-				operatorController.L1(),
-				operatorController.L1(),
-				operatorController.R1(), 
-				operatorController.L1(),
-				operatorController.povLeft(),
+				driverController.leftBumper(),
+				driverController.leftBumper(),
+				driverController.rightBumper(),
+				driverController.leftBumper(),
+				driverController.rightTrigger(),
 				// TODO: BIND TO BUTTONS
-				new Trigger(() -> false),
-				new Trigger(() -> false),
-				new Trigger(() -> false));
+				operatorController.leftBumper(),
+				operatorController.rightBumper(),
+				operatorController.leftTrigger());
 
 		rollers.configureStateSupplierTrigger();
 		configureBindings();
@@ -60,16 +62,10 @@ public class RobotContainer {
 	}
 
 	private void configureBindings() {
-		operatorController.cross().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
-		operatorController.circle().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));
-		// operatorController.square().onTrue(Commands.runOnce(() -> target =
-		// LevelTarget.L3));
-		operatorController.triangle().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
-
-		operatorController.R1().onTrue(Commands.runOnce(() -> superstructure.printState()));
-
-		operatorController.povDown().onTrue(Commands.runOnce(() -> elevator.togglePosition()));
-
+		operatorController.a().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
+		operatorController.b().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));
+		operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
+		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
 	}
 
 	public Command getAutonomousCommand() {

@@ -20,10 +20,11 @@ public class Arm extends SubsystemBase{
     private final TalonFX armMotor;
     private final CANcoder canCoder;
 
+    //TODO: Find CANcoder CAN ID
     private final int CANCODER_CAN_ID = 0;
     
     private final double ARM_GEAR_RATIO = 1;
-    private final double DEGREES_TO_TICKS = 1/360;
+    private final double DEGREES_TO_TICKS = 1 / 360.0;
     private final double ZERO_OFFSET = 0;
 
     private double armTargetPosition = 0; //Target position as a variable for logging purposes

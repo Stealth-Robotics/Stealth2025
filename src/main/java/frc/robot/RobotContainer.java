@@ -63,13 +63,8 @@ public class RobotContainer {
 	private void configureBindings() {
 		operatorController.cross().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
 		operatorController.circle().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));
-		// operatorController.square().onTrue(Commands.runOnce(() -> target =
-		// LevelTarget.L3));
+		operatorController.square().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
 		operatorController.triangle().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
-
-		operatorController.R1().onTrue(Commands.runOnce(() -> superstructure.printState()));
-
-		operatorController.povDown().onTrue(Commands.runOnce(() -> elevator.togglePosition()));
 	}
 
 	public Command getAutonomousCommand() {

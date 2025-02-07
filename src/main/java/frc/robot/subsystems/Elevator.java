@@ -4,6 +4,7 @@ import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -51,6 +52,10 @@ public class Elevator extends SubsystemBase {
             SCORE_L2_INCHES = 0.0, // todo tune
             SCORE_L3_INCHES = 0.0, // todo tune
             SCORE_L4_INCHES = 0.0, // todo tune
+            REMOVE_ALGAE_HIGH_INCHES = 0.0, // todo tune
+            REMOVE_ALGAE_LOW_INCHES = 0.0, // todo tune
+            PRE_PROCESSOR_INCHES = 0.0, // todo tune
+            PRE_NET_INCHES = 0.0, // todo tune
             STOWED_INCHES = 0.0; // todo tune
 
     // TODO tune
@@ -64,8 +69,6 @@ public class Elevator extends SubsystemBase {
     private final double MAX_EXTENSION_IN_INCHES = 0.0,
             MAX_EXTENSION_IN_ROTATIONS = 0.0,
             ROTATIONS_PER_INCH = MAX_EXTENSION_IN_ROTATIONS / MAX_EXTENSION_IN_INCHES;
-
-    private Trigger atPositionTrigger;
 
     boolean atPosition;
 
@@ -81,12 +84,6 @@ public class Elevator extends SubsystemBase {
         motor2 = new TalonFX(0);
         elevatorTargetPositionInches = motor1.getPosition().getValueAsDouble();
         applyConfigs();
-    }
-
-    public Elevator(Trigger atPositionTrigger) {
-        this();
-        this.atPositionTrigger = atPositionTrigger;
-
     }
 
     private void applyConfigs() {
@@ -130,6 +127,10 @@ public class Elevator extends SubsystemBase {
             return atPosition;
         }
         return MathUtil.isNear(motionMagicVoltage.Position, motor1.getPosition().getValueAsDouble(), TOLERANCE);
+    }
+
+    public Command stopElevator() {
+        return this.runOnce(() -> motor1.setControl(new NeutralOut()));
     }
 
     private void setElevatorTargetPositionInches(double pos) {

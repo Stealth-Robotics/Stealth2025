@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Rollers;
 import frc.robot.subsystems.Superstructure;
@@ -25,6 +26,7 @@ public class RobotContainer {
 	Superstructure superstructure;
 	Rollers rollers;
 	Elevator elevator;
+	Arm arm;
 	Dashboard dashboard;
 
 	LevelTarget target = LevelTarget.L1;
@@ -34,12 +36,14 @@ public class RobotContainer {
 
 		elevator = new Elevator();
 		rollers = new Rollers(() -> superstructure.getState());
+		arm = new Arm();
 		dashboard = new Dashboard();
 		superstructure = new Superstructure(
 				elevator,
 				rollers,
+				arm,
 				// TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
-				() -> dashboard.getTargetScoringLevel(),
+				() -> target,
 				() -> algaeTarget,
 				driverController.leftBumper(),
 				driverController.leftBumper(),

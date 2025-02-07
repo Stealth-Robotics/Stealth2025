@@ -61,6 +61,8 @@ public class Elevator extends SubsystemBase {
             SCORE_L4_INCHES = 35, // todo tune
             REMOVE_ALGAE_HIGH_INCHES = 0.0, // todo tune
             REMOVE_ALGAE_LOW_INCHES = 0.0, // todo tune
+            PRE_PROCESSOR_INCHES = 0.0, // todo tune
+            PRE_NET_INCHES = 0.0, // todo tune
             STOWED_INCHES = 0.0; // todo tune
 
     // TODO tune
@@ -74,8 +76,6 @@ public class Elevator extends SubsystemBase {
     private final double MAX_EXTENSION_IN_INCHES = 0.0,
             MAX_EXTENSION_IN_ROTATIONS = 0.0,
             ROTATIONS_PER_INCH = MAX_EXTENSION_IN_ROTATIONS / MAX_EXTENSION_IN_INCHES;
-
-    private Trigger atPositionTrigger;
 
     boolean atPosition;
 
@@ -109,12 +109,6 @@ public class Elevator extends SubsystemBase {
         applyConfigs();
         SmartDashboard.putData("elevator", mechanism);
         root.append(carriage);
-    }
-
-    public Elevator(Trigger atPositionTrigger) {
-        this();
-        this.atPositionTrigger = atPositionTrigger;
-
     }
 
     private void applyConfigs() {

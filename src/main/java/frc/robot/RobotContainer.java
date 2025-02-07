@@ -6,12 +6,15 @@ package frc.robot;
 
 import java.lang.ModuleLayer.Controller;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
 import choreo.auto.AutoFactory;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
@@ -36,12 +39,21 @@ public class RobotContainer {
 	AlgaeTarget algaeTarget = AlgaeTarget.PROCESSOR;
 	AutoTriggers autoTriggers = new AutoTriggers();
 
+	private final SendableChooser<Command> autoChooser;
+
 	public RobotContainer() {
+		NamedCommands.registerCommand("Go to scoring", autoTriggers.preScore());
+		NamedCommands.registerCommand("Dunk", autoTriggers.score());
+		NamedCommands.registerCommand("Intake", autoTriggers.intake());
+		NamedCommands.registerCommand("Spit", autoTriggers.outtake());
+		NamedCommands.registerCommand("Stow", autoTriggers.stow());
+
+		autoChooser = AutoBuilder.buildAutoChooser();
+		SmartDashboard.putData("Auto Chooser", autoChooser);
 
 		elevator = new Elevator();
 		rollers = new Rollers(() -> superstructure.getState());
 		arm = new Arm();
-
 		dashboard = new Dashboard();
 		superstructure = new Superstructure(
 				elevator,
@@ -95,9 +107,8 @@ public class RobotContainer {
 				operatorController.leftTrigger());
 	}
 
-	public Command getAutonomousCommand() {
-		superstructure.configureTriggers(
-				autoTriggers.preScoreTrigger(),
+	public void configureAutoBindings() {
+		superstructure.configureTriggers(autoTriggers.preScoreTrigger(),
 				autoTriggers.scoreTrigger(),
 				autoTriggers.intakeTrigger(),
 				autoTriggers.outtakeTrigger(),
@@ -106,11 +117,10 @@ public class RobotContainer {
 				new Trigger(() -> false),
 				new Trigger(() -> false),
 				new Trigger(() -> false));
-		NamedCommands.registerCommand("Go to scoring", autoTriggers.preScore());
-		NamedCommands.registerCommand("Dunk", autoTriggers.score());
-		NamedCommands.registerCommand("Intake", autoTriggers.intake());
-		NamedCommands.registerCommand("Spit", autoTriggers.outtake());
-		NamedCommands.registerCommand("Stow", autoTriggers.stow());
-		return Commands.print("No autonomous command configured");
+	}
+
+	public Command getAutonomousCommand() {
+
+		return autoChooser.getSelected();
 	}
 }

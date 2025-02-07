@@ -2,8 +2,10 @@ package frc.robot.subsystems;
 
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 
@@ -16,9 +18,12 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 public class Arm extends SubsystemBase{
     
     private final TalonFX armMotor;
+    private final CANcoder canCoder;
+
+    private final int CANCODER_CAN_ID = 0;
     
     private final double ARM_GEAR_RATIO = 1;
-    private final double DEGREES_TO_TICKS = 360;
+    private final double DEGREES_TO_TICKS = 1/360;
     private final double ZERO_OFFSET = 0;
 
     private double armTargetPosition = 0; //Target position as a variable for logging purposes
@@ -30,6 +35,7 @@ public class Arm extends SubsystemBase{
     private final double kTolerance = 0;
 
     private final TalonFXConfiguration armMotorConfiguration;
+    private final CANcoderConfiguration canCoderConfiguration;
 
     private final double MOTION_MAGIC_JERK = 0;
     private final double MOTION_MAGIC_ACCELERATION = 0;
@@ -40,7 +46,9 @@ public class Arm extends SubsystemBase{
     public Arm(){
         //TODO: Find CAN IDs
         armMotor = new TalonFX(0);
+        canCoder = new CANcoder(CANCODER_CAN_ID);
         armMotorConfiguration = new TalonFXConfiguration();
+        canCoderConfiguration = new CANcoderConfiguration();
         applyConfigs();
     }
     private void applyConfigs(){
@@ -52,14 +60,16 @@ public class Arm extends SubsystemBase{
         armMotorConfiguration.MotionMagic.MotionMagicAcceleration = MOTION_MAGIC_ACCELERATION;
         armMotorConfiguration.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
 
-        //TODO: Find encoder ID
-        armMotorConfiguration.Feedback.FeedbackRemoteSensorID = 0;
+        canCoderConfiguration.MagnetSensor.MagnetOffset = ZERO_OFFSET;
+
+        armMotorConfiguration.Feedback.FeedbackRemoteSensorID = CANCODER_CAN_ID;
         armMotorConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
         armMotorConfiguration.Feedback.SensorToMechanismRatio = 1;
-        armMotorConfiguration.Feedback.RotorToSensorRatio = ARM_GEAR_RATIO;
         armMotorConfiguration.Feedback.FeedbackRotorOffset = ZERO_OFFSET;
 
+
         armMotor.getConfigurator().apply(armMotorConfiguration);
+        canCoder.getConfigurator().apply(canCoderConfiguration);
     }
 
     private double getMotorPosition(){

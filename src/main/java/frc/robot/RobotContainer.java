@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -35,26 +36,33 @@ public class RobotContainer {
 	Elevator elevator;
 	Arm arm;
 	Dashboard dashboard;
-	LevelTarget target = LevelTarget.L1;
+	LevelTarget target = LevelTarget.L4;
 	AlgaeTarget algaeTarget = AlgaeTarget.PROCESSOR;
 	AutoTriggers autoTriggers = new AutoTriggers();
 
 	private final SendableChooser<Command> autoChooser;
 
 	public RobotContainer() {
-		NamedCommands.registerCommand("Go to scoring", autoTriggers.preScore());
-		NamedCommands.registerCommand("Dunk", autoTriggers.score());
-		NamedCommands.registerCommand("Intake", autoTriggers.intake());
-		NamedCommands.registerCommand("Spit", autoTriggers.outtake());
-		NamedCommands.registerCommand("Stow", autoTriggers.stow());
-
-		autoChooser = AutoBuilder.buildAutoChooser();
-		SmartDashboard.putData("Auto Chooser", autoChooser);
 
 		elevator = new Elevator();
 		rollers = new Rollers(() -> superstructure.getState());
 		arm = new Arm();
 		dashboard = new Dashboard();
+		Trigger subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
+				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
+		NamedCommands.registerCommand("Go to scoring", autoTriggers.preScore()
+				.andThen(new WaitUntilCommand(subsystemsAtSetpoints)));
+		NamedCommands.registerCommand("Dunk",
+				autoTriggers.score().andThen(new WaitUntilCommand(subsystemsAtSetpoints)));
+		NamedCommands.registerCommand("Intake",
+				autoTriggers.intake().andThen(new WaitUntilCommand(subsystemsAtSetpoints)));
+		NamedCommands.registerCommand("Spit",
+				autoTriggers.outtake().andThen(new WaitUntilCommand(subsystemsAtSetpoints)));
+		NamedCommands.registerCommand("Stow", autoTriggers.stow());
+
+		autoChooser = AutoBuilder.buildAutoChooser();
+		SmartDashboard.putData("Auto Chooser", autoChooser);
+
 		superstructure = new Superstructure(
 				elevator,
 				rollers,

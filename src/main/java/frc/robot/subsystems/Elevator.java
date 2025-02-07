@@ -50,7 +50,7 @@ public class Elevator extends SubsystemBase {
     private final double kG = 0.0;
 
     @NotLogged
-    public static final double INTAKE_HP_INCHES = 5.0, // todo tune
+    public static final double INTAKE_HP_INCHES = 15.0, // todo tune
             PRE_L1_INCHES = 10, // todo tune
             PRE_L2_INCHES = 20, // todo tune
             PRE_L3_INCHES = 30, // todo tune
@@ -58,12 +58,12 @@ public class Elevator extends SubsystemBase {
             SCORE_L1_INCHES = 5, // todo tune
             SCORE_L2_INCHES = 15, // todo tune
             SCORE_L3_INCHES = 25, // todo tune
-            SCORE_L4_INCHES = 35, // todo tune
+            SCORE_L4_INCHES = 40, // todo tune
             REMOVE_ALGAE_HIGH_INCHES = 0.0, // todo tune
             REMOVE_ALGAE_LOW_INCHES = 0.0, // todo tune
             PRE_PROCESSOR_INCHES = 0.0, // todo tune
             PRE_NET_INCHES = 0.0, // todo tune
-            STOWED_INCHES = 0.0; // todo tune
+            STOWED_INCHES = 10; // todo tune
 
     // TODO tune
     private final double MOTION_MAGIC_JERK = 7;
@@ -178,6 +178,10 @@ public class Elevator extends SubsystemBase {
 
     public void setLength(double length) {
         carriage.setLength(length);
+    }
+
+    public MechanismLigament2d getElevatorCarriage() {
+        return carriage;
     }
 
     @Override

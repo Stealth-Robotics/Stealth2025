@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Rollers;
 import frc.robot.subsystems.Superstructure;
@@ -22,10 +23,11 @@ import frc.robot.subsystems.Superstructure;
 @Logged
 public class RobotContainer {
 	CommandXboxController driverController = new CommandXboxController(0);
-	CommandXboxController operatorController = new CommandXboxController(1);
+	CommandPS5Controller operatorController = new CommandPS5Controller(1);
 	Superstructure superstructure;
 	Rollers rollers;
 	Elevator elevator;
+	Arm arm;
 	// Dashboard dashboard;
 
 	LevelTarget target = LevelTarget.L1;
@@ -34,24 +36,25 @@ public class RobotContainer {
 	public RobotContainer() {
 
 		elevator = new Elevator();
-		rollers = new Rollers(() -> superstructure.getState());
-		dashboard = new Dashboard();
+		rollers = new Rollers(operatorController.square(), () -> superstructure.getState());
+		arm = new Arm(elevator);
 		superstructure = new Superstructure(
 				elevator,
 				rollers,
+				arm,
 				// TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
-				() -> dashboard.getTargetScoringLevel(),
+				() -> target,
 				() -> algaeTarget,
-				driverController.leftBumper(),
-				driverController.leftBumper(),
-				driverController.rightBumper(),
-				driverController.leftBumper(),
-				driverController.rightTrigger(),
-				driverController.rightBumper(),
+				operatorController.L1(),
+				operatorController.L1(),
+				operatorController.R1(),
+				operatorController.L1(),
+				operatorController.R2(),
+				operatorController.R1(),
 				// TODO: BIND TO BUTTONS
-				operatorController.leftBumper(),
-				operatorController.rightBumper(),
-				operatorController.leftTrigger());
+				new Trigger(() -> false),
+				new Trigger(() -> false),
+				new Trigger(() -> false));
 
 		rollers.configureStateSupplierTrigger();
 		configureBindings();

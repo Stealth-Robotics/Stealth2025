@@ -37,15 +37,15 @@ public class Superstructure {
 
         // trigger for states. these should be things that cause robot to move, not
         // buttons that change target level
-        private final Trigger preScoreTrigger;
-        private final Trigger scoreTrigger;
-        private final Trigger intakeTrigger;
-        private final Trigger outtakeTrigger;
-        private final Trigger missedScoreTrigger;
-        private final Trigger stowTrigger;
-        private final Trigger removeAlgaeHighTrigger;
-        private final Trigger removeAlgaeLowTrigger;
-        private final Trigger cancelScoringTrigger;
+        private Trigger preScoreTrigger;
+        private Trigger scoreTrigger;
+        private Trigger intakeTrigger;
+        private Trigger outtakeTrigger;
+        private Trigger missedScoreTrigger;
+        private Trigger stowTrigger;
+        private Trigger removeAlgaeHighTrigger;
+        private Trigger removeAlgaeLowTrigger;
+        private Trigger cancelScoringTrigger;
 
         @Logged
         private SuperState state = SuperState.IDLE;
@@ -343,6 +343,22 @@ public class Superstructure {
                         this.prevState = this.state;
                         this.state = nextState;
                 });
+        }
+
+        public void configureTriggers(Trigger preScoreTrigger, Trigger scoreTrigger, Trigger intakeTrigger,
+                        Trigger outtakeTrigger, Trigger missedScoreTrigger, Trigger stowTrigger,
+                        Trigger removeAlgaeHighTrigger, Trigger removeAlgaeLowTrigger,
+                        Trigger cancelScoringTrigger) {
+                this.preScoreTrigger = preScoreTrigger;
+                this.scoreTrigger = scoreTrigger;
+                this.intakeTrigger = intakeTrigger;
+                this.outtakeTrigger = outtakeTrigger;
+                this.missedScoreTrigger = missedScoreTrigger;
+                this.stowTrigger = stowTrigger;
+                this.removeAlgaeHighTrigger = removeAlgaeHighTrigger;
+                this.removeAlgaeLowTrigger = removeAlgaeLowTrigger;
+                this.cancelScoringTrigger = cancelScoringTrigger;
+
         }
 
 }

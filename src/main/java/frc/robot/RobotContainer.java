@@ -6,6 +6,9 @@ package frc.robot;
 
 import java.lang.ModuleLayer.Controller;
 
+import com.pathplanner.lib.auto.NamedCommands;
+
+import choreo.auto.AutoFactory;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj.Joystick;
@@ -15,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Arm;
+
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Rollers;
 import frc.robot.subsystems.Superstructure;
@@ -28,15 +32,16 @@ public class RobotContainer {
 	Elevator elevator;
 	Arm arm;
 	Dashboard dashboard;
-
 	LevelTarget target = LevelTarget.L1;
 	AlgaeTarget algaeTarget = AlgaeTarget.PROCESSOR;
+	AutoTriggers autoTriggers = new AutoTriggers();
 
 	public RobotContainer() {
 
 		elevator = new Elevator();
 		rollers = new Rollers(() -> superstructure.getState());
 		arm = new Arm();
+
 		dashboard = new Dashboard();
 		superstructure = new Superstructure(
 				elevator,
@@ -57,7 +62,6 @@ public class RobotContainer {
 				operatorController.leftTrigger());
 
 		rollers.configureStateSupplierTrigger();
-		configureBindings();
 
 	}
 
@@ -73,14 +77,40 @@ public class RobotContainer {
 		NET
 	}
 
-	private void configureBindings() {
+	public void configureBindings() {
 		operatorController.a().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
 		operatorController.b().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));
 		operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
 		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
+
+		superstructure.configureTriggers(driverController.leftBumper(),
+				driverController.leftBumper(),
+				driverController.rightBumper(),
+				driverController.leftBumper(),
+				driverController.rightTrigger(),
+				driverController.rightBumper(),
+				// TODO: BIND TO BUTTONS
+				operatorController.leftBumper(),
+				operatorController.rightBumper(),
+				operatorController.leftTrigger());
 	}
 
 	public Command getAutonomousCommand() {
+		superstructure.configureTriggers(
+				autoTriggers.preScoreTrigger(),
+				autoTriggers.scoreTrigger(),
+				autoTriggers.intakeTrigger(),
+				autoTriggers.outtakeTrigger(),
+				new Trigger(() -> false),
+				autoTriggers.stowTrigger(),
+				new Trigger(() -> false),
+				new Trigger(() -> false),
+				new Trigger(() -> false));
+		NamedCommands.registerCommand("Go to scoring", autoTriggers.preScore());
+		NamedCommands.registerCommand("Dunk", autoTriggers.score());
+		NamedCommands.registerCommand("Intake", autoTriggers.intake());
+		NamedCommands.registerCommand("Spit", autoTriggers.outtake());
+		NamedCommands.registerCommand("Stow", autoTriggers.stow());
 		return Commands.print("No autonomous command configured");
 	}
 }

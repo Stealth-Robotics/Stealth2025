@@ -5,6 +5,7 @@ import java.util.function.DoubleSupplier;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -14,11 +15,11 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 @Logged
 public class Arm extends SubsystemBase{
     
-    private final double ARM_GEAR_RATIO = 1;
     private final TalonFX armMotor;
     
-    private final double ZERO_OFFSET = 0;
+    private final double ARM_GEAR_RATIO = 1;
     private final double DEGREES_TO_TICKS = 360;
+    private final double ZERO_OFFSET = 0;
 
     private double armTargetPosition = 0; //Target position as a variable for logging purposes
 
@@ -41,7 +42,6 @@ public class Arm extends SubsystemBase{
         armMotor = new TalonFX(0);
         armMotorConfiguration = new TalonFXConfiguration();
         applyConfigs();
-        resetEncoder();
     }
     private void applyConfigs(){
         armMotorConfiguration.Slot0.kP = kP;
@@ -52,20 +52,23 @@ public class Arm extends SubsystemBase{
         armMotorConfiguration.MotionMagic.MotionMagicAcceleration = MOTION_MAGIC_ACCELERATION;
         armMotorConfiguration.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
 
-        armMotorConfiguration.Feedback.SensorToMechanismRatio = ARM_GEAR_RATIO;
+        //TODO: Find encoder ID
+        armMotorConfiguration.Feedback.FeedbackRemoteSensorID = 0;
+        armMotorConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
+        armMotorConfiguration.Feedback.SensorToMechanismRatio = 1;
+        armMotorConfiguration.Feedback.RotorToSensorRatio = ARM_GEAR_RATIO;
+        armMotorConfiguration.Feedback.FeedbackRotorOffset = ZERO_OFFSET;
 
         armMotor.getConfigurator().apply(armMotorConfiguration);
     }
-    private void resetEncoder(){
-        armMotor.setPosition(ZERO_OFFSET);
-    }
+
     private double getMotorPosition(){
         return armMotor.getPosition().getValueAsDouble();
     }
     private double getTargetPosition(){
         return motionMagicVoltage.Position;
     }
-    private boolean isMotorAtTarget(){
+    public boolean isMotorAtTarget(){
         return Math.abs(getMotorPosition()-getTargetPosition()) <= kTolerance;
     }
     private void setTargetPosition(double degrees){
@@ -74,8 +77,8 @@ public class Arm extends SubsystemBase{
         armMotor.setControl(motionMagicVoltage);
     }
     public Command rotateToPositionCommand(DoubleSupplier degrees){
-        return this.runOnce(()->setTargetPosition(degrees.getAsDouble()*DEGREES_TO_TICKS))
-        .andThen(new WaitUntilCommand(()->this.isMotorAtTarget()));
+        return this.runOnce(()->setTargetPosition(degrees.getAsDouble()*DEGREES_TO_TICKS));
+        // No WaitUntil because its handled in the SuperStructure
     }
 
     

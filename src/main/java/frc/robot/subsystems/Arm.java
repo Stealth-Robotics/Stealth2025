@@ -13,7 +13,6 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 
 @Logged
 public class Arm extends SubsystemBase {
@@ -30,7 +29,6 @@ public class Arm extends SubsystemBase {
             kI = 0,
             kD = 0,
             kTolerance = 0.5, // Tolerance in degrees
-            MOTION_MAGIC_JERK = 0,
             MOTION_MAGIC_ACCELERATION = 0,
             MOTION_MAGIC_CRUISE_VELOCITY = 0,
             DEGREES_TO_TICKS = 1 / 360.0,
@@ -39,6 +37,7 @@ public class Arm extends SubsystemBase {
     private final TalonFXConfiguration armMotorConfiguration;
     private final CANcoderConfiguration canCoderConfiguration;
 
+    @SuppressWarnings("unused")
     private double armTargetPosition = 0; // Target position as a variable for logging purposes
 
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
@@ -73,7 +72,6 @@ public class Arm extends SubsystemBase {
         armMotorConfiguration.Slot0.kI = kI;
         armMotorConfiguration.Slot0.kD = kD;
 
-        armMotorConfiguration.MotionMagic.MotionMagicJerk = MOTION_MAGIC_JERK;
         armMotorConfiguration.MotionMagic.MotionMagicAcceleration = MOTION_MAGIC_ACCELERATION;
         armMotorConfiguration.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
 

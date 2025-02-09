@@ -32,7 +32,7 @@ public class Rollers extends SubsystemBase {
      * todo tune debounce time, ideally will be as low as possible without false
      * positives
      */
-    private final Debouncer gamepeiceDetectionCurrentDebouncer = new Debouncer(0.5, DebounceType.kRising);
+    private final Debouncer gamepeiceDetectionCurrentDebouncer = new Debouncer(0.1, DebounceType.kRising);
     Trigger trigger;
     Trigger stateSupplierTrigger;
 
@@ -65,7 +65,6 @@ public class Rollers extends SubsystemBase {
         return this.runOnce(() -> {
             if (voltage < 0) {
                 hasGamepiece = false;
-                System.out.println("hello 2");
             }
             motor.setControl(new VoltageOut(voltage));
         });
@@ -83,13 +82,6 @@ public class Rollers extends SubsystemBase {
             hasGamepiece = true;
         }
         return hasGamepiece;
-    }
-
-    @Override
-    public void periodic() {
-        if (motor.getMotorVoltage().getValueAsDouble() < 0) {
-            hasGamepiece = false;
-        }
     }
 
 }

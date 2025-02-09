@@ -1,6 +1,5 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -13,20 +12,9 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.wpilibj.LEDPattern.GradientType;
-import edu.wpi.first.wpilibj.simulation.ElevatorSim;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Robot;
-
-import static java.lang.Math.abs;
-
 import java.util.function.DoubleSupplier;
 
 @Logged
@@ -35,13 +23,19 @@ public class Elevator extends SubsystemBase {
     private final TalonFX motor1;
     private final TalonFX motor2;
 
-    private final double kP = 0.0;
-    private final double kI = 0.0;
-    private final double kD = 0.0;
+    @NotLogged
+    private final double kP = 0.0,
+            kI = 0.0,
+            kD = 0.0,
 
-    private final double kS = 0.0;
-    private final double kV = 0.0;
-    private final double kG = 0.0;
+            kS = 0.0,
+            kV = 0.0,
+            kG = 0.0,
+            // TODO tune
+            MOTION_MAGIC_ACCELERATION = 4,
+            MOTION_MAGIC_CRUISE_VELOCITY = 2;
+
+    private final double TOLERANCE = 0.0; // todo tune
 
     @NotLogged
     public static final double INTAKE_HP_INCHES = 5.0, // todo tune
@@ -58,12 +52,6 @@ public class Elevator extends SubsystemBase {
             PRE_PROCESSOR_INCHES = 0.0, // todo tune
             PRE_NET_INCHES = 0.0, // todo tune
             STOWED_INCHES = 0.0; // todo tune
-
-    // TODO tune
-    private final double MOTION_MAGIC_ACCELERATION = 4;
-    private final double MOTION_MAGIC_CRUISE_VELOCITY = 2;
-
-    private final double TOLERANCE = 0.0; // todo tune
 
     @NotLogged
     private final double MAX_EXTENSION_IN_INCHES = 0.0,
@@ -124,14 +112,12 @@ public class Elevator extends SubsystemBase {
                 Commands.runOnce(() -> elevatorTargetPosition = rot.getAsDouble()));
     }
 
+    // public so it's auto-logged
     public double getElevatorMotorPosition() {
         return motor1.getPosition().getValueAsDouble();
     }
 
     public boolean isElevatorAtTarget() {
-        if (Robot.isSimulation()) {
-            return atPosition;
-        }
         return MathUtil.isNear(motionMagicVoltage.Position, motor1.getPosition().getValueAsDouble(), TOLERANCE);
     }
 
@@ -144,13 +130,4 @@ public class Elevator extends SubsystemBase {
         motor1.setControl(motionMagicVoltage);
     }
 
-    public void togglePosition() {
-        System.out.println("hello from elevator");
-        atPosition = !atPosition;
-    }
-
-    @Override
-    public void periodic() {
-
-    }
 }

@@ -7,7 +7,6 @@ import java.util.function.Supplier;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotContainer.LevelTarget;
 import frc.robot.RobotContainer.AlgaeTarget;

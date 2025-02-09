@@ -3,7 +3,6 @@ package frc.robot;
 import edu.wpi.first.epilogue.CustomLoggerFor;
 import edu.wpi.first.epilogue.logging.ClassSpecificLogger;
 import edu.wpi.first.epilogue.logging.EpilogueBackend;
-import edu.wpi.first.wpilibj.PS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 
 @CustomLoggerFor(CommandPS5Controller.class)

@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import com.playingwithfusion.TimeOfFlight;
+
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -15,6 +17,7 @@ public class Superstructure {
 
         public enum SuperState {
                 INTAKE_HP,
+                GRAB_CORAL,
                 READY_SCORE_CORAL,
                 PRE_L1,
                 PRE_L2,
@@ -45,6 +48,10 @@ public class Superstructure {
         private Trigger removeAlgaeHighTrigger;
         private Trigger removeAlgaeLowTrigger;
         private Trigger cancelScoringTrigger;
+
+        private final Trigger gamepieceDetectedInStagingArea;
+
+        private final TimeOfFlight tof;
 
         @Logged
         private SuperState state = SuperState.IDLE;
@@ -85,6 +92,11 @@ public class Superstructure {
                 this.removeAlgaeHighTrigger = removeAlgaeHighTrigger;
                 this.removeAlgaeLowTrigger = removeAlgaeLowTrigger;
                 this.cancelScoringTrigger = cancelScoringTrigger;
+
+                // TODO FIND CAN ID
+                tof = new TimeOfFlight(0);
+                // TODO FIND RANGE THAT WORKS WITH TIME OF FLIGHT
+                gamepieceDetectedInStagingArea = new Trigger(() -> tof.getRange() < 10);
 
                 // add all states to stateTriggers map
                 // for each state in the enum, construct a new trigger that will return true
@@ -137,15 +149,17 @@ public class Superstructure {
                 stateTriggers.get(SuperState.INTAKE_HP)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.INTAKE_HP_INCHES))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
-                                .onTrue(rollers.setRollerVoltage(3))
                                 .and(() -> arm.isMotorAtTarget())
-                                // we need to debounce because otherwise everything is true for a frame
-                                .and(() -> elevator.isElevatorAtTarget()).debounce(0.03)
-                                .onTrue(elevator.goToPositionInInches(() -> Elevator.STOWED_INCHES))
+                                .and(gamepieceDetectedInStagingArea)
+                                .onTrue(this.forceState(SuperState.GRAB_CORAL));
+
+                stateTriggers.get(SuperState.GRAB_CORAL)
+                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.GRAB_CORAL_INCHES))
+                                .whileTrue(rollers.setRollerVoltage(3))
                                 .and(() -> rollers.getHasGamepiece())
-                                .onTrue(this.forceState(SuperState.READY_SCORE_CORAL)
-                                                // need to experiment with good voltage that will keep coral in
-                                                .alongWith(rollers.setRollerVoltage(0.5)));
+                                // need to experiment with good voltage that will keep coral in
+                                .onTrue(rollers.setRollerVoltage(0.5))
+                                .onTrue(this.forceState(SuperState.READY_SCORE_CORAL));
 
                 stateTriggers.get(SuperState.REMOVE_ALGAE_HIGH)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.REMOVE_ALGAE_HIGH_INCHES))

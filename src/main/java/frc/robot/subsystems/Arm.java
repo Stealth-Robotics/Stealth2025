@@ -55,7 +55,7 @@ public class Arm extends SubsystemBase {
 
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
-    private final ProfiledPIDController armPIDController = new ProfiledPIDController(20, 0, 0,
+    private final ProfiledPIDController armPIDController = new ProfiledPIDController(20, 0, 1,
             new Constraints(5, 10));
 
     private final SingleJointedArmSim armSim = new SingleJointedArmSim(
@@ -122,12 +122,15 @@ public class Arm extends SubsystemBase {
         canCoder.getConfigurator().apply(canCoderConfiguration);
     }
 
-    private double getMotorPosition() {
-        return armMotor.getPosition().getValueAsDouble();
-    }
-
     private double getTargetPosition() {
         return motionMagicVoltage.Position;
+    }
+
+    public double getMotorPosition() {
+        if (Robot.isSimulation()) {
+            return Units.radiansToDegrees(armSim.getAngleRads());
+        }
+        return armMotor.getPosition().getValueAsDouble();
     }
 
     public boolean isMotorAtTarget() {
@@ -156,6 +159,7 @@ public class Arm extends SubsystemBase {
     @Override
     public void periodic() {
         if (Robot.isSimulation()) {
+
             armSim.update(0.02);
             arm.setAngle(Units.radiansToDegrees(armSim.getAngleRads()));
         }

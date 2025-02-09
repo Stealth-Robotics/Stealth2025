@@ -48,6 +48,7 @@ public class RobotContainer {
 		rollers = new Rollers(() -> superstructure.getState());
 		arm = new Arm();
 		dashboard = new Dashboard();
+
 		Trigger subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
 		NamedCommands.registerCommand("Go to scoring", autoTriggers.preScore()
@@ -63,23 +64,23 @@ public class RobotContainer {
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("Auto Chooser", autoChooser);
 
-		superstructure = new Superstructure(
-				elevator,
-				rollers,
-				arm,
-				// TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
-				() -> target,
-				() -> algaeTarget,
-				driverController.leftBumper(),
-				driverController.leftBumper(),
-				driverController.rightBumper(),
-				driverController.leftBumper(),
-				driverController.rightTrigger(),
-				driverController.rightBumper(),
-				// TODO: BIND TO BUTTONS
-				operatorController.leftBumper(),
-				operatorController.rightBumper(),
-				operatorController.leftTrigger());
+		// superstructure = new Superstructure(
+		// elevator,
+		// rollers,
+		// arm,
+		// // TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
+		// () -> target,
+		// () -> algaeTarget,
+		// driverController.leftBumper(),
+		// driverController.leftBumper(),
+		// driverController.rightBumper(),
+		// driverController.leftBumper(),
+		// driverController.rightTrigger(),
+		// driverController.rightBumper(),
+		// // TODO: BIND TO BUTTONS
+		// operatorController.leftBumper(),
+		// operatorController.rightBumper(),
+		// operatorController.leftTrigger());
 
 		rollers.configureStateSupplierTrigger();
 
@@ -103,28 +104,31 @@ public class RobotContainer {
 		operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
 		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
 
-		superstructure.configureTriggers(driverController.leftBumper(),
-				driverController.leftBumper(),
-				driverController.rightBumper(),
-				driverController.leftBumper(),
-				driverController.rightTrigger(),
-				driverController.rightBumper(),
-				// TODO: BIND TO BUTTONS
-				operatorController.leftBumper(),
-				operatorController.rightBumper(),
-				operatorController.leftTrigger());
+		driverController.a().onTrue(elevator.goToPosition(() -> 500));
+		driverController.x().onTrue(elevator.goToPosition(() -> 0));
+
+		// superstructure.configureTriggers(driverController.leftBumper(),
+		// driverController.leftBumper(),
+		// driverController.rightBumper(),
+		// driverController.leftBumper(),
+		// driverController.rightTrigger(),
+		// driverController.rightBumper(),
+		// // TODO: BIND TO BUTTONS
+		// operatorController.leftBumper(),
+		// operatorController.rightBumper(),
+		// operatorController.leftTrigger());
 	}
 
 	public void configureAutoBindings() {
-		superstructure.configureTriggers(autoTriggers.preScoreTrigger(),
-				autoTriggers.scoreTrigger(),
-				autoTriggers.intakeTrigger(),
-				autoTriggers.outtakeTrigger(),
-				new Trigger(() -> false),
-				autoTriggers.stowTrigger(),
-				new Trigger(() -> false),
-				new Trigger(() -> false),
-				new Trigger(() -> false));
+		// superstructure.configureTriggers(autoTriggers.preScoreTrigger(),
+		// autoTriggers.scoreTrigger(),
+		// autoTriggers.intakeTrigger(),
+		// autoTriggers.outtakeTrigger(),
+		// new Trigger(() -> false),
+		// autoTriggers.stowTrigger(),
+		// new Trigger(() -> false),
+		// new Trigger(() -> false),
+		// new Trigger(() -> false));
 	}
 
 	public Command getAutonomousCommand() {

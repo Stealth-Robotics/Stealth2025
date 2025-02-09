@@ -22,26 +22,24 @@ public class Arm extends SubsystemBase {
     private final CANcoder canCoder;
 
     // TODO: Find CANcoder CAN ID
+    @NotLogged
     private final int CANCODER_CAN_ID = 0;
 
-    private final double ARM_GEAR_RATIO = 1;
-    private final double DEGREES_TO_TICKS = 1 / 360.0;
-    private final double ZERO_OFFSET = 0;
-
-    private double armTargetPosition = 0; // Target position as a variable for logging purposes
-
-    private final double kP = 0;
-    private final double kI = 0;
-    private final double kD = 0;
-    // Tolerance in degrees
-    private final double kTolerance = 0;
+    @NotLogged
+    private final double kP = 0,
+            kI = 0,
+            kD = 0,
+            kTolerance = 0.5, // Tolerance in degrees
+            MOTION_MAGIC_JERK = 0,
+            MOTION_MAGIC_ACCELERATION = 0,
+            MOTION_MAGIC_CRUISE_VELOCITY = 0,
+            DEGREES_TO_TICKS = 1 / 360.0,
+            ZERO_OFFSET = 0;
 
     private final TalonFXConfiguration armMotorConfiguration;
     private final CANcoderConfiguration canCoderConfiguration;
 
-    private final double MOTION_MAGIC_JERK = 0;
-    private final double MOTION_MAGIC_ACCELERATION = 0;
-    private final double MOTION_MAGIC_CRUISE_VELOCITY = 0;
+    private double armTargetPosition = 0; // Target position as a variable for logging purposes
 
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
@@ -90,8 +88,9 @@ public class Arm extends SubsystemBase {
         canCoder.getConfigurator().apply(canCoderConfiguration);
     }
 
-    private double getMotorPosition() {
-        return armMotor.getPosition().getValueAsDouble();
+    // made public so this is logged
+    public double getArmPosition() {
+        return canCoder.getPosition().getValueAsDouble();
     }
 
     private double getTargetPosition() {
@@ -99,7 +98,7 @@ public class Arm extends SubsystemBase {
     }
 
     public boolean isMotorAtTarget() {
-        return Math.abs(getMotorPosition() - getTargetPosition()) <= kTolerance;
+        return Math.abs(getArmPosition() - getTargetPosition()) <= kTolerance;
     }
 
     private void setTargetPosition(double degrees) {

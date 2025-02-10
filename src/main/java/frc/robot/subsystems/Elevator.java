@@ -25,6 +25,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
+
 import java.util.function.DoubleSupplier;
 
 @Logged
@@ -45,7 +47,7 @@ public class Elevator extends SubsystemBase {
             MOTION_MAGIC_ACCELERATION = 8,
             MOTION_MAGIC_CRUISE_VELOCITY = 4;
 
-    private final double TOLERANCE = 0.0; // todo tune
+    private final double TOLERANCE = 2.0; // todo tune
 
     @NotLogged
     public static final double INTAKE_HP_INCHES = 15.0, // todo tune
@@ -63,12 +65,7 @@ public class Elevator extends SubsystemBase {
             PRE_NET_INCHES = 0.0, // todo tune
             STOWED_INCHES = 10; // todo tune
 
-    // TODO tune
-    private final double MOTION_MAGIC_JERK = 7;
-    private final double MOTION_MAGIC_ACCELERATION = 2;
-    private final double MOTION_MAGIC_CRUISE_VELOCITY = 0.5;
-
-    private final double TOLERANCE = 2.0; // todo tune
+    private double elevatorTargetPositionInches;
 
     @NotLogged
     private final double MAX_EXTENSION_IN_INCHES = 0.0,

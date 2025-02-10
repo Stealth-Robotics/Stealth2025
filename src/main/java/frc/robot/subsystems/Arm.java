@@ -38,8 +38,6 @@ public class Arm extends SubsystemBase {
     private final double DEGREES_TO_TICKS = 1 / 360.0;
     private final double ZERO_OFFSET = 0;
 
-    private double armTargetPosition = 0; // Target position as a variable for logging purposes
-
     private final double kP = 0;
     private final double kI = 0;
     private final double kD = 0;
@@ -105,9 +103,6 @@ public class Arm extends SubsystemBase {
         armMotorConfiguration.Slot0.kP = kP;
         armMotorConfiguration.Slot0.kI = kI;
         armMotorConfiguration.Slot0.kD = kD;
-
-        armMotorConfiguration.MotionMagic.MotionMagicAcceleration = MOTION_MAGIC_ACCELERATION;
-        armMotorConfiguration.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
 
         canCoderConfiguration.MagnetSensor.MagnetOffset = ZERO_OFFSET;
 

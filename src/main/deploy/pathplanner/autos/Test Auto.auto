@@ -26,7 +26,7 @@
         {
           "type": "named",
           "data": {
-            "name": "Dunk"
+            "name": "Dunk state"
           }
         },
         {
@@ -38,7 +38,7 @@
         {
           "type": "named",
           "data": {
-            "name": "Eject"
+            "name": "Spit state"
           }
         },
         {
@@ -64,7 +64,7 @@
                     {
                       "type": "named",
                       "data": {
-                        "name": "Intake"
+                        "name": "Intake state"
                       }
                     }
                   ]
@@ -95,7 +95,7 @@
         {
           "type": "named",
           "data": {
-            "name": "Dunk"
+            "name": "Dunk state"
           }
         },
         {
@@ -111,7 +111,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
+                  "name": "Intake state"
                 }
               }
             ]

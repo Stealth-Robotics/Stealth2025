@@ -8,6 +8,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,7 +33,8 @@ public class Rollers extends SubsystemBase {
      * todo tune debounce time, ideally will be as low as possible without false
      * positives
      */
-    private final Debouncer gamepeiceDetectionCurrentDebouncer = new Debouncer(0.5, DebounceType.kRising);
+    private final Debouncer gamepeiceDetectionCurrentDebouncer = new Debouncer(0.1, DebounceType.kRising);
+    @NotLogged
     Trigger trigger;
     Trigger stateSupplierTrigger;
 
@@ -65,7 +67,6 @@ public class Rollers extends SubsystemBase {
         return this.runOnce(() -> {
             if (voltage < 0) {
                 hasGamepiece = false;
-                System.out.println("hello 2");
             }
             motor.setControl(new VoltageOut(voltage));
         });
@@ -83,13 +84,6 @@ public class Rollers extends SubsystemBase {
             hasGamepiece = true;
         }
         return hasGamepiece;
-    }
-
-    @Override
-    public void periodic() {
-        if (motor.getMotorVoltage().getValueAsDouble() < 0) {
-            hasGamepiece = false;
-        }
     }
 
 }

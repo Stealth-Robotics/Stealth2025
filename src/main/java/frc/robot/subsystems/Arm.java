@@ -49,9 +49,8 @@ public class Arm extends SubsystemBase {
     private final TalonFXConfiguration armMotorConfiguration;
     private final CANcoderConfiguration canCoderConfiguration;
 
-    private final double MOTION_MAGIC_JERK = 0;
-    private final double MOTION_MAGIC_ACCELERATION = 0;
-    private final double MOTION_MAGIC_CRUISE_VELOCITY = 0;
+    @SuppressWarnings("unused")
+    private double armTargetPosition = 0; // Target position as a variable for logging purposes
 
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
@@ -107,7 +106,6 @@ public class Arm extends SubsystemBase {
         armMotorConfiguration.Slot0.kI = kI;
         armMotorConfiguration.Slot0.kD = kD;
 
-        armMotorConfiguration.MotionMagic.MotionMagicJerk = MOTION_MAGIC_JERK;
         armMotorConfiguration.MotionMagic.MotionMagicAcceleration = MOTION_MAGIC_ACCELERATION;
         armMotorConfiguration.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
 

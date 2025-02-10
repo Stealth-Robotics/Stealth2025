@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import com.playingwithfusion.TimeOfFlight;
+
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -16,6 +18,7 @@ public class Superstructure {
 
         public enum SuperState {
                 INTAKE_HP,
+                GRAB_CORAL,
                 READY_SCORE_CORAL,
                 PRE_L1,
                 PRE_L2,
@@ -37,15 +40,19 @@ public class Superstructure {
 
         // trigger for states. these should be things that cause robot to move, not
         // buttons that change target level
-        private final Trigger preScoreTrigger;
-        private final Trigger scoreTrigger;
-        private final Trigger intakeTrigger;
-        private final Trigger outtakeTrigger;
-        private final Trigger missedScoreTrigger;
-        private final Trigger stowTrigger;
-        private final Trigger removeAlgaeHighTrigger;
-        private final Trigger removeAlgaeLowTrigger;
-        private final Trigger cancelScoringTrigger;
+        private Trigger preScoreTrigger;
+        private Trigger scoreTrigger;
+        private Trigger intakeTrigger;
+        private Trigger outtakeTrigger;
+        private Trigger missedScoreTrigger;
+        private Trigger stowTrigger;
+        private Trigger removeAlgaeHighTrigger;
+        private Trigger removeAlgaeLowTrigger;
+        private Trigger cancelScoringTrigger;
+
+        private final Trigger gamepieceDetectedInStagingArea;
+
+        private final TimeOfFlight tof;
 
         @Logged
         private SuperState state = SuperState.IDLE;
@@ -86,6 +93,11 @@ public class Superstructure {
                 this.removeAlgaeHighTrigger = removeAlgaeHighTrigger;
                 this.removeAlgaeLowTrigger = removeAlgaeLowTrigger;
                 this.cancelScoringTrigger = cancelScoringTrigger;
+
+                // TODO FIND CAN ID
+                tof = new TimeOfFlight(0);
+                // TODO FIND RANGE THAT WORKS WITH TIME OF FLIGHT
+                gamepieceDetectedInStagingArea = new Trigger(() -> tof.getRange() < 10);
 
                 // add all states to stateTriggers map
                 // for each state in the enum, construct a new trigger that will return true
@@ -144,14 +156,14 @@ public class Superstructure {
                                 .and(() -> elevator.isElevatorAtTarget()).debounce(0.03)
                                 .onTrue(elevator.goToPositionInInches(() -> Elevator.STOWED_INCHES))
                                 .and(() -> rollers.getHasGamepiece())
-                                .onTrue(this.forceState(SuperState.READY_SCORE_CORAL)
-                                                // need to experiment with good voltage that will keep coral in
-                                                .alongWith(rollers.setRollerVoltage(0.5)));
+                                // need to experiment with good voltage that will keep coral in
+                                .onTrue(rollers.setRollerVoltage(0.5))
+                                .onTrue(this.forceState(SuperState.READY_SCORE_CORAL));
 
                 stateTriggers.get(SuperState.REMOVE_ALGAE_HIGH)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.REMOVE_ALGAE_HIGH_INCHES))
                                 .whileTrue(rollers.setRollerVoltage(3))
-                                .and(() -> elevator.isElevatorAtTarget())
+                                .whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_HIGH_DEGREES))
                                 .and(() -> rollers.getHasGamepiece())
                                 .onTrue(this.forceState(SuperState.READY_SCORE_ALGAE)
                                                 // need to experiment with good voltage that will keep algae in
@@ -160,7 +172,7 @@ public class Superstructure {
                 stateTriggers.get(SuperState.REMOVE_ALGAE_LOW)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.REMOVE_ALGAE_LOW_INCHES))
                                 .whileTrue(rollers.setRollerVoltage(3))
-                                .and(() -> elevator.isElevatorAtTarget())
+                                .whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_LOW_DEGREES))
                                 .and(() -> rollers.getHasGamepiece())
                                 .onTrue(this.forceState(SuperState.READY_SCORE_ALGAE)
                                                 // again, experiment
@@ -310,13 +322,17 @@ public class Superstructure {
 
                 stateTriggers.get(SuperState.PRE_PROCESSOR)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_PROCESSOR_INCHES))
+                                .whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_PROCESSOR_DEGREES))
                                 .and(() -> elevator.isElevatorAtTarget())
+                                .and(() -> arm.isMotorAtTarget())
                                 .and(scoreTrigger)
                                 .onFalse(this.forceState(SuperState.SPIT));
 
                 stateTriggers.get(SuperState.PRE_NET)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_NET_INCHES))
+                                .whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_NET_DEGREES))
                                 .and(() -> elevator.isElevatorAtTarget())
+                                .and(() -> arm.isMotorAtTarget())
                                 .and(scoreTrigger)
                                 .onFalse(this.forceState(SuperState.SPIT));
 
@@ -339,6 +355,22 @@ public class Superstructure {
                         this.prevState = this.state;
                         this.state = nextState;
                 });
+        }
+
+        public void configureTriggers(Trigger preScoreTrigger, Trigger scoreTrigger, Trigger intakeTrigger,
+                        Trigger outtakeTrigger, Trigger missedScoreTrigger, Trigger stowTrigger,
+                        Trigger removeAlgaeHighTrigger, Trigger removeAlgaeLowTrigger,
+                        Trigger cancelScoringTrigger) {
+                this.preScoreTrigger = preScoreTrigger;
+                this.scoreTrigger = scoreTrigger;
+                this.intakeTrigger = intakeTrigger;
+                this.outtakeTrigger = outtakeTrigger;
+                this.missedScoreTrigger = missedScoreTrigger;
+                this.stowTrigger = stowTrigger;
+                this.removeAlgaeHighTrigger = removeAlgaeHighTrigger;
+                this.removeAlgaeLowTrigger = removeAlgaeLowTrigger;
+                this.cancelScoringTrigger = cancelScoringTrigger;
+
         }
 
 }

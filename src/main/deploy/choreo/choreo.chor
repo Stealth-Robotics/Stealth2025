@@ -1,0 +1,78 @@
+{
+ "name":"choreo",
+ "version":1,
+ "type":"Swerve",
+ "variables":{
+  "expressions":{},
+  "poses":{}
+ },
+ "config":{
+  "frontLeft":{
+   "x":{
+    "exp":"10.2 in",
+    "val":0.25908
+   },
+   "y":{
+    "exp":"10.2 in",
+    "val":0.25908
+   }
+  },
+  "backLeft":{
+   "x":{
+    "exp":"-10.2 in",
+    "val":-0.25908
+   },
+   "y":{
+    "exp":"10.2 in",
+    "val":0.25908
+   }
+  },
+  "mass":{
+   "exp":"106 lbs",
+   "val":48.08079122
+  },
+  "inertia":{
+   "exp":"3.524 kg m ^ 2",
+   "val":3.524
+  },
+  "gearing":{
+   "exp":"6.75",
+   "val":6.75
+  },
+  "radius":{
+   "exp":"2 in",
+   "val":0.0508
+  },
+  "vmax":{
+   "exp":"5500 RPM",
+   "val":575.9586531581288
+  },
+  "tmax":{
+   "exp":"0.8 N * m",
+   "val":0.8
+  },
+  "cof":{
+   "exp":"1.2",
+   "val":1.2
+  },
+  "bumper":{
+   "front":{
+    "exp":"16.5 in",
+    "val":0.4191
+   },
+   "side":{
+    "exp":"16.5 in",
+    "val":0.4191
+   },
+   "back":{
+    "exp":"16.5 in",
+    "val":0.4191
+   }
+  },
+  "differentialTrackWidth":{
+   "exp":"22 in",
+   "val":0.5588
+  }
+ },
+ "generationFeatures":[]
+}

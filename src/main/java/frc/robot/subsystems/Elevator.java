@@ -1,6 +1,5 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -25,14 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Robot;
-
-import static java.lang.Math.abs;
-
 import java.util.function.DoubleSupplier;
 
 @Logged
@@ -41,13 +33,19 @@ public class Elevator extends SubsystemBase {
     private final TalonFX motor1;
     private final TalonFX motor2;
 
-    private final double kP = 0.0;
-    private final double kI = 0.0;
-    private final double kD = 0.0;
+    @NotLogged
+    private final double kP = 0.1,
+            kI = 0.0,
+            kD = 0.0,
 
-    private final double kS = 0.0;
-    private final double kV = 0.0;
-    private final double kG = 0.0;
+            kS = 0.0,
+            kV = 0.0,
+            kG = 0.0,
+            // TODO tune
+            MOTION_MAGIC_ACCELERATION = 8,
+            MOTION_MAGIC_CRUISE_VELOCITY = 4;
+
+    private final double TOLERANCE = 0.0; // todo tune
 
     @NotLogged
     public static final double INTAKE_HP_INCHES = 15.0, // todo tune
@@ -81,7 +79,8 @@ public class Elevator extends SubsystemBase {
 
     // keep track of target position for logging purposes, this value gets updated
     // in setposition command
-    private double elevatorTargetPositionInches;
+    @Logged(name = "Elevator Target")
+    private double elevatorTargetPosition;
 
     private final Mechanism2d mechanism = new Mechanism2d(3, Units.feetToMeters(6));
     private final MechanismRoot2d root = mechanism.getRoot("Elevator", 1, 0.3);
@@ -105,7 +104,7 @@ public class Elevator extends SubsystemBase {
     public Elevator() {
         motor1 = new TalonFX(0);
         motor2 = new TalonFX(0);
-        elevatorTargetPositionInches = motor1.getPosition().getValueAsDouble();
+        elevatorTargetPosition = motor1.getPosition().getValueAsDouble();
         applyConfigs();
         SmartDashboard.putData("elevator", mechanism);
         root.append(carriage);
@@ -128,9 +127,9 @@ public class Elevator extends SubsystemBase {
 
         config.MotionMagic.MotionMagicAcceleration = MOTION_MAGIC_ACCELERATION;
         config.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
-        config.MotionMagic.MotionMagicJerk = MOTION_MAGIC_JERK;
 
         motor1.getConfigurator().apply(config);
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         motor2.getConfigurator().apply(config);
 
         motor2.setControl(new Follower(motor1.getDeviceID(), false));
@@ -149,9 +148,15 @@ public class Elevator extends SubsystemBase {
         // inches.getAsDouble()));
     }
 
-    private Command goToPosition(DoubleSupplier rot) {
+    public Command goToPosition(DoubleSupplier rot) {
         // removed wait until for use with superstructure logic stuff
-        return this.runOnce(() -> setElevatorTargetPositionInches(rot.getAsDouble()));
+        return this.runOnce(() -> setElevatorTargetPosition(rot.getAsDouble())).alongWith(
+                Commands.runOnce(() -> elevatorTargetPosition = rot.getAsDouble()));
+    }
+
+    // public so it's auto-logged
+    public double getElevatorMotorPosition() {
+        return motor1.getPosition().getValueAsDouble();
     }
 
     public boolean isElevatorAtTarget() {
@@ -166,7 +171,7 @@ public class Elevator extends SubsystemBase {
         return this.runOnce(() -> motor1.setControl(new NeutralOut()));
     }
 
-    private void setElevatorTargetPositionInches(double pos) {
+    private void setElevatorTargetPosition(double pos) {
         motionMagicVoltage.Position = pos;
         motor1.setControl(motionMagicVoltage);
     }

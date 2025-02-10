@@ -4,18 +4,20 @@
 
 package frc.robot;
 
-import java.lang.ModuleLayer.Controller;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
-import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Arm;
+import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Rollers;
 import frc.robot.subsystems.Superstructure;
@@ -28,16 +30,37 @@ public class RobotContainer {
 	Rollers rollers;
 	Elevator elevator;
 	Arm arm;
+	CommandSwerveDrivetrain dt;
 	// Dashboard dashboard;
-
-	LevelTarget target = LevelTarget.L1;
+	LevelTarget target = LevelTarget.L4;
 	AlgaeTarget algaeTarget = AlgaeTarget.PROCESSOR;
+	AutoTriggers autoTriggers = new AutoTriggers();
+
+	private final SendableChooser<Command> autoChooser;
 
 	public RobotContainer() {
 
 		elevator = new Elevator();
-		rollers = new Rollers(operatorController.square(), () -> superstructure.getState());
-		arm = new Arm(elevator);
+		rollers = new Rollers(() -> superstructure.getState());
+		arm = new Arm();
+		dt = TunerConstants.createDrivetrain();
+		// dashboard = new Dashboard();
+
+		Trigger subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
+				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
+		NamedCommands.registerCommand("Go to scoring", autoTriggers.preScore()
+				.andThen(new WaitUntilCommand(subsystemsAtSetpoints)));
+		NamedCommands.registerCommand("Dunk",
+				autoTriggers.score().andThen(new WaitUntilCommand(subsystemsAtSetpoints)));
+		NamedCommands.registerCommand("Intake",
+				autoTriggers.intake().andThen(new WaitUntilCommand(subsystemsAtSetpoints)));
+		NamedCommands.registerCommand("Spit",
+				autoTriggers.outtake().andThen(new WaitUntilCommand(subsystemsAtSetpoints)));
+		NamedCommands.registerCommand("Stow", autoTriggers.stow());
+
+		autoChooser = AutoBuilder.buildAutoChooser();
+		SmartDashboard.putData("Auto Chooser", autoChooser);
+
 		superstructure = new Superstructure(
 				elevator,
 				rollers,
@@ -57,7 +80,6 @@ public class RobotContainer {
 				new Trigger(() -> false));
 
 		rollers.configureStateSupplierTrigger();
-		configureBindings();
 
 	}
 
@@ -73,14 +95,41 @@ public class RobotContainer {
 		NET
 	}
 
-	private void configureBindings() {
-		operatorController.cross().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
-		operatorController.circle().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));
-		operatorController.square().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
-		operatorController.triangle().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
+	public void configureBindings() {
+		operatorController.a().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
+		operatorController.b().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));
+		operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
+		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
+
+		driverController.a().onTrue(elevator.goToPosition(() -> 500));
+		driverController.x().onTrue(elevator.goToPosition(() -> 0));
+
+		superstructure.configureTriggers(driverController.leftBumper(),
+				driverController.leftBumper(),
+				driverController.rightBumper(),
+				driverController.leftBumper(),
+				driverController.rightTrigger(),
+				driverController.rightBumper(),
+				// TODO: BIND TO BUTTONS
+				operatorController.leftBumper(),
+				operatorController.rightBumper(),
+				operatorController.leftTrigger());
+	}
+
+	public void configureAutoBindings() {
+		superstructure.configureTriggers(autoTriggers.preScoreTrigger(),
+				autoTriggers.scoreTrigger(),
+				autoTriggers.intakeTrigger(),
+				autoTriggers.outtakeTrigger(),
+				new Trigger(() -> false),
+				autoTriggers.stowTrigger(),
+				new Trigger(() -> false),
+				new Trigger(() -> false),
+				new Trigger(() -> false));
 	}
 
 	public Command getAutonomousCommand() {
-		return Commands.print("No autonomous command configured");
+
+		return AutoBuilder.buildAuto("Test Auto");
 	}
 }

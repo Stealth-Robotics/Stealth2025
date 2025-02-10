@@ -24,7 +24,7 @@ public class Elevator extends SubsystemBase {
     private final TalonFX motor2;
 
     @NotLogged
-    private final double kP = 0.0,
+    private final double kP = 0.1,
             kI = 0.0,
             kD = 0.0,
 
@@ -32,8 +32,8 @@ public class Elevator extends SubsystemBase {
             kV = 0.0,
             kG = 0.0,
             // TODO tune
-            MOTION_MAGIC_ACCELERATION = 4,
-            MOTION_MAGIC_CRUISE_VELOCITY = 2;
+            MOTION_MAGIC_ACCELERATION = 8,
+            MOTION_MAGIC_CRUISE_VELOCITY = 4;
 
     private final double TOLERANCE = 0.0; // todo tune
 

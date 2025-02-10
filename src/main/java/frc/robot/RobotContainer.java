@@ -4,8 +4,13 @@
 
 package frc.robot;
 
+import java.io.IOException;
+
+import org.json.simple.parser.ParseException;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -43,6 +48,8 @@ public class RobotContainer {
 	Command dunk;
 	Command intake;
 	Command eject;
+
+	public Command leftAuto;
 
 	public RobotContainer() {
 
@@ -118,4 +125,30 @@ public class RobotContainer {
 
 		return AutoBuilder.buildAuto("Test Auto");
 	}
+
+	public void buildAutos() {
+		try {
+			leftAuto = Commands.sequence(
+					Commands.parallel(
+							AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("right start score preload")),
+							goToL4),
+					new WaitCommand(0.5),
+					dunk,
+					new WaitCommand(0.5),
+					eject,
+					Commands.parallel(
+							AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("preload to HP")),
+							Commands.sequence(new WaitCommand(0.5), intake)),
+					new WaitCommand(1),
+					Commands.parallel(
+							AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("hp to score 1")),
+							goToL4),
+					new WaitCommand(0.5),
+					dunk,
+					new WaitCommand(0.5),
+					eject);
+		} catch (Exception e) {
+		}
+	}
+
 }

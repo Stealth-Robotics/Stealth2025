@@ -8,6 +8,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -33,6 +34,7 @@ public class Rollers extends SubsystemBase {
      * positives
      */
     private final Debouncer gamepeiceDetectionCurrentDebouncer = new Debouncer(0.1, DebounceType.kRising);
+    @NotLogged
     Trigger trigger;
     Trigger stateSupplierTrigger;
 

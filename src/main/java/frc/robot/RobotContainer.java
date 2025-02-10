@@ -83,6 +83,11 @@ public class RobotContainer {
 		eject = Commands.sequence(superstructure.forceState(SuperState.SPIT), new WaitCommand(0.5));
 		intake = Commands.sequence(superstructure.forceState(SuperState.INTAKE_HP));
 
+		NamedCommands.registerCommand("Go to scoring", goToL4);
+		NamedCommands.registerCommand("Dunk", dunk);
+		NamedCommands.registerCommand("Eject", eject);
+		NamedCommands.registerCommand("Intake", intake);
+
 		rollers.configureStateSupplierTrigger();
 
 	}

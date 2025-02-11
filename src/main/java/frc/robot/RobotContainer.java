@@ -42,185 +42,176 @@ import frc.robot.subsystems.Superstructure.SuperState;
 
 @Logged
 public class RobotContainer {
-	private final double MAX_VELO = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-	private final double MAX_ANGULAR_VELO = RotationsPerSecond.of(1.5).in(RadiansPerSecond);
+    private final double MAX_VELO = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+    private final double MAX_ANGULAR_VELO = RotationsPerSecond.of(1.5).in(RadiansPerSecond);
 
-	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-			.withDeadband(MAX_VELO * 0.1).withRotationalDeadband(MAX_ANGULAR_VELO * 0.1)
-			.withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+            .withDeadband(MAX_VELO * 0.1).withRotationalDeadband(MAX_ANGULAR_VELO * 0.1)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-	private final SwerveRequest.FieldCentricFacingAngle driveAngle = new SwerveRequest.FieldCentricFacingAngle()
-			.withDeadband(MAX_VELO * 0.1).withRotationalDeadband(MAX_ANGULAR_VELO * 0.1)
-			.withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-			.withTargetDirection(new Rotation2d(Radians.of(90).in(Degrees)));
+    private final SwerveRequest.FieldCentricFacingAngle driveAngle = new SwerveRequest.FieldCentricFacingAngle()
+            .withDeadband(MAX_VELO * 0.1).withRotationalDeadband(MAX_ANGULAR_VELO * 0.1)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+            .withTargetDirection(new Rotation2d(Radians.of(90).in(Degrees)));
 
-	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
-	CommandXboxController driverController = new CommandXboxController(0);
-	CommandXboxController operatorController = new CommandXboxController(1);
-	Superstructure superstructure;
-	// Rollers rollers;
-	Elevator elevator;
-	Arm arm;
-	CommandSwerveDrivetrain dt;
-	// Dashboard dashboard;
-	LevelTarget target = LevelTarget.L4;
-	AlgaeTarget algaeTarget = AlgaeTarget.PROCESSOR;
+    CommandXboxController driverController = new CommandXboxController(0);
+    CommandXboxController operatorController = new CommandXboxController(1);
+    Superstructure superstructure;
+    // Rollers rollers;
+    Elevator elevator;
+    Arm arm;
+    CommandSwerveDrivetrain dt;
 
-	private final SendableChooser<Command> autoChooser;
+    LevelTarget target = LevelTarget.L4;
+    AlgaeTarget algaeTarget = AlgaeTarget.PROCESSOR;
 
-	Command goToL4;
-	Command dunk;
-	Command intake;
-	Command eject;
+    private final SendableChooser<Command> autoChooser;
 
-	private boolean driveFacingAngle = false;
+    Command goToL4;
+    Command dunk;
+    Command intake;
+    Command eject;
 
-	public Command leftAuto;
+    Command driveFacingSetAngle;
+    Command driveFieldCentric;
 
-	public RobotContainer() {
-		// configure PID for heading controller
-		driveAngle.HeadingController.setP(0.1);
+    private boolean driveFacingAngle = false;
 
-		elevator = new Elevator();
-		// rollers = new Rollers(() -> superstructure.getState());
-		arm = new Arm();
-		dt = TunerConstants.createDrivetrain();
-		// dashboard = new Dashboard();
+    public Command leftAuto;
 
-		dt.setDefaultCommand(
-				dt.applyRequest(
-						() -> drive.withVelocityX(-driverController.getLeftTriggerAxis() * MAX_VELO)
-								.withVelocityX(-driverController.getLeftX() * MAX_VELO)
-								.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO)));
+    public RobotContainer() {
+        // configure PID for heading controller
+        driveAngle.HeadingController.setP(0.1);
 
-		Trigger subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
-				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
+        elevator = new Elevator();
+        // rollers = new Rollers(() -> superstructure.getState());
+        arm = new Arm();
+        dt = TunerConstants.createDrivetrain();
 
-		autoChooser = AutoBuilder.buildAutoChooser();
-		SmartDashboard.putData("Auto Chooser", autoChooser);
+        Trigger subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
+                .and(() -> arm.isMotorAtTarget()).debounce(0.1);
 
-		// superstructure = new Superstructure(
-		// elevator,
-		// rollers,
-		// arm,
-		// // TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
-		// () -> target,
-		// () -> algaeTarget,
-		// driverController.leftBumper(),
-		// driverController.leftBumper(),
-		// driverController.rightBumper(),
-		// driverController.leftBumper(),
-		// driverController.rightTrigger(),
-		// driverController.rightBumper(),
-		// // TODO: BIND TO BUTTONS
-		// operatorController.leftBumper(),
-		// operatorController.rightBumper(),
-		// operatorController.leftTrigger());
+        autoChooser = AutoBuilder.buildAutoChooser();
+        SmartDashboard.putData("Auto Chooser", autoChooser);
 
-		// goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
-		// new WaitUntilCommand(subsystemsAtSetpoints));
-		// dunk = Commands.sequence(superstructure.forceState(SuperState.SCORE_CORAL),
-		// new WaitUntilCommand(subsystemsAtSetpoints));
-		// eject = Commands.sequence(superstructure.forceState(SuperState.SPIT), new
-		// WaitCommand(0.5));
-		// intake = Commands.sequence(superstructure.forceState(SuperState.INTAKE_HP));
+        // superstructure = new Superstructure(
+        // elevator,
+        // rollers,
+        // arm,
+        // // TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
+        // () -> target,
+        // () -> algaeTarget,
+        // driverController.leftBumper(),
+        // driverController.leftBumper(),
+        // driverController.rightBumper(),
+        // driverController.leftBumper(),
+        // driverController.rightTrigger(),
+        // driverController.rightBumper(),
+        // // TODO: BIND TO BUTTONS
+        // operatorController.leftBumper(),
+        // operatorController.rightBumper(),
+        // operatorController.leftTrigger());
 
-		// NamedCommands.registerCommand("Go to scoring", goToL4);
-		// NamedCommands.registerCommand("Dunk", dunk);
-		// NamedCommands.registerCommand("Eject", eject);
-		// NamedCommands.registerCommand("Intake", intake);
+        // goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
+        // new WaitUntilCommand(subsystemsAtSetpoints));
+        // dunk = Commands.sequence(superstructure.forceState(SuperState.SCORE_CORAL),
+        // new WaitUntilCommand(subsystemsAtSetpoints));
+        // eject = Commands.sequence(superstructure.forceState(SuperState.SPIT), new
+        // WaitCommand(0.5));
+        // intake = Commands.sequence(superstructure.forceState(SuperState.INTAKE_HP));
 
-		// rollers.configureStateSupplierTrigger();
+        // NamedCommands.registerCommand("Go to scoring", goToL4);
+        // NamedCommands.registerCommand("Dunk", dunk);
+        // NamedCommands.registerCommand("Eject", eject);
+        // NamedCommands.registerCommand("Intake", intake);
 
-	}
+        // rollers.configureStateSupplierTrigger();
 
-	public enum LevelTarget {
-		L1,
-		L2,
-		L3,
-		L4
-	}
+        driveFacingSetAngle = Commands.runOnce(() -> dt.setDefaultCommand(dt.applyRequest(
+                () -> drive
+                        .withVelocityX(-driverController.getLeftTriggerAxis()
+                                * MAX_VELO)
+                        .withVelocityX(-driverController.getLeftX() * MAX_VELO)
+                        .withRotationalRate(-driverController.getRightX()
+                                * MAX_ANGULAR_VELO))));
 
-	public enum AlgaeTarget {
-		PROCESSOR,
-		NET
-	}
+        driveFieldCentric = Commands.runOnce(() -> dt.setDefaultCommand(dt.applyRequest(
+                () -> drive.withVelocityX(-driverController.getLeftTriggerAxis() * MAX_VELO)
+                        .withVelocityX(-driverController.getLeftX() * MAX_VELO)
+                        .withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO))));
 
-	public void configureBindings() {
+        dt.setDefaultCommand(driveFieldCentric);
 
-		operatorController.a().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
-		operatorController.b().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));
-		operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
-		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
+    }
 
-		driverController.a().onTrue(elevator.goToPosition(() -> 10));
-		driverController.x().onTrue(elevator.goToPosition(() -> 0));
+    public enum LevelTarget {
+        L1,
+        L2,
+        L3,
+        L4
+    }
 
-		// toggle driving to face angle or not
-		driverController.y().onTrue(
-				Commands.runOnce(() -> driveFacingAngle = !driveFacingAngle).andThen(
-						Commands.either(
-								Commands.runOnce(
-										() -> dt.setDefaultCommand(
-												dt.applyRequest(
-														() -> driveAngle
-																.withVelocityX(-driverController.getLeftTriggerAxis()
-																		* MAX_VELO)
-																.withVelocityX(
-																		-driverController.getLeftX() * MAX_VELO)))),
+    public enum AlgaeTarget {
+        PROCESSOR,
+        NET
+    }
 
-								Commands.runOnce(
-										() -> dt.setDefaultCommand(
-												dt.applyRequest(
-														() -> drive
-																.withVelocityX(-driverController.getLeftTriggerAxis()
-																		* MAX_VELO)
-																.withVelocityX(-driverController.getLeftX() * MAX_VELO)
-																.withRotationalRate(-driverController.getRightX()
-																		* MAX_ANGULAR_VELO)))),
-								() -> driveFacingAngle
+    public void configureBindings() {
 
-						)));
+        operatorController.a().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
+        operatorController.b().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));
+        operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
+        operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
 
-		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
+        driverController.a().onTrue(elevator.goToPosition(() -> 10));
+        driverController.x().onTrue(elevator.goToPosition(() -> 0));
 
-		// brake when we aren't driving
-		new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)
-				.and(() -> Math.abs(driverController.getLeftY()) < 0.1)
-				.and(() -> Math.abs(driverController.getRightX()) < 0.1)
-				.whileTrue(dt.applyRequest(() -> brake));
+        // toggle driving to face angle or not
+        driverController.y().onTrue(Commands.runOnce(() -> driveFacingAngle = !driveFacingAngle));
+        new Trigger(() -> (Math.abs(driverController.getRightX()) > 0.05))
+                .onTrue(Commands.runOnce(() -> driveFacingAngle = false));
 
-	}
+        new Trigger(() -> driveFacingAngle).onTrue(driveFacingSetAngle).onFalse(driveFieldCentric);
+        driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
 
-	public Command getAutonomousCommand() {
+        // brake when we aren't driving
+        new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)
+                .and(() -> Math.abs(driverController.getLeftY()) < 0.1)
+                .and(() -> Math.abs(driverController.getRightX()) < 0.1)
+                .whileTrue(dt.applyRequest(() -> brake));
 
-		return Commands.none();
-	}
+    }
 
-	public void buildAutos() {
-		try {
-			leftAuto = Commands.sequence(
-					Commands.parallel(
-							AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("right start score preload")),
-							goToL4),
-					new WaitCommand(0.5),
-					dunk,
-					new WaitCommand(0.5),
-					eject,
-					Commands.parallel(
-							AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("preload to HP")),
-							Commands.sequence(new WaitCommand(0.5), intake)),
-					new WaitCommand(1),
-					Commands.parallel(
-							AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("hp to score 1")),
-							goToL4),
-					new WaitCommand(0.5),
-					dunk,
-					new WaitCommand(0.5),
-					eject);
-		} catch (Exception e) {
-		}
-	}
+    public Command getAutonomousCommand() {
+
+        return Commands.none();
+    }
+
+    public void buildAutos() {
+        try {
+            leftAuto = Commands.sequence(
+                    Commands.parallel(
+                            AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("right start score preload")),
+                            goToL4),
+                    new WaitCommand(0.5),
+                    dunk,
+                    new WaitCommand(0.5),
+                    eject,
+                    Commands.parallel(
+                            AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("preload to HP")),
+                            Commands.sequence(new WaitCommand(0.5), intake)),
+                    new WaitCommand(1),
+                    Commands.parallel(
+                            AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("hp to score 1")),
+                            goToL4),
+                    new WaitCommand(0.5),
+                    dunk,
+                    new WaitCommand(0.5),
+                    eject);
+        } catch (Exception e) {
+        }
+    }
 
 }

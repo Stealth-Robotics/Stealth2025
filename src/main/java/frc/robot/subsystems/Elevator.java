@@ -132,9 +132,4 @@ public class Elevator extends SubsystemBase {
         motionMagicVoltage.Position = pos;
         motor1.setControl(motionMagicVoltage);
     }
-
-    public Command runDutyCycle(DoubleSupplier dutyCycle) {
-        return this.run(() -> motor1.setControl(new DutyCycleOut(dutyCycle.getAsDouble())));
-    }
-
 }

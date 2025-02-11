@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
@@ -24,7 +25,7 @@ public class Elevator extends SubsystemBase {
     private final TalonFX motor2;
 
     @NotLogged
-    private final double kP = 0.1,
+    private final double kP = 5,
             kI = 0.0,
             kD = 0.0,
 
@@ -32,8 +33,8 @@ public class Elevator extends SubsystemBase {
             kV = 0.0,
             kG = 0.0,
             // TODO tune
-            MOTION_MAGIC_ACCELERATION = 8,
-            MOTION_MAGIC_CRUISE_VELOCITY = 4;
+            MOTION_MAGIC_ACCELERATION = 40,
+            MOTION_MAGIC_CRUISE_VELOCITY = 20;
 
     private final double TOLERANCE = 0.0; // todo tune
 
@@ -70,9 +71,10 @@ public class Elevator extends SubsystemBase {
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
     public Elevator() {
-        motor1 = new TalonFX(0);
-        motor2 = new TalonFX(0);
-        elevatorTargetPosition = motor1.getPosition().getValueAsDouble();
+        motor1 = new TalonFX(2);
+        motor2 = new TalonFX(3);
+        elevatorTargetPosition = 0;
+        motor1.setPosition(0);
         applyConfigs();
     }
 
@@ -98,7 +100,7 @@ public class Elevator extends SubsystemBase {
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         motor2.getConfigurator().apply(config);
 
-        motor2.setControl(new Follower(motor1.getDeviceID(), false));
+        motor2.setControl(new Follower(motor1.getDeviceID(), true));
     }
 
     public Command goToPositionInInches(DoubleSupplier inches) {
@@ -129,6 +131,10 @@ public class Elevator extends SubsystemBase {
     private void setElevatorTargetPosition(double pos) {
         motionMagicVoltage.Position = pos;
         motor1.setControl(motionMagicVoltage);
+    }
+
+    public Command runDutyCycle(DoubleSupplier dutyCycle) {
+        return this.run(() -> motor1.setControl(new DutyCycleOut(dutyCycle.getAsDouble())));
     }
 
 }

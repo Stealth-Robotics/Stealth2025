@@ -60,7 +60,7 @@ public class Arm extends SubsystemBase {
 
     public Arm() {
         // TODO: Find CAN IDs
-        armMotor = new TalonFX(0);
+        armMotor = new TalonFX(99);
         canCoder = new CANcoder(CANCODER_CAN_ID);
         armMotorConfiguration = new TalonFXConfiguration();
         canCoderConfiguration = new CANcoderConfiguration();

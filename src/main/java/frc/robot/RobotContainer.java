@@ -34,7 +34,7 @@ public class RobotContainer {
 	CommandXboxController driverController = new CommandXboxController(0);
 	CommandXboxController operatorController = new CommandXboxController(1);
 	Superstructure superstructure;
-	Rollers rollers;
+	// Rollers rollers;
 	Elevator elevator;
 	Arm arm;
 	CommandSwerveDrivetrain dt;
@@ -54,7 +54,7 @@ public class RobotContainer {
 	public RobotContainer() {
 
 		elevator = new Elevator();
-		rollers = new Rollers(() -> superstructure.getState());
+		// rollers = new Rollers(() -> superstructure.getState());
 		arm = new Arm();
 		dt = TunerConstants.createDrivetrain();
 		// dashboard = new Dashboard();
@@ -65,37 +65,38 @@ public class RobotContainer {
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("Auto Chooser", autoChooser);
 
-		superstructure = new Superstructure(
-				elevator,
-				rollers,
-				arm,
-				// TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
-				() -> target,
-				() -> algaeTarget,
-				driverController.leftBumper(),
-				driverController.leftBumper(),
-				driverController.rightBumper(),
-				driverController.leftBumper(),
-				driverController.rightTrigger(),
-				driverController.rightBumper(),
-				// TODO: BIND TO BUTTONS
-				operatorController.leftBumper(),
-				operatorController.rightBumper(),
-				operatorController.leftTrigger());
+		// superstructure = new Superstructure(
+		// elevator,
+		// rollers,
+		// arm,
+		// // TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
+		// () -> target,
+		// () -> algaeTarget,
+		// driverController.leftBumper(),
+		// driverController.leftBumper(),
+		// driverController.rightBumper(),
+		// driverController.leftBumper(),
+		// driverController.rightTrigger(),
+		// driverController.rightBumper(),
+		// // TODO: BIND TO BUTTONS
+		// operatorController.leftBumper(),
+		// operatorController.rightBumper(),
+		// operatorController.leftTrigger());
 
-		goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
-				new WaitUntilCommand(subsystemsAtSetpoints));
-		dunk = Commands.sequence(superstructure.forceState(SuperState.SCORE_CORAL),
-				new WaitUntilCommand(subsystemsAtSetpoints));
-		eject = Commands.sequence(superstructure.forceState(SuperState.SPIT), new WaitCommand(0.5));
-		intake = Commands.sequence(superstructure.forceState(SuperState.INTAKE_HP));
+		// goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
+		// new WaitUntilCommand(subsystemsAtSetpoints));
+		// dunk = Commands.sequence(superstructure.forceState(SuperState.SCORE_CORAL),
+		// new WaitUntilCommand(subsystemsAtSetpoints));
+		// eject = Commands.sequence(superstructure.forceState(SuperState.SPIT), new
+		// WaitCommand(0.5));
+		// intake = Commands.sequence(superstructure.forceState(SuperState.INTAKE_HP));
 
-		NamedCommands.registerCommand("Go to scoring", goToL4);
-		NamedCommands.registerCommand("Dunk", dunk);
-		NamedCommands.registerCommand("Eject", eject);
-		NamedCommands.registerCommand("Intake", intake);
+		// NamedCommands.registerCommand("Go to scoring", goToL4);
+		// NamedCommands.registerCommand("Dunk", dunk);
+		// NamedCommands.registerCommand("Eject", eject);
+		// NamedCommands.registerCommand("Intake", intake);
 
-		rollers.configureStateSupplierTrigger();
+		// rollers.configureStateSupplierTrigger();
 
 	}
 
@@ -117,13 +118,14 @@ public class RobotContainer {
 		operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
 		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
 
-		driverController.a().onTrue(elevator.goToPosition(() -> 500));
+		driverController.a().onTrue(elevator.goToPosition(() -> 10));
 		driverController.x().onTrue(elevator.goToPosition(() -> 0));
+
 	}
 
 	public Command getAutonomousCommand() {
 
-		return AutoBuilder.buildAuto("Test Auto");
+		return Commands.none();
 	}
 
 	public void buildAutos() {

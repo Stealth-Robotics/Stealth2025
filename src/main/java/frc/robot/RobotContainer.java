@@ -4,15 +4,26 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degree;
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 import java.io.IOException;
 
 import org.json.simple.parser.ParseException;
 
+import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -31,6 +42,20 @@ import frc.robot.subsystems.Superstructure.SuperState;
 
 @Logged
 public class RobotContainer {
+	private final double MAX_VELO = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+	private final double MAX_ANGULAR_VELO = RotationsPerSecond.of(1.5).in(RadiansPerSecond);
+
+	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+			.withDeadband(MAX_VELO * 0.1).withRotationalDeadband(MAX_ANGULAR_VELO * 0.1)
+			.withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
+	private final SwerveRequest.FieldCentricFacingAngle driveAngle = new SwerveRequest.FieldCentricFacingAngle()
+			.withDeadband(MAX_VELO * 0.1).withRotationalDeadband(MAX_ANGULAR_VELO * 0.1)
+			.withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+			.withTargetDirection(new Rotation2d(Radians.of(90).in(Degrees)));
+
+	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+
 	CommandXboxController driverController = new CommandXboxController(0);
 	CommandXboxController operatorController = new CommandXboxController(1);
 	Superstructure superstructure;
@@ -49,15 +74,25 @@ public class RobotContainer {
 	Command intake;
 	Command eject;
 
+	private boolean driveFacingAngle = false;
+
 	public Command leftAuto;
 
 	public RobotContainer() {
+		// configure PID for heading controller
+		driveAngle.HeadingController.setP(0.1);
 
 		elevator = new Elevator();
 		// rollers = new Rollers(() -> superstructure.getState());
 		arm = new Arm();
 		dt = TunerConstants.createDrivetrain();
 		// dashboard = new Dashboard();
+
+		dt.setDefaultCommand(
+				dt.applyRequest(
+						() -> drive.withVelocityX(-driverController.getLeftTriggerAxis() * MAX_VELO)
+								.withVelocityX(-driverController.getLeftX() * MAX_VELO)
+								.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO)));
 
 		Trigger subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
@@ -113,6 +148,7 @@ public class RobotContainer {
 	}
 
 	public void configureBindings() {
+
 		operatorController.a().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
 		operatorController.b().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));
 		operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
@@ -120,6 +156,40 @@ public class RobotContainer {
 
 		driverController.a().onTrue(elevator.goToPosition(() -> 10));
 		driverController.x().onTrue(elevator.goToPosition(() -> 0));
+
+		// toggle driving to face angle or not
+		driverController.y().onTrue(
+				Commands.runOnce(() -> driveFacingAngle = !driveFacingAngle).andThen(
+						Commands.either(
+								Commands.runOnce(
+										() -> dt.setDefaultCommand(
+												dt.applyRequest(
+														() -> driveAngle
+																.withVelocityX(-driverController.getLeftTriggerAxis()
+																		* MAX_VELO)
+																.withVelocityX(
+																		-driverController.getLeftX() * MAX_VELO)))),
+
+								Commands.runOnce(
+										() -> dt.setDefaultCommand(
+												dt.applyRequest(
+														() -> drive
+																.withVelocityX(-driverController.getLeftTriggerAxis()
+																		* MAX_VELO)
+																.withVelocityX(-driverController.getLeftX() * MAX_VELO)
+																.withRotationalRate(-driverController.getRightX()
+																		* MAX_ANGULAR_VELO)))),
+								() -> driveFacingAngle
+
+						)));
+
+		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
+
+		// brake when we aren't driving
+		new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)
+				.and(() -> Math.abs(driverController.getLeftY()) < 0.1)
+				.and(() -> Math.abs(driverController.getRightX()) < 0.1)
+				.whileTrue(dt.applyRequest(() -> brake));
 
 	}
 

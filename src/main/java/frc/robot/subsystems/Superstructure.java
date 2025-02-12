@@ -48,6 +48,7 @@ public class Superstructure {
         private Trigger removeAlgaeHighTrigger;
         private Trigger removeAlgaeLowTrigger;
         private Trigger cancelScoringTrigger;
+        private Trigger overrideBeamBreakTrigger;
 
         private final Trigger gamepieceDetectedInStagingArea;
 
@@ -79,7 +80,8 @@ public class Superstructure {
                         Trigger stowTrigger,
                         Trigger removeAlgaeHighTrigger,
                         Trigger removeAlgaeLowTrigger,
-                        Trigger cancelScoringTrigger) {
+                        Trigger cancelScoringTrigger,
+                        Trigger overrideBeamBreakTrigger) {
                 this.elevator = elevator;
                 this.rollers = rollers;
                 this.arm = arm;
@@ -95,6 +97,7 @@ public class Superstructure {
                 this.removeAlgaeHighTrigger = removeAlgaeHighTrigger;
                 this.removeAlgaeLowTrigger = removeAlgaeLowTrigger;
                 this.cancelScoringTrigger = cancelScoringTrigger;
+                this.overrideBeamBreakTrigger = overrideBeamBreakTrigger;
 
                 // TODO FIND CAN ID
                 tof = new TimeOfFlight(0);
@@ -154,7 +157,8 @@ public class Superstructure {
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
                                 .whileTrue(transfer.setVoltage(() -> 3)) // todo: test voltage that works
                                 .and(() -> arm.isMotorAtTarget())
-                                .and(gamepieceDetectedInStagingArea)
+                                .and(gamepieceDetectedInStagingArea.or(overrideBeamBreakTrigger)) // ability to override
+                                                                                                  // beambreak
                                 .onTrue(this.forceState(SuperState.GRAB_CORAL));
 
                 stateTriggers.get(SuperState.GRAB_CORAL)

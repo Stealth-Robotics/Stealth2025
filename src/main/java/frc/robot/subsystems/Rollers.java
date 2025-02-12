@@ -40,6 +40,8 @@ public class Rollers extends SubsystemBase {
 
     private final Supplier<SuperState> stateSupplier;
 
+    private final VoltageOut voltageOut;
+
     public Rollers(Trigger trigger, Supplier<SuperState> stateSupplier) {
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // todo check
         config.CurrentLimits.SupplyCurrentLimit = 30; // limit current so we dont draw too much when stalling rollers to
@@ -47,6 +49,7 @@ public class Rollers extends SubsystemBase {
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
         motor.getConfigurator().apply(config);
         this.trigger = trigger;
+        voltageOut = new VoltageOut(0);
 
         this.stateSupplier = stateSupplier;
 
@@ -65,10 +68,11 @@ public class Rollers extends SubsystemBase {
     public Command setRollerVoltage(double voltage) {
         // we no longer have a gamepiece if the rollers have been reversed
         return this.runOnce(() -> {
+            voltageOut.Output = voltage;
             if (voltage < 0) {
                 hasGamepiece = false;
             }
-            motor.setControl(new VoltageOut(voltage));
+            motor.setControl(voltageOut);
         });
     }
 

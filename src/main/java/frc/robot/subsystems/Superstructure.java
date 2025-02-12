@@ -63,10 +63,12 @@ public class Superstructure {
         private final Elevator elevator;
         private final Rollers rollers;
         private final Arm arm;
+        private final Transfer transfer;
 
         public Superstructure(Elevator elevator,
                         Rollers rollers,
                         Arm arm,
+                        Transfer transfer,
                         Supplier<LevelTarget> levelTarget,
                         Supplier<AlgaeTarget> algaeTarget,
                         Trigger preScoreTrigger,
@@ -81,6 +83,7 @@ public class Superstructure {
                 this.elevator = elevator;
                 this.rollers = rollers;
                 this.arm = arm;
+                this.transfer = transfer;
                 this.levelTarget = levelTarget;
                 this.algaeTarget = algaeTarget;
                 this.preScoreTrigger = preScoreTrigger;
@@ -149,6 +152,7 @@ public class Superstructure {
                 stateTriggers.get(SuperState.INTAKE_HP)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.INTAKE_HP_INCHES))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
+                                .whileTrue(transfer.setVoltage(() -> 3)) // todo: test voltage that works
                                 .and(() -> arm.isMotorAtTarget())
                                 .and(gamepieceDetectedInStagingArea)
                                 .onTrue(this.forceState(SuperState.GRAB_CORAL));
@@ -159,6 +163,7 @@ public class Superstructure {
                                 .and(() -> rollers.getHasGamepiece())
                                 // need to experiment with good voltage that will keep coral in
                                 .onTrue(rollers.setRollerVoltage(0.5))
+                                .onTrue(transfer.setVoltage(() -> 0))
                                 .onTrue(this.forceState(SuperState.READY_SCORE_CORAL));
 
                 stateTriggers.get(SuperState.REMOVE_ALGAE_HIGH)

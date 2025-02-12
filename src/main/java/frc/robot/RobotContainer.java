@@ -39,6 +39,7 @@ import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Rollers;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Superstructure.SuperState;
+import frc.robot.subsystems.Transfer;
 
 @Logged
 public class RobotContainer {
@@ -62,12 +63,13 @@ public class RobotContainer {
 	// Rollers rollers;
 	Elevator elevator;
 	Arm arm;
+	Transfer transfer;
 	CommandSwerveDrivetrain dt;
 
 	LevelTarget target = LevelTarget.L4;
 	AlgaeTarget algaeTarget = AlgaeTarget.PROCESSOR;
 
-	private final SendableChooser<Command> autoChooser;
+	// private final SendableChooser<Command> autoChooser;
 
 	Command goToL4;
 	Command dunk;
@@ -88,13 +90,14 @@ public class RobotContainer {
 		elevator = new Elevator();
 		// rollers = new Rollers(() -> superstructure.getState());
 		arm = new Arm();
+		transfer = new Transfer();
 		dt = TunerConstants.createDrivetrain();
 
 		Trigger subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
 
-		autoChooser = AutoBuilder.buildAutoChooser();
-		SmartDashboard.putData("Auto Chooser", autoChooser);
+		// autoChooser = AutoBuilder.buildAutoChooser();
+		// SmartDashboard.putData("Auto Chooser", autoChooser);
 
 		// superstructure = new Superstructure(
 		// elevator,
@@ -130,17 +133,18 @@ public class RobotContainer {
 		// rollers.configureStateSupplierTrigger();
 
 		driveFacingSetAngle = Commands.runOnce(() -> dt.setDefaultCommand(dt.applyRequest(
-				() -> drive
+				() -> driveAngle
 						.withVelocityX(-driverController.getLeftTriggerAxis()
 								* MAX_VELO)
-						.withVelocityX(-driverController.getLeftX() * MAX_VELO)
-						.withRotationalRate(-driverController.getRightX()
-								* MAX_ANGULAR_VELO))));
+						.withVelocityX(-driverController.getLeftX() * MAX_VELO))),
+
+				dt);
 
 		driveFieldCentric = Commands.runOnce(() -> dt.setDefaultCommand(dt.applyRequest(
 				() -> drive.withVelocityX(-driverController.getLeftTriggerAxis() * MAX_VELO)
 						.withVelocityX(-driverController.getLeftX() * MAX_VELO)
-						.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO))));
+						.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO))),
+				dt);
 
 		dt.setDefaultCommand(driveFieldCentric);
 
@@ -165,7 +169,7 @@ public class RobotContainer {
 		operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
 		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
 
-		driverController.a().onTrue(elevator.goToPosition(() -> 10));
+		driverController.a().onTrue(elevator.goToPosition(() -> 40));
 		driverController.x().onTrue(elevator.goToPosition(() -> 0));
 
 		// toggle driving to face angle or not
@@ -182,6 +186,9 @@ public class RobotContainer {
 				.and(() -> Math.abs(driverController.getRightX()) < 0.1)
 				.whileTrue(dt.applyRequest(() -> brake));
 
+		transfer.setDefaultCommand(transfer
+				.setDutyCycle(() -> (driverController.getLeftTriggerAxis() - driverController.getRightTriggerAxis())));
+
 	}
 
 	public Command getAutonomousCommand() {
@@ -189,29 +196,32 @@ public class RobotContainer {
 		return Commands.none();
 	}
 
-	public void buildAutos() {
-		try {
-			leftAuto = Commands.sequence(
-					Commands.parallel(
-							AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("right start score preload")),
-							goToL4),
-					new WaitCommand(0.5),
-					dunk,
-					new WaitCommand(0.5),
-					eject,
-					Commands.parallel(
-							AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("preload to HP")),
-							Commands.sequence(new WaitCommand(0.5), intake)),
-					new WaitCommand(1),
-					Commands.parallel(
-							AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("hp to score 1")),
-							goToL4),
-					new WaitCommand(0.5),
-					dunk,
-					new WaitCommand(0.5),
-					eject);
-		} catch (Exception e) {
-		}
-	}
+	// public void buildAutos() {
+	// try {
+	// leftAuto = Commands.sequence(
+	// Commands.parallel(
+	// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("right start
+	// score preload")),
+	// goToL4),
+	// new WaitCommand(0.5),
+	// dunk,
+	// new WaitCommand(0.5),
+	// eject,
+	// Commands.parallel(
+	// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("preload to
+	// HP")),
+	// Commands.sequence(new WaitCommand(0.5), intake)),
+	// new WaitCommand(1),
+	// Commands.parallel(
+	// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("hp to score
+	// 1")),
+	// goToL4),
+	// new WaitCommand(0.5),
+	// dunk,
+	// new WaitCommand(0.5),
+	// eject);
+	// } catch (Exception e) {
+	// }
+	// }
 
 }

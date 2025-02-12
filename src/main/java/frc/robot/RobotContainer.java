@@ -76,10 +76,7 @@ public class RobotContainer {
 	Command intake;
 	Command eject;
 
-	Command driveFacingSetAngle;
 	Command driveFieldCentric;
-
-	private boolean driveFacingAngle = false;
 
 	public Command leftAuto;
 
@@ -132,19 +129,10 @@ public class RobotContainer {
 
 		// rollers.configureStateSupplierTrigger();
 
-		driveFacingSetAngle = Commands.runOnce(() -> dt.setDefaultCommand(dt.applyRequest(
-				() -> driveAngle
-						.withVelocityX(-driverController.getLeftTriggerAxis()
-								* MAX_VELO)
-						.withVelocityX(-driverController.getLeftX() * MAX_VELO))),
-
-				dt);
-
-		driveFieldCentric = Commands.runOnce(() -> dt.setDefaultCommand(dt.applyRequest(
+		driveFieldCentric = dt.applyRequest(
 				() -> drive.withVelocityX(-driverController.getLeftTriggerAxis() * MAX_VELO)
 						.withVelocityX(-driverController.getLeftX() * MAX_VELO)
-						.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO))),
-				dt);
+						.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO));
 
 		dt.setDefaultCommand(driveFieldCentric);
 
@@ -172,19 +160,14 @@ public class RobotContainer {
 		driverController.a().onTrue(elevator.goToPosition(() -> 40));
 		driverController.x().onTrue(elevator.goToPosition(() -> 0));
 
-		// toggle driving to face angle or not
-		driverController.y().onTrue(Commands.runOnce(() -> driveFacingAngle = !driveFacingAngle));
-		new Trigger(() -> (Math.abs(driverController.getRightX()) > 0.05))
-				.onTrue(Commands.runOnce(() -> driveFacingAngle = false));
-
-		new Trigger(() -> driveFacingAngle).onTrue(driveFacingSetAngle).onFalse(driveFieldCentric);
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
 
 		// brake when we aren't driving
 		new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)
 				.and(() -> Math.abs(driverController.getLeftY()) < 0.1)
 				.and(() -> Math.abs(driverController.getRightX()) < 0.1)
-				.whileTrue(dt.applyRequest(() -> brake));
+				.whileTrue(dt.applyRequest(() -> brake))
+				.onFalse(driveFieldCentric);
 
 		transfer.setDefaultCommand(transfer
 				.setDutyCycle(() -> (driverController.getLeftTriggerAxis() - driverController.getRightTriggerAxis())));

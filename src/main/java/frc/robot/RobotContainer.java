@@ -60,7 +60,7 @@ public class RobotContainer {
 	CommandXboxController driverController = new CommandXboxController(0);
 	CommandXboxController operatorController = new CommandXboxController(1);
 	Superstructure superstructure;
-	// Rollers rollers;
+	Rollers rollers;
 	Elevator elevator;
 	Arm arm;
 	Transfer transfer;
@@ -85,7 +85,7 @@ public class RobotContainer {
 		driveAngle.HeadingController.setP(0.1);
 
 		elevator = new Elevator();
-		// rollers = new Rollers(() -> superstructure.getState());
+		rollers = new Rollers(() -> SuperState.IDLE);
 		arm = new Arm();
 		transfer = new Transfer();
 		dt = TunerConstants.createDrivetrain();
@@ -130,8 +130,8 @@ public class RobotContainer {
 		// rollers.configureStateSupplierTrigger();
 
 		driveFieldCentric = dt.applyRequest(
-				() -> drive.withVelocityX(-driverController.getLeftTriggerAxis() * MAX_VELO)
-						.withVelocityX(-driverController.getLeftX() * MAX_VELO)
+				() -> drive.withVelocityY(-driverController.getLeftX() * MAX_VELO)
+						.withVelocityX(-driverController.getLeftY() * MAX_VELO)
 						.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO));
 
 		dt.setDefaultCommand(driveFieldCentric);
@@ -157,8 +157,10 @@ public class RobotContainer {
 		operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
 		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
 
-		driverController.a().onTrue(elevator.goToPosition(() -> 40));
-		driverController.x().onTrue(elevator.goToPosition(() -> 0));
+		driverController.a().onTrue(arm.rotateToPositionCommand(() -> 135).alongWith(elevator.goToPosition(() -> 15)));
+		driverController.x().onTrue(arm.rotateToPositionCommand(() -> 90).alongWith(elevator.goToPosition(() -> 0)));
+		driverController.y().onTrue(arm.rotateToPositionCommand(() -> -8)
+				.andThen(new WaitUntilCommand(() -> arm.isMotorAtTarget())).andThen(elevator.goToPosition(() -> 7)));
 
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
 
@@ -169,8 +171,10 @@ public class RobotContainer {
 				.whileTrue(dt.applyRequest(() -> brake))
 				.onFalse(driveFieldCentric);
 
-		transfer.setDefaultCommand(transfer
-				.setDutyCycle(() -> (driverController.getLeftTriggerAxis() - driverController.getRightTriggerAxis())));
+		rollers.setDefaultCommand(rollers
+				.setRollerVoltage(
+						() -> (12 * (driverController.getLeftTriggerAxis()
+								- driverController.getRightTriggerAxis()))));
 
 	}
 

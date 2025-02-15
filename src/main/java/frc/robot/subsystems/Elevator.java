@@ -90,7 +90,7 @@ public class Elevator extends SubsystemBase {
 
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
 
-        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // todo change
 
         config.MotionMagic.MotionMagicAcceleration = MOTION_MAGIC_ACCELERATION;

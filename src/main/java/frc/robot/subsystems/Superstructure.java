@@ -121,7 +121,7 @@ public class Superstructure {
                 // Idle -> stow
                 stateTriggers.get(SuperState.IDLE)
                                 // stop subsystems when we are in idle state
-                                .whileTrue(elevator.stopElevator())
+                                // .whileTrue(elevator.stopElevator())
                                 // if we choose to stow, go to stow state
                                 .and(stowTrigger)
                                 .onFalse(this.forceState(SuperState.STOW));

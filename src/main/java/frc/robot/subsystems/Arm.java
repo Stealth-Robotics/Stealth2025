@@ -8,9 +8,13 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Unit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -22,17 +26,17 @@ public class Arm extends SubsystemBase {
 
     // TODO: Find CANcoder CAN ID
     @NotLogged
-    private final int CANCODER_CAN_ID = 0;
+    private final int CANCODER_CAN_ID = 36;
 
     @NotLogged
-    private final double kP = 0,
+    private final double kP = 100,
             kI = 0,
             kD = 0,
-            kTolerance = 0.5, // Tolerance in degrees
-            MOTION_MAGIC_ACCELERATION = 0,
-            MOTION_MAGIC_CRUISE_VELOCITY = 0,
+            kTolerance = 1, // Tolerance in degrees
+            MOTION_MAGIC_ACCELERATION = 8,
+            MOTION_MAGIC_CRUISE_VELOCITY = 4,
             DEGREES_TO_TICKS = 1 / 360.0,
-            ZERO_OFFSET = 0;
+            ZERO_OFFSET = 0.12;
 
     private final TalonFXConfiguration armMotorConfiguration;
     private final CANcoderConfiguration canCoderConfiguration;
@@ -43,7 +47,7 @@ public class Arm extends SubsystemBase {
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
     @NotLogged
-    public static final double INTAKE_HP_DEGREES = 180, // todo tune
+    public static final double INTAKE_HP_DEGREES = 0, // todo tune
             PRE_L1_DEGREES = 165, // todo tune
             PRE_L2_DEGREES = 15, // todo tune
             PRE_L3_DEGREES = 15, // todo tune
@@ -60,7 +64,7 @@ public class Arm extends SubsystemBase {
 
     public Arm() {
         // TODO: Find CAN IDs
-        armMotor = new TalonFX(99);
+        armMotor = new TalonFX(36);
         canCoder = new CANcoder(CANCODER_CAN_ID);
         armMotorConfiguration = new TalonFXConfiguration();
         canCoderConfiguration = new CANcoderConfiguration();
@@ -76,11 +80,13 @@ public class Arm extends SubsystemBase {
         armMotorConfiguration.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
 
         canCoderConfiguration.MagnetSensor.MagnetOffset = ZERO_OFFSET;
+        canCoderConfiguration.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
 
         armMotorConfiguration.Feedback.FeedbackRemoteSensorID = CANCODER_CAN_ID;
         armMotorConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
         armMotorConfiguration.Feedback.SensorToMechanismRatio = 1;
         armMotorConfiguration.Feedback.FeedbackRotorOffset = ZERO_OFFSET;
+        armMotorConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
         armMotor.getConfigurator().apply(armMotorConfiguration);
         canCoder.getConfigurator().apply(canCoderConfiguration);
@@ -88,11 +94,11 @@ public class Arm extends SubsystemBase {
 
     // made public so this is logged
     public double getArmPosition() {
-        return canCoder.getPosition().getValueAsDouble();
+        return Units.rotationsToDegrees(canCoder.getPosition().getValueAsDouble());
     }
 
-    private double getTargetPosition() {
-        return motionMagicVoltage.Position;
+    public double getTargetPosition() {
+        return Units.rotationsToDegrees(motionMagicVoltage.Position);
     }
 
     public boolean isMotorAtTarget() {

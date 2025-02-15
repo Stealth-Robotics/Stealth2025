@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.DoubleSummaryStatistics;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -22,7 +24,7 @@ import frc.robot.subsystems.Superstructure.SuperState;
 
 public class Rollers extends SubsystemBase {
 
-    private final TalonFX motor = new TalonFX(0); // todo: change the can id
+    private final TalonFX motor = new TalonFX(28); // todo: change the can id
     private final TalonFXConfiguration config = new TalonFXConfiguration();
 
     private boolean hasGamepiece = false;
@@ -63,6 +65,17 @@ public class Rollers extends SubsystemBase {
     public void configureStateSupplierTrigger() {
         stateSupplierTrigger = new Trigger(() -> stateSupplier.get() == SuperState.INTAKE_HP)
                 .onTrue(Commands.runOnce(() -> this.hasGamepiece = false));
+    }
+
+    public Command setRollerVoltage(DoubleSupplier voltage) {
+        // we no longer have a gamepiece if the rollers have been reversed
+        return this.runOnce(() -> {
+            voltageOut.Output = voltage.getAsDouble();
+            if (voltage.getAsDouble() < 0) {
+                hasGamepiece = false;
+            }
+            motor.setControl(voltageOut);
+        });
     }
 
     public Command setRollerVoltage(double voltage) {

@@ -27,6 +27,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
@@ -151,6 +152,10 @@ public class RobotContainer {
 	}
 
 	public void configureBindings() {
+		// this gets run in teleopInit, so it should stop subsystems from moving on
+		// enable
+		CommandScheduler.getInstance().schedule(arm.neutral());
+		CommandScheduler.getInstance().schedule(elevator.stopElevator());
 
 		operatorController.a().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
 		operatorController.b().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));

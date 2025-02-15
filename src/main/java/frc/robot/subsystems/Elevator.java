@@ -132,4 +132,5 @@ public class Elevator extends SubsystemBase {
         motionMagicVoltage.Position = pos;
         motor1.setControl(motionMagicVoltage);
     }
+
 }

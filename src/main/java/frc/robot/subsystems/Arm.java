@@ -5,9 +5,11 @@ import java.util.function.DoubleSupplier;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
@@ -28,6 +30,7 @@ public class Arm extends SubsystemBase {
     @NotLogged
     private final int CANCODER_CAN_ID = 36;
 
+    private final NeutralOut neutralOut;
     @NotLogged
     private final double kP = 100,
             kI = 0,
@@ -35,14 +38,11 @@ public class Arm extends SubsystemBase {
             kTolerance = 1, // Tolerance in degrees
             MOTION_MAGIC_ACCELERATION = 8,
             MOTION_MAGIC_CRUISE_VELOCITY = 4,
-            DEGREES_TO_TICKS = 1 / 360.0,
+            DEGREES_TO_ROTATIONS = 1 / 360.0,
             ZERO_OFFSET = 0.12;
 
     private final TalonFXConfiguration armMotorConfiguration;
     private final CANcoderConfiguration canCoderConfiguration;
-
-    @SuppressWarnings("unused")
-    private double armTargetPosition = 0; // Target position as a variable for logging purposes
 
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
@@ -68,6 +68,7 @@ public class Arm extends SubsystemBase {
         canCoder = new CANcoder(CANCODER_CAN_ID);
         armMotorConfiguration = new TalonFXConfiguration();
         canCoderConfiguration = new CANcoderConfiguration();
+        neutralOut = new NeutralOut();
         applyConfigs();
     }
 
@@ -78,6 +79,7 @@ public class Arm extends SubsystemBase {
 
         armMotorConfiguration.MotionMagic.MotionMagicAcceleration = MOTION_MAGIC_ACCELERATION;
         armMotorConfiguration.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
+        armMotorConfiguration.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
         canCoderConfiguration.MagnetSensor.MagnetOffset = ZERO_OFFSET;
         canCoderConfiguration.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
@@ -85,7 +87,6 @@ public class Arm extends SubsystemBase {
         armMotorConfiguration.Feedback.FeedbackRemoteSensorID = CANCODER_CAN_ID;
         armMotorConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
         armMotorConfiguration.Feedback.SensorToMechanismRatio = 1;
-        armMotorConfiguration.Feedback.FeedbackRotorOffset = ZERO_OFFSET;
         armMotorConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
         armMotor.getConfigurator().apply(armMotorConfiguration);
@@ -105,15 +106,18 @@ public class Arm extends SubsystemBase {
         return Math.abs(getArmPosition() - getTargetPosition()) <= kTolerance;
     }
 
-    private void setTargetPosition(double degrees) {
-        motionMagicVoltage.Position = degrees;
-        armTargetPosition = degrees;
+    private void setTargetPosition(double rotations) {
+        motionMagicVoltage.Position = rotations;
         armMotor.setControl(motionMagicVoltage);
     }
 
     public Command rotateToPositionCommand(DoubleSupplier degrees) {
-        return this.runOnce(() -> setTargetPosition(degrees.getAsDouble() * DEGREES_TO_TICKS));
+        return this.runOnce(() -> setTargetPosition(degrees.getAsDouble() * DEGREES_TO_ROTATIONS));
         // No WaitUntil because its handled in the SuperStructure
+    }
+
+    public Command neutral() {
+        return this.runOnce(() -> armMotor.setControl(neutralOut));
     }
 
 }

@@ -11,6 +11,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.epilogue.Logged;
@@ -80,6 +81,8 @@ public class Arm extends SubsystemBase {
         armMotorConfiguration.MotionMagic.MotionMagicAcceleration = MOTION_MAGIC_ACCELERATION;
         armMotorConfiguration.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
         armMotorConfiguration.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+
+        armMotorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         canCoderConfiguration.MagnetSensor.MagnetOffset = ZERO_OFFSET;
         canCoderConfiguration.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;

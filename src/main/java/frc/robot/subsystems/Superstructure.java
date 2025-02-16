@@ -198,21 +198,25 @@ public class Superstructure {
                 // AT FALSE FORCES TO WAIT UNTIL BUTTON IS ACTUALLY RELEASED, ON FALSE ONLY
                 // TRIGGERS TRUE WHEN SWITCHINGG FROM TRUE TO FALSE
                 stateTriggers.get(SuperState.READY_SCORE_CORAL)
+                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.STOWED_INCHES))
                                 .and(() -> levelTarget.get() == LevelTarget.L1)
                                 .and(preScoreTrigger)
                                 .onFalse(this.forceState(SuperState.PRE_L1));
 
                 stateTriggers.get(SuperState.READY_SCORE_CORAL)
+                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.STOWED_INCHES))
                                 .and(() -> levelTarget.get() == LevelTarget.L2)
                                 .and(preScoreTrigger)
                                 .onFalse(this.forceState(SuperState.PRE_L2));
 
                 stateTriggers.get(SuperState.READY_SCORE_CORAL)
+                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.STOWED_INCHES))
                                 .and(() -> levelTarget.get() == LevelTarget.L3)
                                 .and(preScoreTrigger)
                                 .onFalse(this.forceState(SuperState.PRE_L3));
 
                 stateTriggers.get(SuperState.READY_SCORE_CORAL)
+                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.STOWED_INCHES))
                                 .and(() -> levelTarget.get() == LevelTarget.L4)
                                 .and(preScoreTrigger)
                                 .onFalse(this.forceState(SuperState.PRE_L4));

@@ -40,21 +40,21 @@ public class Elevator extends SubsystemBase {
     private final double TOLERANCE = 0.0; // todo tune
 
     @NotLogged
-    public static final double INTAKE_HP_INCHES = 5.0, // todo tune
+    public static final double INTAKE_HP_INCHES = 24, // todo tune
             PRE_L1_INCHES = 20, // todo tune
-            PRE_L2_INCHES = 0.0, // todo tune
-            PRE_L3_INCHES = 0.0, // todo tune
-            PRE_L4_INCHES = 0.0, // todo tune
-            SCORE_L1_INCHES = 10.0, // todo tune
-            SCORE_L2_INCHES = 0.0, // todo tune
-            SCORE_L3_INCHES = 0.0, // todo tune
-            SCORE_L4_INCHES = 0.0, // todo tune
+            PRE_L2_INCHES = 25, // todo tune
+            PRE_L3_INCHES = 30, // todo tune
+            PRE_L4_INCHES = 60, // todo tune
+            SCORE_L1_INCHES = 15, // todo tune
+            SCORE_L2_INCHES = 20.0, // todo tune
+            SCORE_L3_INCHES = 25.0, // todo tune
+            SCORE_L4_INCHES = 50.0, // todo tune
             REMOVE_ALGAE_HIGH_INCHES = 0.0, // todo tune
             REMOVE_ALGAE_LOW_INCHES = 0.0, // todo tune
             PRE_PROCESSOR_INCHES = 0.0, // todo tune
             PRE_NET_INCHES = 0.0, // todo tune
-            GRAB_CORAL_INCHES = 0.0, // todo tune
-            STOWED_INCHES = 0.0; // todo tune
+            GRAB_CORAL_INCHES = 18.5, // todo tune
+            STOWED_INCHES = 24.0; // todo tune
 
     @NotLogged
     private final double MAX_EXTENSION_IN_INCHES = 0.0,

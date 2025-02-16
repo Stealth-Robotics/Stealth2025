@@ -48,20 +48,20 @@ public class Arm extends SubsystemBase {
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
     @NotLogged
-    public static final double INTAKE_HP_DEGREES = 0, // todo tune
-            PRE_L1_DEGREES = 165, // todo tune
-            PRE_L2_DEGREES = 15, // todo tune
-            PRE_L3_DEGREES = 15, // todo tune
-            PRE_L4_DEGREES = 70, // todo tune
-            SCORE_L1_DEGREES = 165, // todo tune
-            SCORE_L2_DEGREES = 20, // todo tune
-            SCORE_L3_DEGREES = 20, // todo tune
+    public static final double INTAKE_HP_DEGREES = -8, // todo tune
+            PRE_L1_DEGREES = 15, // todo tune
+            PRE_L2_DEGREES = 135, // todo tune
+            PRE_L3_DEGREES = 135, // todo tune
+            PRE_L4_DEGREES = 100, // todo tune
+            SCORE_L1_DEGREES = 15, // todo tune
+            SCORE_L2_DEGREES = 125, // todo tune
+            SCORE_L3_DEGREES = 125, // todo tune
             SCORE_L4_DEGREES = 90, // todo tune
             REMOVE_ALGAE_HIGH_DEGREES = 0.0, // todo tune
             REMOVE_ALGAE_LOW_DEGREES = 0.0, // todo tune
             PRE_PROCESSOR_DEGREES = 0.0, // todo tune
             PRE_NET_DEGREES = 0.0, // todo tune
-            STOWED_DEGREES = 5; // todo tune
+            STOWED_DEGREES = 170; // todo tune
 
     public Arm() {
         // TODO: Find CAN IDs

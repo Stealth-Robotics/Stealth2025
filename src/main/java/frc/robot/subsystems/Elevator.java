@@ -160,7 +160,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public double getElevatorMotorPositionInches() {
-        return motor1.getPosition().getValueAsDouble() / ROTATIONS_PER_INCH;
+        return motor1.getPosition().getValueAsDouble() / (12 / 4.25 * Math.PI);
     }
 
     public boolean isElevatorAtTarget() {

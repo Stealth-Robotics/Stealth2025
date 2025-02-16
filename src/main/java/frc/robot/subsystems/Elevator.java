@@ -38,7 +38,7 @@ public class Elevator extends SubsystemBase {
             MOTION_MAGIC_ACCELERATION = 150,
             MOTION_MAGIC_CRUISE_VELOCITY = 75;
 
-    private final double TOLERANCE = 0.0; // todo tune
+    private final double TOLERANCE = 0.05; // todo tune
 
     @NotLogged
     public static final double INTAKE_HP_INCHES = 24, // todo tune
@@ -58,6 +58,23 @@ public class Elevator extends SubsystemBase {
             STOWED_INCHES = 24.0; // todo tune
 
     @NotLogged
+    public static final double INTAKE_HP_ROTATIONS = 24, // todo tune
+            PRE_L1_ROTATIONS = 20, // todo tune
+            PRE_L2_ROTATIONS = 25, // todo tune
+            PRE_L3_ROTATIONS = 30, // todo tune
+            PRE_L4_ROTATIONS = 40, // todo tune
+            SCORE_L1_ROTATIONS = 15, // todo tune
+            SCORE_L2_ROTATIONS = 20.0, // todo tune
+            SCORE_L3_ROTATIONS = 25.0, // todo tune
+            SCORE_L4_ROTATIONS = 39.0, // todo tune
+            REMOVE_ALGAE_HIGH_ROTATIONS = 0.0, // todo tune
+            REMOVE_ALGAE_LOW_ROTATIONS = 0.0, // todo tune
+            PRE_PROCESSOR_ROTATIONS = 0.0, // todo tune
+            PRE_NET_ROTATIONS = 0.0, // todo tune
+            GRAB_CORAL_ROTATIONS = 18.5, // todo tune
+            STOWED_ROTATIONS = 0; // todo tune
+
+    @NotLogged
     private final double MAX_EXTENSION_IN_INCHES = 60.0,
             MAX_EXTENSION_IN_ROTATIONS = 43.0,
             STARTING_POSITION_INCHES = 15.0,
@@ -73,14 +90,14 @@ public class Elevator extends SubsystemBase {
 
     private final TalonFXConfiguration config = new TalonFXConfiguration();
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(
-            STARTING_POSITION_INCHES * ROTATIONS_PER_INCH);
+            0);
 
     public Elevator() {
         motor1 = new TalonFX(2);
         motor2 = new TalonFX(3);
 
-        elevatorTargetPosition = STARTING_POSITION_INCHES * ROTATIONS_PER_INCH;
-        motor1.setPosition(STARTING_POSITION_INCHES * ROTATIONS_PER_INCH);
+        elevatorTargetPosition = 0;
+        motor1.setPosition(0);
         applyConfigs();
     }
 
@@ -164,13 +181,13 @@ public class Elevator extends SubsystemBase {
 
     public Command homeElevator() {
         return this.run(() -> {
-            motor1.setVoltage(-3);
+            motor1.setVoltage(-1);
             isHomed = false;
         }).until(() -> (motor1.getSupplyCurrent().getValueAsDouble() > 10))
                 .andThen(
                         this.runOnce(() -> {
                             motor1.setControl(new NeutralOut());
-                            motor1.setPosition(STARTING_POSITION_INCHES * ROTATIONS_PER_INCH);
+                            motor1.setPosition(0);
                             isHomed = true;
                         }));
     }

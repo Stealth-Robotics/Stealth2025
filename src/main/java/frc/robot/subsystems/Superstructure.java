@@ -151,7 +151,7 @@ public class Superstructure {
                                 .onTrue(this.forceState(SuperState.IDLE));
 
                 stateTriggers.get(SuperState.STOW)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.STOWED_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.STOWED_DEGREES))
                                 // if we are stowing, we dont really care if we reach stow position before going
                                 // to intake
@@ -168,7 +168,7 @@ public class Superstructure {
                                 .onTrue(this.forceState(SuperState.REMOVE_ALGAE_LOW));
 
                 stateTriggers.get(SuperState.INTAKE_HP)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.INTAKE_HP_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
                                 .whileTrue(transfer.setVoltage(() -> 3)) // todo: test voltage that works
                                 .and(() -> arm.isMotorAtTarget())
@@ -178,7 +178,7 @@ public class Superstructure {
                                 .onTrue(this.forceState(SuperState.GRAB_CORAL));
 
                 stateTriggers.get(SuperState.GRAB_CORAL)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.GRAB_CORAL_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.GRAB_CORAL_ROTATIONS))
                                 .whileTrue(rollers.setRollerVoltage(3))
                                 .and(() -> rollers.getHasGamepiece())
                                 // need to experiment with good voltage that will keep coral in
@@ -187,7 +187,7 @@ public class Superstructure {
                                 .onTrue(this.forceState(SuperState.READY_SCORE_CORAL));
 
                 stateTriggers.get(SuperState.REMOVE_ALGAE_HIGH)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.REMOVE_ALGAE_HIGH_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.REMOVE_ALGAE_HIGH_ROTATIONS))
                                 .whileTrue(rollers.setRollerVoltage(3))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_HIGH_DEGREES))
                                 .and(() -> rollers.getHasGamepiece())
@@ -196,7 +196,7 @@ public class Superstructure {
                                                 .alongWith(rollers.setRollerVoltage(0.5)));
 
                 stateTriggers.get(SuperState.REMOVE_ALGAE_LOW)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.REMOVE_ALGAE_LOW_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.REMOVE_ALGAE_LOW_ROTATIONS))
                                 .whileTrue(rollers.setRollerVoltage(3))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_LOW_DEGREES))
                                 .and(() -> rollers.getHasGamepiece())
@@ -214,25 +214,25 @@ public class Superstructure {
                 // AT FALSE FORCES TO WAIT UNTIL BUTTON IS ACTUALLY RELEASED, ON FALSE ONLY
                 // TRIGGERS TRUE WHEN SWITCHINGG FROM TRUE TO FALSE
                 stateTriggers.get(SuperState.READY_SCORE_CORAL)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.STOWED_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))
                                 .and(() -> levelTarget.get() == LevelTarget.L1)
                                 .and(preScoreTrigger)
                                 .onFalse(this.forceState(SuperState.PRE_L1));
 
                 stateTriggers.get(SuperState.READY_SCORE_CORAL)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.STOWED_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))
                                 .and(() -> levelTarget.get() == LevelTarget.L2)
                                 .and(preScoreTrigger)
                                 .onFalse(this.forceState(SuperState.PRE_L2));
 
                 stateTriggers.get(SuperState.READY_SCORE_CORAL)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.STOWED_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))
                                 .and(() -> levelTarget.get() == LevelTarget.L3)
                                 .and(preScoreTrigger)
                                 .onFalse(this.forceState(SuperState.PRE_L3));
 
                 stateTriggers.get(SuperState.READY_SCORE_CORAL)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.STOWED_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))
                                 .and(() -> levelTarget.get() == LevelTarget.L4)
                                 .and(preScoreTrigger)
                                 .onFalse(this.forceState(SuperState.PRE_L4));
@@ -242,7 +242,7 @@ public class Superstructure {
                  * when driver presses scoring button
                  */
                 stateTriggers.get(SuperState.PRE_L1)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_L1_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.PRE_L1_ROTATIONS))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L1_DEGREES))
                                 .and(() -> elevator.isElevatorAtTarget())
                                 .and(() -> arm.isMotorAtTarget())
@@ -250,7 +250,7 @@ public class Superstructure {
                                 .onFalse(this.forceState(SuperState.SCORE_CORAL));
 
                 stateTriggers.get(SuperState.PRE_L2)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_L2_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.PRE_L2_ROTATIONS))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L2_DEGREES))
                                 .and(() -> elevator.isElevatorAtTarget())
                                 .and(() -> arm.isMotorAtTarget())
@@ -258,7 +258,7 @@ public class Superstructure {
                                 .onFalse(this.forceState(SuperState.SCORE_CORAL));
 
                 stateTriggers.get(SuperState.PRE_L3)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_L3_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.PRE_L3_ROTATIONS))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L3_DEGREES))
                                 .and(() -> elevator.isElevatorAtTarget())
                                 .and(() -> arm.isMotorAtTarget())
@@ -266,7 +266,7 @@ public class Superstructure {
                                 .onFalse(this.forceState(SuperState.SCORE_CORAL));
 
                 stateTriggers.get(SuperState.PRE_L4)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_L4_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.PRE_L4_ROTATIONS))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L4_DEGREES))
                                 .and(() -> elevator.isElevatorAtTarget())
                                 .and(() -> arm.isMotorAtTarget())
@@ -277,7 +277,7 @@ public class Superstructure {
                 // then command rollers to spit
                 stateTriggers.get(SuperState.SCORE_CORAL)
                                 .and(() -> levelTarget.get() == LevelTarget.L1)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.SCORE_L1_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.SCORE_L1_ROTATIONS))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.SCORE_L1_DEGREES))
                                 .and(() -> elevator.isElevatorAtTarget())
                                 .and(() -> arm.isMotorAtTarget())
@@ -286,7 +286,7 @@ public class Superstructure {
 
                 stateTriggers.get(SuperState.SCORE_CORAL)
                                 .and(() -> levelTarget.get() == LevelTarget.L2)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.SCORE_L2_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.SCORE_L2_ROTATIONS))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.SCORE_L2_DEGREES))
                                 .and(() -> elevator.isElevatorAtTarget())
                                 .and(() -> arm.isMotorAtTarget())
@@ -295,7 +295,7 @@ public class Superstructure {
 
                 stateTriggers.get(SuperState.SCORE_CORAL)
                                 .and(() -> levelTarget.get() == LevelTarget.L3)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.SCORE_L3_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.SCORE_L3_ROTATIONS))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.SCORE_L3_DEGREES))
                                 .and(() -> elevator.isElevatorAtTarget())
                                 .and(() -> arm.isMotorAtTarget())
@@ -304,7 +304,7 @@ public class Superstructure {
 
                 stateTriggers.get(SuperState.SCORE_CORAL)
                                 .and(() -> levelTarget.get() == LevelTarget.L4)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.SCORE_L4_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.SCORE_L4_ROTATIONS))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.SCORE_L4_DEGREES))
                                 .and(() -> elevator.isElevatorAtTarget())
                                 .and(() -> arm.isMotorAtTarget())
@@ -350,7 +350,7 @@ public class Superstructure {
                                 .onFalse(this.forceState(SuperState.PRE_NET));
 
                 stateTriggers.get(SuperState.PRE_PROCESSOR)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_PROCESSOR_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.PRE_PROCESSOR_ROTATIONS))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_PROCESSOR_DEGREES))
                                 .and(() -> elevator.isElevatorAtTarget())
                                 .and(() -> arm.isMotorAtTarget())
@@ -358,7 +358,7 @@ public class Superstructure {
                                 .onFalse(this.forceState(SuperState.SPIT));
 
                 stateTriggers.get(SuperState.PRE_NET)
-                                .whileTrue(elevator.goToPositionInInches(() -> Elevator.PRE_NET_INCHES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.PRE_NET_ROTATIONS))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_NET_DEGREES))
                                 .and(() -> elevator.isElevatorAtTarget())
                                 .and(() -> arm.isMotorAtTarget())

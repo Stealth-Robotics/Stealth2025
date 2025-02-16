@@ -59,6 +59,7 @@ public class Elevator extends SubsystemBase {
     @NotLogged
     private final double MAX_EXTENSION_IN_INCHES = 0.0,
             MAX_EXTENSION_IN_ROTATIONS = 0.0,
+            STARTING_POSITION_INCHES = 15.0,
             ROTATIONS_PER_INCH = MAX_EXTENSION_IN_ROTATIONS / MAX_EXTENSION_IN_INCHES;
 
     boolean atPosition;
@@ -69,13 +70,15 @@ public class Elevator extends SubsystemBase {
     private double elevatorTargetPosition;
 
     private final TalonFXConfiguration config = new TalonFXConfiguration();
-    private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
+    private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(
+            STARTING_POSITION_INCHES * ROTATIONS_PER_INCH);
 
     public Elevator() {
         motor1 = new TalonFX(2);
         motor2 = new TalonFX(3);
-        elevatorTargetPosition = 0;
-        motor1.setPosition(0);
+
+        elevatorTargetPosition = STARTING_POSITION_INCHES * ROTATIONS_PER_INCH;
+        motor1.setPosition(STARTING_POSITION_INCHES * ROTATIONS_PER_INCH);
         applyConfigs();
     }
 
@@ -135,6 +138,10 @@ public class Elevator extends SubsystemBase {
     // public so it's auto-logged
     public double getElevatorMotorPosition() {
         return motor1.getPosition().getValueAsDouble();
+    }
+
+    public double getElevatorMotorPositionInches() {
+        return motor1.getPosition().getValueAsDouble() / ROTATIONS_PER_INCH;
     }
 
     public boolean isElevatorAtTarget() {

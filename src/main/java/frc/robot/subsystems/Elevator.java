@@ -5,6 +5,7 @@ import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -95,6 +96,22 @@ public class Elevator extends SubsystemBase {
 
         config.MotionMagic.MotionMagicAcceleration = MOTION_MAGIC_ACCELERATION;
         config.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
+
+        // turn down status signals
+        motor1.getDeviceTemp().setUpdateFrequency(1);
+        motor1.getSupplyCurrent().setUpdateFrequency(1);
+
+        // IMPORTANT: MUST BE ENABLED FOR FOLLOWER
+        motor1.getMotorVoltage().setUpdateFrequency(50);
+        motor1.getDutyCycle().setUpdateFrequency(50);
+        motor1.getTorqueCurrent().setUpdateFrequency(50);
+
+        motor2.getDeviceTemp().setUpdateFrequency(1);
+        motor2.getSupplyCurrent().setUpdateFrequency(1);
+        motor2.getMotorVoltage().setUpdateFrequency(1);
+        motor1.getPosition().setUpdateFrequency(200);
+        // turn off everythign we dont need
+        ParentDevice.optimizeBusUtilizationForAll(motor1, motor2);
 
         motor1.getConfigurator().apply(config);
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;

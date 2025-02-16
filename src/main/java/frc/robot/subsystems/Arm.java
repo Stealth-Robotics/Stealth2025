@@ -74,6 +74,7 @@ public class Arm extends SubsystemBase {
     }
 
     private void applyConfigs() {
+
         armMotorConfiguration.Slot0.kP = kP;
         armMotorConfiguration.Slot0.kI = kI;
         armMotorConfiguration.Slot0.kD = kD;
@@ -92,13 +93,21 @@ public class Arm extends SubsystemBase {
         armMotorConfiguration.Feedback.SensorToMechanismRatio = 1;
         armMotorConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
+        // turn down status signals
+        armMotor.getDeviceTemp().setUpdateFrequency(1);
+        armMotor.getSupplyCurrent().setUpdateFrequency(1);
+        armMotor.getMotorVoltage().setUpdateFrequency(1);
+        armMotor.getPosition().setUpdateFrequency(200);
+        // turn off everythign we dont need
+        armMotor.optimizeBusUtilization();
+
         armMotor.getConfigurator().apply(armMotorConfiguration);
         canCoder.getConfigurator().apply(canCoderConfiguration);
     }
 
     // made public so this is logged
     public double getArmPosition() {
-        return Units.rotationsToDegrees(canCoder.getPosition().getValueAsDouble());
+        return Units.rotationsToDegrees(armMotor.getPosition().getValueAsDouble());
     }
 
     public double getTargetPosition() {

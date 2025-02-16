@@ -13,9 +13,11 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 
 import java.util.function.DoubleSupplier;
@@ -83,6 +85,8 @@ public class Elevator extends SubsystemBase {
     boolean atPosition;
     private boolean isHomed;
 
+    Trigger currentOverZeroThreshold;
+
     // keep track of target position for logging purposes, this value gets updated
     // in setposition command
     @Logged(name = "Elevator Target")
@@ -140,6 +144,8 @@ public class Elevator extends SubsystemBase {
         motor2.getConfigurator().apply(config);
 
         motor2.setControl(new Follower(motor1.getDeviceID(), true));
+
+        currentOverZeroThreshold = new Trigger(() -> (motor1.getSupplyCurrent().getValueAsDouble() > 10)).debounce(0.5);
     }
 
     public Command goToPositionInInches(DoubleSupplier inches) {
@@ -183,7 +189,7 @@ public class Elevator extends SubsystemBase {
         return this.run(() -> {
             motor1.setVoltage(-1);
             isHomed = false;
-        }).until(() -> (motor1.getSupplyCurrent().getValueAsDouble() > 10))
+        }).until(currentOverZeroThreshold)
                 .andThen(
                         this.runOnce(() -> {
                             motor1.setControl(new NeutralOut());

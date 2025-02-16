@@ -86,7 +86,7 @@ public class RobotContainer {
 		driveAngle.HeadingController.setP(0.1);
 
 		elevator = new Elevator();
-		rollers = new Rollers(() -> SuperState.IDLE);
+		rollers = new Rollers(() -> superstructure.getState());
 		arm = new Arm();
 		transfer = new Transfer();
 		dt = TunerConstants.createDrivetrain();
@@ -115,7 +115,8 @@ public class RobotContainer {
 				operatorController.leftBumper(),
 				operatorController.rightBumper(),
 				operatorController.leftTrigger(),
-				driverController.povLeft());
+				driverController.povLeft(),
+				driverController.povRight());
 
 		// goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
 		// new WaitUntilCommand(subsystemsAtSetpoints));
@@ -130,7 +131,7 @@ public class RobotContainer {
 		// NamedCommands.registerCommand("Eject", eject);
 		// NamedCommands.registerCommand("Intake", intake);
 
-		// rollers.configureStateSupplierTrigger();
+		rollers.configureStateSupplierTrigger();
 
 		driveFieldCentric = dt.applyRequest(
 				() -> drive.withVelocityY(-driverController.getLeftX() * MAX_VELO)

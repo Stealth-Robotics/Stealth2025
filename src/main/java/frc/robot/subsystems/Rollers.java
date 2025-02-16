@@ -38,6 +38,7 @@ public class Rollers extends SubsystemBase {
     private final Debouncer gamepeiceDetectionCurrentDebouncer = new Debouncer(0.1, DebounceType.kRising);
     @NotLogged
     Trigger trigger;
+
     Trigger stateSupplierTrigger;
 
     private final Supplier<SuperState> stateSupplier;
@@ -90,10 +91,8 @@ public class Rollers extends SubsystemBase {
     }
 
     public boolean getHasGamepiece() {
-        if (Robot.isSimulation() && trigger != null) {
-            if (gamepeiceDetectionCurrentDebouncer.calculate(trigger.getAsBoolean())) {
-                hasGamepiece = true;
-            }
+        if (Robot.isSimulation()) {
+            return true;
         }
 
         // if we draw enough current for long enough, we have a gamepiece.

@@ -17,6 +17,8 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
+
 import java.util.function.DoubleSupplier;
 
 @Logged
@@ -57,12 +59,13 @@ public class Elevator extends SubsystemBase {
             STOWED_INCHES = 24.0; // todo tune
 
     @NotLogged
-    private final double MAX_EXTENSION_IN_INCHES = 0.0,
-            MAX_EXTENSION_IN_ROTATIONS = 0.0,
+    private final double MAX_EXTENSION_IN_INCHES = 60.0,
+            MAX_EXTENSION_IN_ROTATIONS = 43.0,
             STARTING_POSITION_INCHES = 15.0,
             ROTATIONS_PER_INCH = MAX_EXTENSION_IN_ROTATIONS / MAX_EXTENSION_IN_INCHES;
 
     boolean atPosition;
+    private boolean isHomed;
 
     // keep track of target position for logging purposes, this value gets updated
     // in setposition command
@@ -102,7 +105,7 @@ public class Elevator extends SubsystemBase {
 
         // turn down status signals
         motor1.getDeviceTemp().setUpdateFrequency(1);
-        motor1.getSupplyCurrent().setUpdateFrequency(1);
+        motor1.getSupplyCurrent().setUpdateFrequency(50);
 
         // IMPORTANT: MUST BE ENABLED FOR FOLLOWER
         motor1.getMotorVoltage().setUpdateFrequency(50);
@@ -145,6 +148,9 @@ public class Elevator extends SubsystemBase {
     }
 
     public boolean isElevatorAtTarget() {
+        if (Robot.isSimulation()) {
+            return true;
+        }
         return MathUtil.isNear(motionMagicVoltage.Position, motor1.getPosition().getValueAsDouble(), TOLERANCE);
     }
 
@@ -155,6 +161,23 @@ public class Elevator extends SubsystemBase {
     private void setElevatorTargetPosition(double pos) {
         motionMagicVoltage.Position = pos;
         motor1.setControl(motionMagicVoltage);
+    }
+
+    public Command homeElevator() {
+        return this.run(() -> {
+            motor1.setVoltage(-3);
+            isHomed = false;
+        }).until(() -> (motor1.getSupplyCurrent().getValueAsDouble() > 10))
+                .andThen(
+                        this.runOnce(() -> {
+                            motor1.setControl(new NeutralOut());
+                            motor1.setPosition(STARTING_POSITION_INCHES * ROTATIONS_PER_INCH);
+                            isHomed = true;
+                        }));
+    }
+
+    public boolean getIsHomed() {
+        return isHomed;
     }
 
 }

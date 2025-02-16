@@ -20,6 +20,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.Unit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
 
 @Logged
 public class Arm extends SubsystemBase {
@@ -115,6 +116,9 @@ public class Arm extends SubsystemBase {
     }
 
     public boolean isMotorAtTarget() {
+        if (Robot.isSimulation()) {
+            return true;
+        }
         return Math.abs(getArmPosition() - getTargetPosition()) <= kTolerance;
     }
 

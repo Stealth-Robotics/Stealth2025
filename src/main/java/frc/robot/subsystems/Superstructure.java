@@ -31,7 +31,8 @@ public class Superstructure {
                 PRE_PROCESSOR,
                 PRE_NET,
                 STOW,
-                IDLE
+                IDLE,
+                HOMING
         }
 
         private final Supplier<LevelTarget> levelTarget;
@@ -49,6 +50,7 @@ public class Superstructure {
         private Trigger removeAlgaeLowTrigger;
         private Trigger cancelScoringTrigger;
         private Trigger overrideBeamBreakTrigger;
+        private Trigger homeTrigger;
 
         private final Trigger gamepieceDetectedInStagingArea;
 
@@ -81,7 +83,8 @@ public class Superstructure {
                         Trigger removeAlgaeHighTrigger,
                         Trigger removeAlgaeLowTrigger,
                         Trigger cancelScoringTrigger,
-                        Trigger overrideBeamBreakTrigger) {
+                        Trigger overrideBeamBreakTrigger,
+                        Trigger homeTrigger) {
                 this.elevator = elevator;
                 this.rollers = rollers;
                 this.arm = arm;
@@ -98,6 +101,7 @@ public class Superstructure {
                 this.removeAlgaeLowTrigger = removeAlgaeLowTrigger;
                 this.cancelScoringTrigger = cancelScoringTrigger;
                 this.overrideBeamBreakTrigger = overrideBeamBreakTrigger;
+                this.homeTrigger = homeTrigger;
 
                 // TODO FIND CAN ID
                 tof = new TimeOfFlight(0);
@@ -135,6 +139,17 @@ public class Superstructure {
                                 .and(removeAlgaeLowTrigger)
                                 .onTrue(this.forceState(SuperState.REMOVE_ALGAE_LOW));
 
+                stateTriggers.get(SuperState.IDLE)
+                                .and(homeTrigger)
+                                .onFalse(this.forceState(SuperState.HOMING));
+
+                stateTriggers.get(SuperState.HOMING)
+                                .whileTrue(arm.rotateToPositionCommand(() -> Arm.STOWED_DEGREES))
+                                .and(() -> arm.isMotorAtTarget())
+                                .whileTrue(elevator.homeElevator())
+                                .and(() -> elevator.getIsHomed()).debounce(0.2)
+                                .onTrue(this.forceState(SuperState.IDLE));
+
                 stateTriggers.get(SuperState.STOW)
                                 .whileTrue(elevator.goToPositionInInches(() -> Elevator.STOWED_INCHES))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.STOWED_DEGREES))
@@ -157,8 +172,9 @@ public class Superstructure {
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
                                 .whileTrue(transfer.setVoltage(() -> 3)) // todo: test voltage that works
                                 .and(() -> arm.isMotorAtTarget())
-                                .and(gamepieceDetectedInStagingArea.or(overrideBeamBreakTrigger)) // ability to override
-                                                                                                  // beambreak
+                                .and(/* gamepieceDetectedInStagingArea.or */(overrideBeamBreakTrigger)) // ability to
+                                                                                                        // override
+                                                                                                        // beambreak
                                 .onTrue(this.forceState(SuperState.GRAB_CORAL));
 
                 stateTriggers.get(SuperState.GRAB_CORAL)
@@ -320,7 +336,6 @@ public class Superstructure {
                 stateTriggers.get(SuperState.SPIT)
                                 .onTrue(rollers.setRollerVoltage(-3))
                                 .and(() -> !rollers.getHasGamepiece())
-                                .and(() -> true)
                                 .onTrue(this.forceState(SuperState.IDLE));
 
                 // algae scoring

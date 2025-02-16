@@ -97,23 +97,25 @@ public class RobotContainer {
 		// autoChooser = AutoBuilder.buildAutoChooser();
 		// SmartDashboard.putData("Auto Chooser", autoChooser);
 
-		// superstructure = new Superstructure(
-		// elevator,
-		// rollers,
-		// arm,
-		// // TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
-		// () -> target,
-		// () -> algaeTarget,
-		// driverController.leftBumper(),
-		// driverController.leftBumper(),
-		// driverController.rightBumper(),
-		// driverController.leftBumper(),
-		// driverController.rightTrigger(),
-		// driverController.rightBumper(),
-		// // TODO: BIND TO BUTTONS
-		// operatorController.leftBumper(),
-		// operatorController.rightBumper(),
-		// operatorController.leftTrigger());
+		superstructure = new Superstructure(
+				elevator,
+				rollers,
+				arm,
+				transfer,
+				// TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
+				() -> target,
+				() -> algaeTarget,
+				driverController.leftBumper(),
+				driverController.leftBumper(),
+				driverController.rightBumper(),
+				driverController.leftBumper(),
+				driverController.rightTrigger(),
+				driverController.rightBumper(),
+				// TODO: BIND TO BUTTONS
+				operatorController.leftBumper(),
+				operatorController.rightBumper(),
+				operatorController.leftTrigger(),
+				driverController.povLeft());
 
 		// goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
 		// new WaitUntilCommand(subsystemsAtSetpoints));

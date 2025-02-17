@@ -153,11 +153,6 @@ public class RobotContainer {
 		operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
 		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
 
-		driverController.a().onTrue(arm.rotateToPositionCommand(() -> 135).alongWith(elevator.goToPosition(() -> 15)));
-		driverController.x().onTrue(arm.rotateToPositionCommand(() -> 90).alongWith(elevator.goToPosition(() -> 0)));
-		driverController.y().onTrue(arm.rotateToPositionCommand(() -> -8)
-				.andThen(new WaitUntilCommand(() -> arm.isMotorAtTarget())).andThen(elevator.goToPosition(() -> 7)));
-
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
 
 		// brake when we aren't driving

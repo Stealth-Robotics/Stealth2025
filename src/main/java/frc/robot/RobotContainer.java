@@ -27,6 +27,7 @@ import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Rollers;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Transfer;
+import frc.robot.subsystems.Superstructure.SuperState;
 
 @Logged
 public class RobotContainer {
@@ -54,7 +55,7 @@ public class RobotContainer {
 	CommandSwerveDrivetrain dt;
 
 	LevelTarget target = LevelTarget.L4;
-	AlgaeTarget algaeTarget = AlgaeTarget.PROCESSOR;
+	AlgaeTarget algaeTarget = AlgaeTarget.NET;
 
 	// private final SendableChooser<Command> autoChooser;
 
@@ -145,6 +146,7 @@ public class RobotContainer {
 		// enable
 		CommandScheduler.getInstance().schedule(arm.neutral());
 		CommandScheduler.getInstance().schedule(elevator.stopElevator());
+		CommandScheduler.getInstance().schedule(superstructure.forceState(SuperState.IDLE));
 
 		operatorController.a().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
 		operatorController.b().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));
@@ -165,10 +167,10 @@ public class RobotContainer {
 				.whileTrue(dt.applyRequest(() -> brake))
 				.onFalse(driveFieldCentric);
 
-		rollers.setDefaultCommand(rollers
-				.setRollerVoltage(
-						() -> (12 * (driverController.getLeftTriggerAxis()
-								- driverController.getRightTriggerAxis()))));
+		// rollers.setDefaultCommand(rollers
+		// .setRollerVoltage(
+		// () -> (12 * (driverController.getLeftTriggerAxis()
+		// - driverController.getRightTriggerAxis()))));
 
 	}
 

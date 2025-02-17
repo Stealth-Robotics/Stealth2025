@@ -9,6 +9,8 @@ import com.playingwithfusion.TimeOfFlight;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotContainer.LevelTarget;
 import frc.robot.RobotContainer.AlgaeTarget;
@@ -124,6 +126,8 @@ public class Superstructure {
 
                 // Idle -> stow
                 stateTriggers.get(SuperState.IDLE)
+                                .whileTrue(transfer.setVoltage(() -> 0))
+                                .whileTrue(rollers.setRollerVoltage(() -> 0))
                                 // stop subsystems when we are in idle state
                                 // .whileTrue(elevator.stopElevator())
                                 // if we choose to stow, go to stow state
@@ -170,7 +174,7 @@ public class Superstructure {
                 stateTriggers.get(SuperState.INTAKE_HP)
                                 .whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
-                                .whileTrue(transfer.setVoltage(() -> 3)) // todo: test voltage that works
+                                .whileTrue(transfer.setVoltage(() -> 2)) // todo: test voltage that works
                                 .and(() -> arm.isMotorAtTarget())
                                 .and(/* gamepieceDetectedInStagingArea.or */(overrideBeamBreakTrigger)) // ability to
                                                                                                         // override
@@ -179,30 +183,32 @@ public class Superstructure {
 
                 stateTriggers.get(SuperState.GRAB_CORAL)
                                 .whileTrue(elevator.goToPosition(() -> Elevator.GRAB_CORAL_ROTATIONS))
-                                .whileTrue(rollers.setRollerVoltage(3))
-                                .and(() -> rollers.getHasGamepiece())
-                                // need to experiment with good voltage that will keep coral in
-                                .onTrue(rollers.setRollerVoltage(0.5))
+                                .whileTrue(rollers.setRollerVoltage(6))
                                 .onTrue(transfer.setVoltage(() -> 0))
+
+                                // .and(() -> rollers.getHasGamepiece())
+                                // need to experiment with good voltage that will keep coral in
+                                .and(() -> elevator.isElevatorAtTarget())
+                                .onTrue(rollers.setRollerVoltage(0.6))
                                 .onTrue(this.forceState(SuperState.READY_SCORE_CORAL));
 
                 stateTriggers.get(SuperState.REMOVE_ALGAE_HIGH)
                                 .whileTrue(elevator.goToPosition(() -> Elevator.REMOVE_ALGAE_HIGH_ROTATIONS))
-                                .whileTrue(rollers.setRollerVoltage(3))
+                                .whileTrue(rollers.setRollerVoltage(9))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_HIGH_DEGREES))
                                 .and(() -> rollers.getHasGamepiece())
                                 .onTrue(this.forceState(SuperState.READY_SCORE_ALGAE)
                                                 // need to experiment with good voltage that will keep algae in
-                                                .alongWith(rollers.setRollerVoltage(0.5)));
+                                                .alongWith(rollers.setRollerVoltage(8)));
 
                 stateTriggers.get(SuperState.REMOVE_ALGAE_LOW)
                                 .whileTrue(elevator.goToPosition(() -> Elevator.REMOVE_ALGAE_LOW_ROTATIONS))
-                                .whileTrue(rollers.setRollerVoltage(3))
+                                .whileTrue(rollers.setRollerVoltage(9))
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_LOW_DEGREES))
                                 .and(() -> rollers.getHasGamepiece())
                                 .onTrue(this.forceState(SuperState.READY_SCORE_ALGAE)
                                                 // again, experiment
-                                                .alongWith(rollers.setRollerVoltage(0.5)));
+                                                .alongWith(rollers.setRollerVoltage(8)));
 
                 // when we are in ready mode, meaning arm has a coral, we now need to check for
                 // when driver presses button to actually go to scoring location
@@ -250,9 +256,10 @@ public class Superstructure {
                                 .onFalse(this.forceState(SuperState.SCORE_CORAL));
 
                 stateTriggers.get(SuperState.PRE_L2)
-                                .whileTrue(elevator.goToPosition(() -> Elevator.PRE_L2_ROTATIONS))
-                                .whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L2_DEGREES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.PRE_L3_ROTATIONS))
                                 .and(() -> elevator.isElevatorAtTarget())
+                                .whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L2_DEGREES))
+                                .whileTrue(elevator.goToPosition(() -> Elevator.PRE_L2_ROTATIONS))
                                 .and(() -> arm.isMotorAtTarget())
                                 .and(scoreTrigger)
                                 .onFalse(this.forceState(SuperState.SCORE_CORAL));
@@ -334,12 +341,13 @@ public class Superstructure {
 
                 // ejecting gamepiece
                 stateTriggers.get(SuperState.SPIT)
-                                .onTrue(rollers.setRollerVoltage(-3))
-                                .and(() -> !rollers.getHasGamepiece())
-                                .onTrue(this.forceState(SuperState.IDLE));
+                                .onTrue(rollers.setRollerVoltage(-1.5)
+                                                .andThen(new WaitCommand(0.5).andThen(rollers.setRollerVoltage(0))
+                                                                .andThen(this.forceState(SuperState.IDLE))));
 
                 // algae scoring
                 stateTriggers.get(SuperState.READY_SCORE_ALGAE)
+                                // .onTrue(arm.rotateToPositionCommand(() -> Arm.READY_SCORE_ALGAE))
                                 .and(() -> algaeTarget.get() == AlgaeTarget.PROCESSOR)
                                 .and(preScoreTrigger)
                                 .onFalse(this.forceState(SuperState.PRE_PROCESSOR));

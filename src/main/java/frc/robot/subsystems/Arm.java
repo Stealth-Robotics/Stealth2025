@@ -36,11 +36,12 @@ public class Arm extends SubsystemBase {
     private final double kP = 100,
             kI = 0,
             kD = 0,
-            kTolerance = 1, // Tolerance in degrees
+            kG = 0.3,
+            kTolerance = 2, // Tolerance in degrees
             MOTION_MAGIC_ACCELERATION = 8,
             MOTION_MAGIC_CRUISE_VELOCITY = 4,
             DEGREES_TO_ROTATIONS = 1 / 360.0,
-            ZERO_OFFSET = 0.12;
+            ZERO_OFFSET = 0.878;
 
     private final TalonFXConfiguration armMotorConfiguration;
     private final CANcoderConfiguration canCoderConfiguration;
@@ -48,20 +49,21 @@ public class Arm extends SubsystemBase {
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
     @NotLogged
-    public static final double INTAKE_HP_DEGREES = -8, // todo tune
-            PRE_L1_DEGREES = 15, // todo tune
-            PRE_L2_DEGREES = 135, // todo tune
-            PRE_L3_DEGREES = 135, // todo tune
-            PRE_L4_DEGREES = 100, // todo tune
-            SCORE_L1_DEGREES = 15, // todo tune
-            SCORE_L2_DEGREES = 125, // todo tune
-            SCORE_L3_DEGREES = 125, // todo tune
-            SCORE_L4_DEGREES = 90, // todo tune
+    public static final double INTAKE_HP_DEGREES = -92.5, // todo tune
+            PRE_L1_DEGREES = -45, // todo tune
+            PRE_L2_DEGREES = 73.6, // todo tune
+            PRE_L3_DEGREES = 73.6, // todo tune
+            PRE_L4_DEGREES = 80, // todo tune
+            SCORE_L1_DEGREES = -35, // todo tune
+            SCORE_L2_DEGREES = 60, // todo tune
+            SCORE_L3_DEGREES = 60, // todo tune
+            SCORE_L4_DEGREES = 60, // todo tune
             REMOVE_ALGAE_HIGH_DEGREES = 0.0, // todo tune
-            REMOVE_ALGAE_LOW_DEGREES = 0.0, // todo tune
+            REMOVE_ALGAE_LOW_DEGREES = -45, // todo tune
             PRE_PROCESSOR_DEGREES = 0.0, // todo tune
-            PRE_NET_DEGREES = 0.0, // todo tune
-            STOWED_DEGREES = 170; // todo tune
+            PRE_NET_DEGREES = 45.0, // todo tune
+            READY_SCORE_ALGAE = 70.0,
+            STOWED_DEGREES = 80; // todo tune
 
     public Arm() {
         // TODO: Find CAN IDs
@@ -78,6 +80,7 @@ public class Arm extends SubsystemBase {
         armMotorConfiguration.Slot0.kP = kP;
         armMotorConfiguration.Slot0.kI = kI;
         armMotorConfiguration.Slot0.kD = kD;
+        armMotorConfiguration.Slot0.kG = kG;
 
         armMotorConfiguration.MotionMagic.MotionMagicAcceleration = MOTION_MAGIC_ACCELERATION;
         armMotorConfiguration.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
@@ -107,7 +110,7 @@ public class Arm extends SubsystemBase {
 
     // made public so this is logged
     public double getArmPosition() {
-        return Units.rotationsToDegrees(armMotor.getPosition().getValueAsDouble());
+        return armMotor.getPosition().getValueAsDouble() * 360.0;
     }
 
     public double getTargetPosition() {

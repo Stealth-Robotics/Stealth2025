@@ -258,7 +258,7 @@ public class Superstructure {
                 stateTriggers.get(SuperState.PRE_L2)
                                 .whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS)
                                                 .onlyIf(() -> prevState == SuperState.READY_SCORE_CORAL))
-                                .and(() -> elevator.isElevatorAtTarget())
+                                .and(() -> elevator.isElevatorAtTarget()).or(() -> prevState == SuperState.SCORE_CORAL)
                                 .whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L2_DEGREES))
                                 .whileTrue(elevator.goToPosition(() -> Elevator.PRE_L2_ROTATIONS))
                                 .and(() -> arm.isMotorAtTarget())

@@ -163,7 +163,7 @@ public class RobotContainer {
 		// brake when we aren't driving
 		new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)
 				.and(() -> Math.abs(driverController.getLeftY()) < 0.1)
-				.and(() -> Math.abs(driverController.getRightX()) < 0.1)
+				// .and(() -> Math.abs(driverController.getRightX()) < 0.1)
 				.whileTrue(dt.applyRequest(() -> brake))
 				.onFalse(driveFieldCentric);
 

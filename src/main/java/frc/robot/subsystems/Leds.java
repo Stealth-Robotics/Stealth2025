@@ -3,11 +3,10 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.led.Animation;
 import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix.led.CANdleConfiguration;
-import com.ctre.phoenix.led.ColorFlowAnimation;
+
 import com.ctre.phoenix.led.RainbowAnimation;
-import com.ctre.phoenix.led.SingleFadeAnimation;
+
 import com.ctre.phoenix.led.StrobeAnimation;
-import com.ctre.phoenix.led.TwinkleAnimation;
 import com.ctre.phoenix.led.CANdle.VBatOutputMode;
 
 import edu.wpi.first.wpilibj.util.Color;
@@ -15,11 +14,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import frc.robot.Superstructure;
-import frc.robot.Superstructure.ScoringLevel;
+import frc.robot.RobotContainer.LevelTarget;
 
 public class Leds extends SubsystemBase {
-    private final int LED_COUNT = 0;
+    private final int LED_COUNT = 40;
     // TODO: Find CAN id
     private final CANdle candle = new CANdle(0);
 
@@ -34,14 +32,15 @@ public class Leds extends SubsystemBase {
 
     public Leds() {
         CANdleConfiguration config = new CANdleConfiguration();
-        config.brightnessScalar = 0.30;
+        config.brightnessScalar = 0.2;
         config.disableWhenLOS = true;
-        config.v5Enabled = true; // What does this mean?
-        config.vBatOutputMode = VBatOutputMode.Off; // what?
-        config.enableOptimizations = true; // What does this mean?
+        config.v5Enabled = true;
+        config.vBatOutputMode = VBatOutputMode.Off;
+        config.enableOptimizations = true;
         config.statusLedOffWhenActive = false;
 
         candle.configAllSettings(config);
+
     }
 
     private void setRGB(int r, int g, int b) {
@@ -58,21 +57,22 @@ public class Leds extends SubsystemBase {
         return this.runOnce(() -> setRGB((int) color.red, (int) color.green, (int) color.blue));
     }
 
-    public Command setLevel(ScoringLevel level) {
+    public Command setLevel(LevelTarget level) {
         return this.runOnce(() -> {
-            if (level == ScoringLevel.L1) {
+            if (level == LevelTarget.L1) {
                 setColor(l1Color);
-            } else if (level == ScoringLevel.L2) {
+            } else if (level == LevelTarget.L2) {
                 setColor(l2Color);
-            } else if (level == ScoringLevel.L3) {
+            } else if (level == LevelTarget.L3) {
                 setColor(l3Color);
             } else {
                 setColor(l4Color);
             }
         });
     }
-    public Command enabledAnimation(){
-        return this.runOnce(()->animate(new RainbowAnimation(1.0, 0.6, LED_COUNT)));
+
+    public Command rainbowAnim() {
+        return this.runOnce(() -> animate(new RainbowAnimation(1.0, 0.6, LED_COUNT))).ignoringDisable(true);
     }
 
     private void setBlinkingState(boolean state) {

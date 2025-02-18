@@ -60,21 +60,21 @@ public class Elevator extends SubsystemBase {
             STOWED_INCHES = 24.0; // todo tune
 
     @NotLogged
-    public static final double INTAKE_HP_ROTATIONS = 14, // todo tune
+    public static final double INTAKE_HP_ROTATIONS = 17.4, // todo tune
             PRE_L1_ROTATIONS = 20, // todo tune
-            PRE_L2_ROTATIONS = 8.5, // todo tune
-            PRE_L3_ROTATIONS = 26.0, // todo tune
-            PRE_L4_ROTATIONS = 44.5, // todo tune
+            PRE_L2_ROTATIONS = 7.25, // todo tune
+            PRE_L3_ROTATIONS = 24.0, // todo tune
+            PRE_L4_ROTATIONS = 43.5, // todo tune
             SCORE_L1_ROTATIONS = 15, // todo tune
-            SCORE_L2_ROTATIONS = 7.4, // todo tune
-            SCORE_L3_ROTATIONS = 24.0, // todo tune
-            SCORE_L4_ROTATIONS = 44.5, // todo tune
+            SCORE_L2_ROTATIONS = 4.5, // todo tune
+            SCORE_L3_ROTATIONS = 22.0, // todo tune
+            SCORE_L4_ROTATIONS = 43.5, // todo tune
             REMOVE_ALGAE_HIGH_ROTATIONS = 22.0, // todo tune
             REMOVE_ALGAE_LOW_ROTATIONS = 35, // todo tune
             PRE_PROCESSOR_ROTATIONS = 40.0, // todo tune
             PRE_NET_ROTATIONS = 40.0, // todo tune
-            GRAB_CORAL_ROTATIONS = 8, // todo tune
-            STOWED_ROTATIONS = 10; // todo tune
+            GRAB_CORAL_ROTATIONS = 10, // todo tune
+            STOWED_ROTATIONS = 12; // todo tune
 
     @NotLogged
     private final double MAX_EXTENSION_IN_INCHES = 60.0,

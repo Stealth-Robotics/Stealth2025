@@ -24,6 +24,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.Rollers;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Transfer;
@@ -52,6 +53,7 @@ public class RobotContainer {
 	Elevator elevator;
 	Arm arm;
 	Transfer transfer;
+	Leds leds;
 	CommandSwerveDrivetrain dt;
 
 	LevelTarget target = LevelTarget.L4;
@@ -76,6 +78,7 @@ public class RobotContainer {
 		rollers = new Rollers(() -> superstructure.getState());
 		arm = new Arm();
 		transfer = new Transfer();
+		leds = new Leds();
 		dt = TunerConstants.createDrivetrain();
 
 		Trigger subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
@@ -89,6 +92,7 @@ public class RobotContainer {
 				rollers,
 				arm,
 				transfer,
+				leds,
 				// TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
 				() -> target,
 				() -> algaeTarget,
@@ -141,24 +145,29 @@ public class RobotContainer {
 		NET
 	}
 
+	public void configureIdleAnim() {
+		CommandScheduler.getInstance().schedule(leds.rainbowAnim());
+	}
+
 	public void configureBindings() {
 		// this gets run in teleopInit, so it should stop subsystems from moving on
 		// enable
 		CommandScheduler.getInstance().schedule(arm.neutral());
 		CommandScheduler.getInstance().schedule(elevator.stopElevator());
 		CommandScheduler.getInstance().schedule(superstructure.forceState(SuperState.IDLE));
+		CommandScheduler.getInstance().schedule(leds.setLevel(target));
 
-		operatorController.a().onTrue(Commands.runOnce(() -> target = LevelTarget.L1));
-		operatorController.b().onTrue(Commands.runOnce(() -> target = LevelTarget.L2));
-		operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3));
-		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4));
+		operatorController.a().onTrue(Commands.runOnce(() -> target = LevelTarget.L1).alongWith(leds.setLevel(target)));
+		operatorController.b().onTrue(Commands.runOnce(() -> target = LevelTarget.L2).alongWith(leds.setLevel(target)));
+		operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3).alongWith(leds.setLevel(target)));
+		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4).alongWith(leds.setLevel(target)));
 
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
 
 		// brake when we aren't driving
 		new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)
 				.and(() -> Math.abs(driverController.getLeftY()) < 0.1)
-				// .and(() -> Math.abs(driverController.getRightX()) < 0.1)
+				.and(() -> Math.abs(driverController.getRightX()) < 0.1)
 				.whileTrue(dt.applyRequest(() -> brake))
 				.onFalse(driveFieldCentric);
 

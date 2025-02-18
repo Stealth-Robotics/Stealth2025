@@ -41,7 +41,7 @@ public class Arm extends SubsystemBase {
             MOTION_MAGIC_ACCELERATION = 8,
             MOTION_MAGIC_CRUISE_VELOCITY = 4,
             DEGREES_TO_ROTATIONS = 1 / 360.0,
-            ZERO_OFFSET = 0.878;
+            ZERO_OFFSET = -0.279;
 
     private final TalonFXConfiguration armMotorConfiguration;
     private final CANcoderConfiguration canCoderConfiguration;
@@ -49,9 +49,9 @@ public class Arm extends SubsystemBase {
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
     @NotLogged
-    public static final double INTAKE_HP_DEGREES = -92.5, // todo tune
+    public static final double INTAKE_HP_DEGREES = -85, // todo tune
             PRE_L1_DEGREES = -45, // todo tune
-            PRE_L2_DEGREES = 73.6, // todo tune
+            PRE_L2_DEGREES = 65.5, // todo tune
             PRE_L3_DEGREES = 73.6, // todo tune
             PRE_L4_DEGREES = 80, // todo tune
             SCORE_L1_DEGREES = -35, // todo tune

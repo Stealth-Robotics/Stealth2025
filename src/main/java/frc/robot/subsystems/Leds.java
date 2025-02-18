@@ -71,6 +71,9 @@ public class Leds extends SubsystemBase {
             }
         });
     }
+    public Command enabledAnimation(){
+        return this.runOnce(animate())
+    }
 
     private void setBlinkingState(boolean state) {
         blinking = state;

@@ -27,6 +27,7 @@ import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.Rollers;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.SwerveLogger;
 import frc.robot.subsystems.Transfer;
 import frc.robot.subsystems.Superstructure.SuperState;
 
@@ -54,7 +55,8 @@ public class RobotContainer {
 	Arm arm;
 	Transfer transfer;
 	Leds leds;
-	CommandSwerveDrivetrain dt;
+	CommandSwerveDrivetrain dt = TunerConstants.createDrivetrain();
+	SwerveLogger logger = new SwerveLogger(dt);
 
 	LevelTarget target = LevelTarget.L4;
 	AlgaeTarget algaeTarget = AlgaeTarget.NET;
@@ -79,7 +81,6 @@ public class RobotContainer {
 		arm = new Arm();
 		transfer = new Transfer();
 		leds = new Leds();
-		dt = TunerConstants.createDrivetrain();
 
 		Trigger subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget()).debounce(0.1);

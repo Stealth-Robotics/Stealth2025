@@ -72,13 +72,13 @@ public class Leds extends SubsystemBase {
         });
     }
     public Command enabledAnimation(){
-        return this.runOnce(animate())
+        return this.runOnce(()->animate(new RainbowAnimation(1.0, 0.6, LED_COUNT)));
     }
 
     private void setBlinkingState(boolean state) {
         blinking = state;
         if (blinking) {
-            animate(new StrobeAnimation((int) currentColor.red, (int) currentColor.green, (int) currentColor.blue, 0, 1,
+            animate(new StrobeAnimation((int) currentColor.red, (int) currentColor.green, (int) currentColor.blue, 0, 5,
                     LED_COUNT));
         }
     }

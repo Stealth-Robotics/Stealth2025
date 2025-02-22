@@ -158,12 +158,16 @@ public class RobotContainer {
 		CommandScheduler.getInstance().schedule(arm.neutral());
 		CommandScheduler.getInstance().schedule(elevator.stopElevator());
 		CommandScheduler.getInstance().schedule(superstructure.forceState(SuperState.IDLE));
-		CommandScheduler.getInstance().schedule(leds.setLevel(target));
+		CommandScheduler.getInstance().schedule(Commands.runOnce(() -> leds.setLevel(target)));
 
-		operatorController.a().onTrue(Commands.runOnce(() -> target = LevelTarget.L1).alongWith(leds.setLevel(target)));
-		operatorController.b().onTrue(Commands.runOnce(() -> target = LevelTarget.L2).alongWith(leds.setLevel(target)));
-		operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3).alongWith(leds.setLevel(target)));
-		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4).alongWith(leds.setLevel(target)));
+		operatorController.a().onTrue(Commands.runOnce(() -> target = LevelTarget.L1)
+				.alongWith(Commands.runOnce(() -> leds.setLevel(target))));
+		operatorController.b().onTrue(Commands.runOnce(() -> target = LevelTarget.L2)
+				.alongWith(Commands.runOnce(() -> leds.setLevel(target))));
+		operatorController.x().onTrue(Commands.runOnce(() -> target = LevelTarget.L3)
+				.alongWith(Commands.runOnce(() -> leds.setLevel(target))));
+		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4)
+				.alongWith(Commands.runOnce(() -> leds.setLevel(target))));
 
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
 

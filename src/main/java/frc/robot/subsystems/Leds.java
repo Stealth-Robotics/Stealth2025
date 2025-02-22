@@ -28,7 +28,16 @@ public class Leds extends SubsystemBase {
             l3Color = new Color(109, 170, 194), // Cora blue
             l4Color = new Color(0, 255, 0); // Blinding green
 
+    private final int l1Red = 166, l1Green = 7, l1Blue = 28,
+            l2Red = 234, l2Green = 10, l2Blue = 142,
+            l3Red = 109, l3Green = 170, l3Blue = 194,
+            l4Red = 0, l4Green = 255, l4Blue = 0;
+
     Color currentColor;
+
+    private boolean isBlinking;
+
+    private int currentR = 0, currentG = 0, currentB = 0;
 
     boolean blinking;
 
@@ -47,67 +56,58 @@ public class Leds extends SubsystemBase {
     }
 
     private void setRGB(int r, int g, int b) {
-        currentColor = new Color(r, g, b);
-        candle.clearAnimation(0);
-        candle.setLEDs(r, g, b, 0, 0, LED_COUNT);
+        currentR = r;
+        currentG = g;
+        currentB = b;
     }
 
-    public Command setColor(int r, int g, int b) {
-        return this.runOnce(() -> setRGB(r, g, b));
-    }
+    // sets the current led colors based on target, perodic sets colors
+    public void setLevel(LevelTarget level) {
+        switch (level) {
+            case L1:
+                setRGB(l1Red, l1Green, l1Blue);
+                break;
+            case L2:
+                setRGB(l2Red, l2Green, l2Blue);
+                break;
+            case L3:
+                setRGB(l3Red, l3Green, l3Blue);
+                break;
 
-    public Command setColor(Color color) {
-        return this.runOnce(() -> setRGB((int) color.red, (int) color.green, (int) color.blue));
-    }
-
-    public Command setLevel(LevelTarget level) {
-        return this.runOnce(() -> {
-            if (level == LevelTarget.L1) {
-                setColor(l1Color);
-            } else if (level == LevelTarget.L2) {
-                setColor(l2Color);
-            } else if (level == LevelTarget.L3) {
-                setColor(l3Color);
-            } else {
-                setColor(l4Color);
-            }
-        });
-    }
-
-    public Command rainbowAnim() {
-        return this
-                .run(() -> {
-
-                })
-                .alongWith(
-                        Commands.runOnce(() -> candle.animate(new StrobeAnimation(170, 109, 194, 0, 0.2, LED_COUNT))))
-                .ignoringDisable(true);
-    }
-
-    private void setBlinkingState(boolean state) {
-
-        if (state) {
-            animate(new StrobeAnimation((int) currentColor.red, (int) currentColor.green, (int) currentColor.blue, 0, 5,
-                    LED_COUNT));
+            default:
+                setRGB(l4Red, l4Green, l4Blue);
+                break;
         }
     }
 
-    // private void toggleBlinking(){
-    // blinking = !blinking;
-    // if(blinking){
-    // animate(new
-    // StrobeAnimation((int)currentColor.red,(int)currentColor.green,(int)currentColor.blue));
-    // }
-    // }
-    public Command blink() {
-        return this.run(() -> setBlinkingState(true)).andThen(
-                new WaitCommand(2),
-                setColor(currentColor));
+    public Command rainbowAnim() {
+        return this.runOnce(() -> candle.animate(new RainbowAnimation(1, 0.2, LED_COUNT)))
+                .ignoringDisable(true);
     }
 
-    private void animate(Animation animation) {
-        candle.clearAnimation(0);
-        candle.animate(animation);
+    public Command blink() {
+        return this.runOnce(() -> {
+            // set blinking var to true to override periodic if statement
+            isBlinking = true;
+            candle.clearAnimation(0);
+            // make blinking animation
+            candle.animate(new StrobeAnimation(currentR, currentG, currentB, 0, 0.2, LED_COUNT));
+        }).andThen(
+                // after 2 seconds, we clear the animation and set var to false, allowing
+                // periodic to take over again
+                new WaitCommand(2),
+                Commands.runOnce(() -> {
+                    candle.clearAnimation(0);
+                    isBlinking = false;
+                }));
+    }
+
+    @Override
+    public void periodic() {
+        // set rgb if we're not blinking
+        if (!isBlinking) {
+            candle.setLEDs(currentR, currentG, currentB);
+        }
     }
 
 }

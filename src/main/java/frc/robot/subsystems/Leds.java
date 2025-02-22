@@ -3,21 +3,23 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.led.Animation;
 import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix.led.CANdleConfiguration;
-
+import com.ctre.phoenix.led.FireAnimation;
 import com.ctre.phoenix.led.RainbowAnimation;
 
 import com.ctre.phoenix.led.StrobeAnimation;
+import com.ctre.phoenix.led.CANdle.LEDStripType;
 import com.ctre.phoenix.led.CANdle.VBatOutputMode;
 
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.RobotContainer.LevelTarget;
 
 public class Leds extends SubsystemBase {
-    private final int LED_COUNT = 40;
+    private final int LED_COUNT = 18;
     // TODO: Find CAN id
     private final CANdle candle = new CANdle(0);
 
@@ -35,9 +37,10 @@ public class Leds extends SubsystemBase {
         config.brightnessScalar = 0.2;
         config.disableWhenLOS = true;
         config.v5Enabled = true;
-        config.vBatOutputMode = VBatOutputMode.Off;
+        config.vBatOutputMode = VBatOutputMode.On;
         config.enableOptimizations = true;
         config.statusLedOffWhenActive = false;
+        config.stripType = LEDStripType.RGB;
 
         candle.configAllSettings(config);
 
@@ -72,12 +75,18 @@ public class Leds extends SubsystemBase {
     }
 
     public Command rainbowAnim() {
-        return this.runOnce(() -> animate(new RainbowAnimation(1.0, 0.6, LED_COUNT))).ignoringDisable(true);
+        return this
+                .run(() -> {
+
+                })
+                .alongWith(
+                        Commands.runOnce(() -> candle.animate(new StrobeAnimation(170, 109, 194, 0, 0.2, LED_COUNT))))
+                .ignoringDisable(true);
     }
 
     private void setBlinkingState(boolean state) {
-        blinking = state;
-        if (blinking) {
+
+        if (state) {
             animate(new StrobeAnimation((int) currentColor.red, (int) currentColor.green, (int) currentColor.blue, 0, 5,
                     LED_COUNT));
         }
@@ -91,10 +100,8 @@ public class Leds extends SubsystemBase {
     // }
     // }
     public Command blink() {
-        return new SequentialCommandGroup(
-                this.run(() -> setBlinkingState(true)),
+        return this.run(() -> setBlinkingState(true)).andThen(
                 new WaitCommand(2),
-                this.run(() -> setBlinkingState(false)),
                 setColor(currentColor));
     }
 

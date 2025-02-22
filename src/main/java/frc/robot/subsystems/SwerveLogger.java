@@ -33,11 +33,12 @@ public class SwerveLogger extends SubsystemBase {
         frontRightSteer = dt.getModule(1).getSteerMotor();
         backLeftSteer = dt.getModule(2).getSteerMotor();
         backRightSteer = dt.getModule(3).getSteerMotor();
+
     }
 
     private void updateModulePositions() {
         for (int i = 0; i < 4; i++) {
-            modulePositions[i] = dt.getModule(i).getSteerMotor().getPosition().getValueAsDouble();
+            modulePositions[i] = dt.getModule(i).getSteerMotor().getPosition().getValueAsDouble() * 360.0;
         }
     }
 

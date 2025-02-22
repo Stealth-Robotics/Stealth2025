@@ -20,12 +20,12 @@ import frc.robot.Robot;
 import frc.robot.subsystems.Superstructure.SuperState;
 
 @Logged
-
 public class Rollers extends SubsystemBase {
 
-    private final TalonFX motor = new TalonFX(28); // todo: change the can id
+    private final TalonFX motor = new TalonFX(28);
     private final TalonFXConfiguration config = new TalonFXConfiguration();
 
+    @NotLogged
     private boolean hasGamepiece = false;
 
     // debouncer for determining whether we have a gamepiece, will only return true

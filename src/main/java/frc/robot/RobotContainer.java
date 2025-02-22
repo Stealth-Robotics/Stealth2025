@@ -13,6 +13,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -33,8 +34,9 @@ import frc.robot.subsystems.Superstructure.SuperState;
 
 @Logged
 public class RobotContainer {
-	private final double MAX_VELO = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-	private final double MAX_ANGULAR_VELO = RotationsPerSecond.of(1.5).in(RadiansPerSecond);
+	@NotLogged
+	private final double MAX_VELO = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
+			MAX_ANGULAR_VELO = RotationsPerSecond.of(1.5).in(RadiansPerSecond);
 
 	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
 			.withDeadband(MAX_VELO * 0.1).withRotationalDeadband(MAX_ANGULAR_VELO * 0.1)

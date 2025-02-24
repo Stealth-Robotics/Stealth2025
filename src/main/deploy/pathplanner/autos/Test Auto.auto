@@ -5,116 +5,51 @@
     "data": {
       "commands": [
         {
-          "type": "parallel",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Go to scoring"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "right start score preload"
-                }
-              }
-            ]
+            "pathName": "right start drive 1"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "Dunk"
+            "pathName": "score preload i"
           }
         },
         {
-          "type": "wait",
+          "type": "path",
           "data": {
-            "waitTime": 0.5
+            "pathName": "preload to HP"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "Eject"
+            "pathName": "hp to score 1"
           }
         },
         {
-          "type": "parallel",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "preload to HP"
-                }
-              },
-              {
-                "type": "sequential",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 0.5
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Intake"
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
+            "pathName": "score K"
           }
         },
         {
-          "type": "parallel",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "hp to score 1"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Go to scoring"
-                }
-              }
-            ]
+            "pathName": "score k to HP"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "Dunk"
+            "pathName": "hp to score 2"
           }
         },
         {
-          "type": "parallel",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "score 1 to HP"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake"
-                }
-              }
-            ]
+            "pathName": "score L"
           }
         }
       ]

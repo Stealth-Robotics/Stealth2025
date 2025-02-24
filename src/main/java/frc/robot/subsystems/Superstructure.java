@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.DoubleConsumer;
 import java.util.function.Supplier;
 
 import com.playingwithfusion.TimeOfFlight;
@@ -44,19 +45,21 @@ public class Superstructure {
 
 	// trigger for states. these should be things that cause robot to move, not
 	// buttons that change target level
-	private Trigger preScoreTrigger;
-	private Trigger scoreTrigger;
-	private Trigger intakeTrigger;
-	private Trigger outtakeTrigger;
-	private Trigger missedScoreTrigger;
-	private Trigger stowTrigger;
-	private Trigger removeAlgaeHighTrigger;
-	private Trigger removeAlgaeLowTrigger;
-	private Trigger forceIdleTrigger;
-	private Trigger overrideBeamBreakTrigger;
-	private Trigger homeTrigger;
+	private final Trigger preScoreTrigger;
+	private final Trigger scoreTrigger;
+	private final Trigger intakeTrigger;
+	private final Trigger outtakeTrigger;
+	private final Trigger missedScoreTrigger;
+	private final Trigger stowTrigger;
+	private final Trigger removeAlgaeHighTrigger;
+	private final Trigger removeAlgaeLowTrigger;
+	private final Trigger forceIdleTrigger;
+	private final Trigger overrideBeamBreakTrigger;
+	private final Trigger homeTrigger;
 	@Logged
 	private final Trigger gamepieceDetectedInStagingArea;
+
+	private final DoubleConsumer rumble;
 
 	private final TimeOfFlight tof;
 
@@ -90,7 +93,8 @@ public class Superstructure {
 			Trigger removeAlgaeLowTrigger,
 			Trigger forceIdleTrigger,
 			Trigger overrideBeamBreakTrigger,
-			Trigger homeTrigger) {
+			Trigger homeTrigger,
+			DoubleConsumer rumble) {
 		this.elevator = elevator;
 		this.rollers = rollers;
 		this.arm = arm;
@@ -109,6 +113,8 @@ public class Superstructure {
 		this.forceIdleTrigger = forceIdleTrigger;
 		this.overrideBeamBreakTrigger = overrideBeamBreakTrigger;
 		this.homeTrigger = homeTrigger;
+
+		this.rumble = rumble;
 
 		// TODO FIND CAN ID
 		tof = new TimeOfFlight(0);
@@ -187,8 +193,12 @@ public class Superstructure {
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
 				.whileTrue(transfer.setVoltage(() -> 1)) // todo: test voltage that works
 				.and(gamepieceDetectedInStagingArea.or(overrideBeamBreakTrigger))
+				.onTrue(Commands.runOnce(() -> rumble.accept(0.5))
+						.andThen(
+								Commands.sequence(new WaitCommand(0.25), Commands.runOnce(() -> rumble.accept(0)))))
 				.onTrue(transfer.setVoltage(() -> 0))
 				.and(() -> arm.isMotorAtTarget())
+
 				.onTrue(this.forceState(SuperState.GRAB_CORAL));
 
 		// intake unjam state

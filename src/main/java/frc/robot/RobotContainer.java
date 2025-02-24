@@ -18,6 +18,7 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -117,7 +118,8 @@ public class RobotContainer {
 				operatorController.rightBumper(),
 				operatorController.leftTrigger(),
 				driverController.povLeft(),
-				driverController.povRight());
+				driverController.povRight(),
+				(rumble) -> setRumble(rumble));
 
 		goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
 				new WaitUntilCommand(subsystemsAtSetpoints));
@@ -205,6 +207,12 @@ public class RobotContainer {
 	// log if robot is enabled
 	public boolean isRobotEnabled() {
 		return DriverStation.isEnabled();
+	}
+
+	private void setRumble(double intensity) {
+		if (!DriverStation.isAutonomous()) {
+			driverController.getHID().setRumble(RumbleType.kBothRumble, intensity);
+		}
 	}
 
 	public void buildAutos() {

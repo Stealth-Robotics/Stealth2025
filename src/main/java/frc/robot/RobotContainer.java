@@ -10,6 +10,10 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import java.lang.management.CompilationMXBean;
+
+import org.opencv.features2d.FlannBasedMatcher;
+
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
@@ -28,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Arm;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Leds;
@@ -62,6 +67,7 @@ public class RobotContainer {
 	Arm arm;
 	Transfer transfer;
 	Leds leds;
+	Climber climber;
 	CommandSwerveDrivetrain dt = TunerConstants.createDrivetrain();
 	SwerveLogger logger = new SwerveLogger(dt);
 
@@ -91,6 +97,7 @@ public class RobotContainer {
 		arm = new Arm();
 		transfer = new Transfer();
 		leds = new Leds();
+		climber = new Climber();
 
 		Trigger subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
@@ -116,10 +123,13 @@ public class RobotContainer {
 				// TODO: BIND TO BUTTONS
 				operatorController.leftBumper(),
 				operatorController.rightBumper(),
-				operatorController.leftTrigger(),
+				new Trigger(() -> false),
 				driverController.povLeft(),
 				driverController.povRight(),
 				(rumble) -> setRumble(rumble));
+
+		climber.setDefaultCommand(climber.setDutyCycle(
+				() -> operatorController.getRightTriggerAxis() - operatorController.getLeftTriggerAxis()));
 
 		goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
 				new WaitUntilCommand(subsystemsAtSetpoints));

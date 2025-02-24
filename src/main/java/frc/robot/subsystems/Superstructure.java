@@ -199,7 +199,7 @@ public class Superstructure {
 		stateTriggers.get(SuperState.GRAB_CORAL)
 				.whileTrue(elevator.goToPosition(() -> Elevator.GRAB_CORAL_ROTATIONS))
 				.whileTrue(rollers.setRollerVoltage(6))
-				// .onTrue(leds.blink())
+				.onTrue(leds.blink())
 
 				// .and(() -> rollers.getHasGamepiece())
 				// need to experiment with good voltage that will keep coral in

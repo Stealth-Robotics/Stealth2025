@@ -81,7 +81,6 @@ public class Elevator extends SubsystemBase {
             STARTING_POSITION_INCHES = 15.0,
             ROTATIONS_PER_INCH = MAX_EXTENSION_IN_ROTATIONS / MAX_EXTENSION_IN_INCHES;
 
-    boolean atPosition;
     private boolean isHomed;
 
     Trigger currentOverZeroThreshold;

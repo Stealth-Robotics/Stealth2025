@@ -11,6 +11,8 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
@@ -19,6 +21,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -116,13 +119,12 @@ public class RobotContainer {
 				driverController.povLeft(),
 				driverController.povRight());
 
-		// goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
-		// new WaitUntilCommand(subsystemsAtSetpoints));
-		// dunk = Commands.sequence(superstructure.forceState(SuperState.SCORE_CORAL),
-		// new WaitUntilCommand(subsystemsAtSetpoints));
-		// eject = Commands.sequence(superstructure.forceState(SuperState.SPIT), new
-		// WaitCommand(0.5));
-		// intake = Commands.sequence(superstructure.forceState(SuperState.INTAKE_HP));
+		goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
+				new WaitUntilCommand(subsystemsAtSetpoints));
+		dunk = Commands.sequence(superstructure.forceState(SuperState.SCORE_CORAL),
+				new WaitUntilCommand(subsystemsAtSetpoints));
+		eject = Commands.sequence(superstructure.forceState(SuperState.SPIT), new WaitCommand(0.5));
+		intake = Commands.sequence(superstructure.forceState(SuperState.INTAKE_HP));
 
 		// NamedCommands.registerCommand("Go to scoring", goToL4);
 		// NamedCommands.registerCommand("Dunk", dunk);
@@ -193,16 +195,11 @@ public class RobotContainer {
 		// if we try to rotate the bot, go back to normal driving
 		new Trigger(() -> Math.abs(driverController.getRightTriggerAxis()) > 0.05).onTrue(driveFieldCentric);
 
-		// rollers.setDefaultCommand(rollers
-		// .setRollerVoltage(
-		// () -> (12 * (driverController.getLeftTriggerAxis()
-		// - driverController.getRightTriggerAxis()))));
-
 	}
 
 	public Command getAutonomousCommand() {
 
-		return Commands.none();
+		return leftAuto;
 	}
 
 	// log if robot is enabled
@@ -210,32 +207,30 @@ public class RobotContainer {
 		return DriverStation.isEnabled();
 	}
 
-	// public void buildAutos() {
-	// try {
-	// leftAuto = Commands.sequence(
-	// Commands.parallel(
-	// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("right start
-	// score preload")),
-	// goToL4),
-	// new WaitCommand(0.5),
-	// dunk,
-	// new WaitCommand(0.5),
-	// eject,
-	// Commands.parallel(
-	// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("preload to
-	// HP")),
-	// Commands.sequence(new WaitCommand(0.5), intake)),
-	// new WaitCommand(1),
-	// Commands.parallel(
-	// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("hp to score
-	// 1")),
-	// goToL4),
-	// new WaitCommand(0.5),
-	// dunk,
-	// new WaitCommand(0.5),
-	// eject);
-	// } catch (Exception e) {
-	// }
-	// }
+	public void buildAutos() {
+		try {
+			leftAuto = Commands.sequence(
+
+					AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("right start drive 1")),
+					goToL4,
+					AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("score preload i")),
+					dunk,
+					new WaitCommand(0.5),
+					eject,
+					Commands.parallel(
+							AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("preload to HP")),
+							Commands.sequence(new WaitCommand(0.5), intake)),
+					new WaitCommand(1),
+
+					AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("hp to score 1")),
+					goToL4,
+					AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("score K")),
+					new WaitCommand(0.5),
+					dunk,
+					new WaitCommand(0.5),
+					eject);
+		} catch (Exception e) {
+		}
+	}
 
 }

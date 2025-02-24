@@ -63,6 +63,8 @@ public class Leds extends SubsystemBase {
 
     // sets the current led colors based on target, perodic sets colors
     public void setLevel(LevelTarget level) {
+        isBlinking = false;
+        candle.clearAnimation(0);
         switch (level) {
             case L1:
                 setRGB(l1Red, l1Green, l1Blue);
@@ -82,6 +84,7 @@ public class Leds extends SubsystemBase {
 
     public Command rainbowAnim() {
         return this.runOnce(() -> candle.animate(new RainbowAnimation(1, 0.2, LED_COUNT)))
+                .alongWith(Commands.runOnce(() -> isBlinking = true))
                 .ignoringDisable(true);
     }
 

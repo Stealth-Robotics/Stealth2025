@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import com.playingwithfusion.TimeOfFlight;
+import com.playingwithfusion.TimeOfFlight.RangingMode;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -54,7 +55,7 @@ public class Superstructure {
 	private Trigger cancelScoringTrigger;
 	private Trigger overrideBeamBreakTrigger;
 	private Trigger homeTrigger;
-
+	@Logged
 	private final Trigger gamepieceDetectedInStagingArea;
 
 	private final TimeOfFlight tof;
@@ -111,8 +112,10 @@ public class Superstructure {
 
 		// TODO FIND CAN ID
 		tof = new TimeOfFlight(0);
+		tof.setRangingMode(RangingMode.Short, 0.02);
 		// TODO FIND RANGE THAT WORKS WITH TIME OF FLIGHT
-		gamepieceDetectedInStagingArea = new Trigger(() -> tof.getRange() < 10);
+
+		gamepieceDetectedInStagingArea = new Trigger(() -> tof.getRange() < 80).debounce(0.1);
 
 		// add all states to stateTriggers map
 		// for each state in the enum, construct a new trigger that will return true
@@ -178,8 +181,8 @@ public class Superstructure {
 		stateTriggers.get(SuperState.INTAKE_HP)
 				.whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
-				.whileTrue(transfer.setVoltage(() -> 2)) // todo: test voltage that works
-				.and(/* gamepieceDetectedInStagingArea.or */(overrideBeamBreakTrigger))
+				.whileTrue(transfer.setVoltage(() -> 1)) // todo: test voltage that works
+				.and(gamepieceDetectedInStagingArea.or(overrideBeamBreakTrigger))
 				.onTrue(transfer.setVoltage(() -> 0))
 				.and(() -> arm.isMotorAtTarget())
 				.onTrue(this.forceState(SuperState.GRAB_CORAL));

@@ -51,7 +51,7 @@ public class Superstructure {
 	private Trigger stowTrigger;
 	private Trigger removeAlgaeHighTrigger;
 	private Trigger removeAlgaeLowTrigger;
-	private Trigger cancelScoringTrigger;
+	private Trigger forceIdleTrigger;
 	private Trigger overrideBeamBreakTrigger;
 	private Trigger homeTrigger;
 	@Logged
@@ -87,7 +87,7 @@ public class Superstructure {
 			Trigger stowTrigger,
 			Trigger removeAlgaeHighTrigger,
 			Trigger removeAlgaeLowTrigger,
-			Trigger cancelScoringTrigger,
+			Trigger forceIdleTrigger,
 			Trigger overrideBeamBreakTrigger,
 			Trigger homeTrigger) {
 		this.elevator = elevator;
@@ -105,7 +105,7 @@ public class Superstructure {
 		this.stowTrigger = stowTrigger;
 		this.removeAlgaeHighTrigger = removeAlgaeHighTrigger;
 		this.removeAlgaeLowTrigger = removeAlgaeLowTrigger;
-		this.cancelScoringTrigger = cancelScoringTrigger;
+		this.forceIdleTrigger = forceIdleTrigger;
 		this.overrideBeamBreakTrigger = overrideBeamBreakTrigger;
 		this.homeTrigger = homeTrigger;
 
@@ -127,7 +127,7 @@ public class Superstructure {
 
 	private void configureStateTransitions() {
 		// allows us to cancel if anything goes wrong
-		cancelScoringTrigger
+		forceIdleTrigger
 				.onTrue(this.forceState(SuperState.IDLE));
 
 		// Idle -> stow
@@ -153,11 +153,14 @@ public class Superstructure {
 				.and(homeTrigger)
 				.onFalse(this.forceState(SuperState.HOMING));
 
+		// home elevator
 		stateTriggers.get(SuperState.HOMING)
+				// make sure arm isnt down before we force the elevator to low hardstops
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.STOWED_DEGREES))
 				.and(() -> arm.isMotorAtTarget())
+				// home elevator and force back to idle
 				.whileTrue(elevator.homeElevator())
-				.and(() -> elevator.getIsHomed()).debounce(0.2)
+				.and(() -> elevator.getIsHomed())
 				.onTrue(this.forceState(SuperState.IDLE));
 
 		stateTriggers.get(SuperState.STOW)
@@ -186,22 +189,23 @@ public class Superstructure {
 				.and(() -> arm.isMotorAtTarget())
 				.onTrue(this.forceState(SuperState.GRAB_CORAL));
 
+		// intake unjam state
 		stateTriggers.get(SuperState.INTAKE_HP)
 				.and(missedScoreTrigger)
 				.onFalse(this.forceState(SuperState.UNJAM));
 
 		stateTriggers.get(SuperState.UNJAM)
+				// move arm up to flat out and reverse transfer
+				// then we try to intake again 1 second later
 				.whileTrue(arm.rotateToPositionCommand(() -> 0))
 				.whileTrue(transfer.setVoltage(() -> -2))
 				.onTrue(Commands.sequence(new WaitCommand(1), this.forceState(SuperState.INTAKE_HP)));
 
 		stateTriggers.get(SuperState.GRAB_CORAL)
+				// just drop elevator down and bring it back up
 				.whileTrue(elevator.goToPosition(() -> Elevator.GRAB_CORAL_ROTATIONS))
 				.whileTrue(rollers.setRollerVoltage(6))
 				.onTrue(leds.blink())
-
-				// .and(() -> rollers.getHasGamepiece())
-				// need to experiment with good voltage that will keep coral in
 				.and(() -> elevator.isElevatorAtTarget())
 				.onTrue(rollers.setRollerVoltage(0.6))
 
@@ -228,7 +232,7 @@ public class Superstructure {
 		// when we are in ready mode, meaning arm has a coral, we now need to check for
 		// when driver presses button to actually go to scoring location
 
-		// THE TRIGGER IS ON FALSE BECAUSE IF IT IS ONTRUE FOR THIS ONE, IT IMMEDIATELY
+		// THE TRIGGER IS ONFALSE BECAUSE IF IT IS ONTRUE FOR THIS ONE, IT IMMEDIATELY
 		// JUMPS PAST THE PRE LEVELS
 		// THIS IS BECAUSE EVERYTHING IS TRUE AT ONCE AND IT IMMEDIATELY GOES TO THE
 		// NEXT STATE
@@ -358,7 +362,7 @@ public class Superstructure {
 		// ejecting gamepiece
 		stateTriggers.get(SuperState.SPIT)
 				.onTrue(rollers.setRollerVoltage(-1.5)
-						.andThen(new WaitCommand(0.5).andThen(rollers.setRollerVoltage(0))
+						.andThen(new WaitCommand(1).andThen(rollers.setRollerVoltage(0))
 								.andThen(this.forceState(SuperState.IDLE))));
 
 		// algae scoring

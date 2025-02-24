@@ -25,10 +25,6 @@ public class Transfer extends SubsystemBase {
         rightMotor.setControl(new Follower(leftMotor.getDeviceID(), true));
     }
 
-    public Command setDutyCycle(DoubleSupplier dutycycle) {
-        return this.run(() -> leftMotor.set(dutycycle.getAsDouble()));
-    }
-
     public Command setVoltage(DoubleSupplier voltage) {
         return this.runOnce(() -> {
             voltageOut.Output = voltage.getAsDouble();

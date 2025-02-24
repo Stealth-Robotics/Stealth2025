@@ -72,6 +72,9 @@ public class RobotContainer {
 	Command eject;
 
 	Command driveFieldCentric;
+	Command drivePointingAtAngle;
+
+	boolean driveAngled = false;
 
 	public Command leftAuto;
 
@@ -131,7 +134,13 @@ public class RobotContainer {
 		driveFieldCentric = dt.applyRequest(
 				() -> drive.withVelocityY(-driverController.getLeftX() * MAX_VELO)
 						.withVelocityX(-driverController.getLeftY() * MAX_VELO)
-						.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO));
+						.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO))
+				.alongWith(Commands.runOnce(() -> driveAngled = false));
+
+		drivePointingAtAngle = dt.applyRequest(
+				() -> driveAngle.withVelocityY(-driverController.getLeftX() * MAX_VELO)
+						.withVelocityX(-driverController.getLeftY() * MAX_VELO))
+				.alongWith(Commands.runOnce(() -> driveAngled = true));
 
 		dt.setDefaultCommand(driveFieldCentric);
 
@@ -177,7 +186,12 @@ public class RobotContainer {
 				.and(() -> Math.abs(driverController.getLeftY()) < 0.1)
 				.and(() -> Math.abs(driverController.getRightX()) < 0.1)
 				.whileTrue(dt.applyRequest(() -> brake))
-				.onFalse(driveFieldCentric);
+				.onFalse(Commands.either(drivePointingAtAngle, driveFieldCentric, () -> driveAngled));
+
+		// swap to driving at angle
+		driverController.y().onTrue(drivePointingAtAngle);
+		// if we try to rotate the bot, go back to normal driving
+		new Trigger(() -> Math.abs(driverController.getRightTriggerAxis()) > 0.05).onTrue(driveFieldCentric);
 
 		// rollers.setDefaultCommand(rollers
 		// .setRollerVoltage(

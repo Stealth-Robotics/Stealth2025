@@ -11,7 +11,6 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotContainer.LevelTarget;
 import frc.robot.RobotContainer.AlgaeTarget;
@@ -188,7 +187,7 @@ public class Superstructure {
 				.onTrue(this.forceState(SuperState.GRAB_CORAL));
 
 		stateTriggers.get(SuperState.INTAKE_HP)
-				.and(cancelScoringTrigger)
+				.and(missedScoreTrigger)
 				.onFalse(this.forceState(SuperState.UNJAM));
 
 		stateTriggers.get(SuperState.UNJAM)

@@ -17,7 +17,7 @@ public class Climber extends SubsystemBase {
     private final TalonFXConfiguration config = new TalonFXConfiguration();
 
     public Climber() {
-        motor = new TalonFX(99);
+        motor = new TalonFX(61);
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     }
 

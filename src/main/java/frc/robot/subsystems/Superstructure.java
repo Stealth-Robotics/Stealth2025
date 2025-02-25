@@ -172,7 +172,7 @@ public class Superstructure {
 
 		stateTriggers.get(SuperState.STOW)
 				.whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))
-				.and(() -> elevator.getElevatorMotorPosition() > 12)
+				.and(() -> elevator.getElevatorMotorPosition() > 11.5)
 				.onTrue(arm.rotateToPositionCommand(() -> Arm.STOWED_DEGREES))
 				// if we are stowing, we dont really care if we reach stow position before going
 				// to intake
@@ -191,7 +191,7 @@ public class Superstructure {
 		stateTriggers.get(SuperState.INTAKE_HP)
 				.whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
-				.whileTrue(transfer.setVoltage(() -> 1)) // todo: test voltage that works
+				.whileTrue(transfer.pulseVoltage(1.5)) // todo: test voltage that works
 				.and(gamepieceDetectedInStagingArea.or(overrideBeamBreakTrigger))
 				.onTrue(Commands.runOnce(() -> rumble.accept(0.5))
 						.andThen(
@@ -205,6 +205,10 @@ public class Superstructure {
 		stateTriggers.get(SuperState.INTAKE_HP)
 				.and(missedScoreTrigger)
 				.onFalse(this.forceState(SuperState.UNJAM));
+
+		stateTriggers.get(SuperState.READY_SCORE_CORAL)
+				.and(intakeTrigger)
+				.onFalse(this.forceState(SuperState.INTAKE_HP));
 
 		stateTriggers.get(SuperState.UNJAM)
 				// move arm up to flat out and reverse transfer
@@ -289,7 +293,7 @@ public class Superstructure {
 		stateTriggers.get(SuperState.PRE_L2)
 				.whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
 				// make sure arm doesnt collide with anything
-				.and(() -> elevator.getElevatorMotorPosition() > 12)
+				.and(() -> elevator.isElevatorAtTarget())
 				.onTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L2_DEGREES))
 				.and(() -> arm.getArmPosition() > 0)
 				.onTrue(elevator.goToPosition(() -> Elevator.PRE_L2_ROTATIONS))
@@ -407,7 +411,7 @@ public class Superstructure {
 		stateTriggers.get(SuperState.PRE_NET)
 				.whileTrue(elevator.goToPosition(() -> Elevator.PRE_NET_ROTATIONS))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_NET_DEGREES))
-				.and(() -> (elevator.getElevatorMotorPosition() > 40))
+				.and(() -> (elevator.getElevatorMotorPosition() > 35))
 				.onTrue(this.forceState(SuperState.SPIT_ALGAE));
 
 	}

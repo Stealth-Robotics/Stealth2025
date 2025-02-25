@@ -39,7 +39,7 @@ public class Transfer extends SubsystemBase {
                 setVoltage(() -> voltage),
                 new WaitCommand(0.5),
                 setVoltage(() -> 0),
-                new WaitCommand(0.25));
+                new WaitCommand(0.1));
     }
 
 }

@@ -23,6 +23,8 @@ import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -74,7 +76,7 @@ public class RobotContainer {
 	LevelTarget target = LevelTarget.L4;
 	AlgaeTarget algaeTarget = AlgaeTarget.NET;
 
-	// private final SendableChooser<Command> autoChooser;
+	private final SendableChooser<Command> autoChooser;
 
 	Command goToL4;
 	Command dunk;
@@ -98,12 +100,13 @@ public class RobotContainer {
 		transfer = new Transfer();
 		leds = new Leds();
 		climber = new Climber();
+		buildAutos();
 
 		Trigger subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
 
-		// autoChooser = AutoBuilder.buildAutoChooser();
-		// SmartDashboard.putData("Auto Chooser", autoChooser);
+		autoChooser = AutoBuilder.buildAutoChooser();
+		SmartDashboard.putData("Auto Chooser", autoChooser);
 
 		superstructure = new Superstructure(
 				elevator,
@@ -137,6 +140,8 @@ public class RobotContainer {
 				new WaitUntilCommand(subsystemsAtSetpoints));
 		eject = Commands.sequence(superstructure.forceState(SuperState.SPIT), new WaitCommand(0.5));
 		intake = Commands.sequence(superstructure.forceState(SuperState.INTAKE_HP));
+
+		autoChooser.addOption("auto", leftAuto);
 
 		// NamedCommands.registerCommand("Go to scoring", goToL4);
 		// NamedCommands.registerCommand("Dunk", dunk);
@@ -200,7 +205,9 @@ public class RobotContainer {
 				.and(() -> Math.abs(driverController.getLeftY()) < 0.1)
 				.and(() -> Math.abs(driverController.getRightX()) < 0.1)
 				.whileTrue(dt.applyRequest(() -> brake))
-				.onFalse(Commands.either(drivePointingAtAngle, driveFieldCentric, () -> driveAngled));
+				.onFalse(/*
+							 * Commands.either(drivePointingAtAngle, driveFieldCentric, () -> driveAngled)
+							 */ driveFieldCentric);
 
 		// swap to driving at angle
 		driverController.y().onTrue(drivePointingAtAngle);
@@ -228,25 +235,29 @@ public class RobotContainer {
 	public void buildAutos() {
 		try {
 			leftAuto = Commands.sequence(
+					AutoBuilder.resetOdom(
+							PathPlannerPath.fromChoreoTrajectory("right start drive 1").getStartingDifferentialPose()),
+					AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("right start drive 1")));
+			// goToL4,
+			// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("score preload
+			// i")),
+			// dunk,
+			// new WaitCommand(0.5),
+			// eject,
+			// Commands.parallel(
+			// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("preload to
+			// HP")),
+			// Commands.sequence(new WaitCommand(0.5), intake)),
+			// new WaitCommand(1),
 
-					AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("right start drive 1")),
-					goToL4,
-					AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("score preload i")),
-					dunk,
-					new WaitCommand(0.5),
-					eject,
-					Commands.parallel(
-							AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("preload to HP")),
-							Commands.sequence(new WaitCommand(0.5), intake)),
-					new WaitCommand(1),
-
-					AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("hp to score 1")),
-					goToL4,
-					AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("score K")),
-					new WaitCommand(0.5),
-					dunk,
-					new WaitCommand(0.5),
-					eject);
+			// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("hp to score
+			// 1")),
+			// goToL4,
+			// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("score K")),
+			// new WaitCommand(0.5),
+			// dunk,
+			// new WaitCommand(0.5),
+			// eject);
 		} catch (Exception e) {
 		}
 	}

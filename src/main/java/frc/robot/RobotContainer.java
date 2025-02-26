@@ -17,9 +17,18 @@ import org.opencv.features2d.FlannBasedMatcher;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
+
+import choreo.auto.AutoChooser;
+import choreo.auto.AutoFactory;
+import choreo.auto.AutoRoutine;
+import choreo.auto.AutoTrajectory;
+import choreo.trajectory.SwerveSample;
+import choreo.trajectory.Trajectory;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -28,6 +37,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -72,11 +82,12 @@ public class RobotContainer {
 	Climber climber;
 	CommandSwerveDrivetrain dt = TunerConstants.createDrivetrain();
 	SwerveLogger logger = new SwerveLogger(dt);
+	AutoFactory autoFactory;
 
 	LevelTarget target = LevelTarget.L4;
 	AlgaeTarget algaeTarget = AlgaeTarget.NET;
 
-	private final SendableChooser<Command> autoChooser;
+	private final AutoChooser autoChooser;
 
 	Command goToL4;
 	Command dunk;
@@ -90,6 +101,9 @@ public class RobotContainer {
 
 	public Command leftAuto;
 
+	@Logged
+	SwerveSample[] trajSamples;
+
 	public RobotContainer() {
 		// configure PID for heading controller
 		driveAngle.HeadingController.setP(0.1);
@@ -100,13 +114,15 @@ public class RobotContainer {
 		transfer = new Transfer();
 		leds = new Leds();
 		climber = new Climber();
-		buildAutos();
 
 		Trigger subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
 
-		autoChooser = AutoBuilder.buildAutoChooser();
+		autoChooser = new AutoChooser();
 		SmartDashboard.putData("Auto Chooser", autoChooser);
+		autoFactory = dt.createAutoFactory();
+		buildAuto();
+		autoChooser.addRoutine("test auto", this::buildAuto);
 
 		superstructure = new Superstructure(
 				elevator,
@@ -141,7 +157,7 @@ public class RobotContainer {
 		eject = Commands.sequence(superstructure.forceState(SuperState.SPIT), new WaitCommand(0.5));
 		intake = Commands.sequence(superstructure.forceState(SuperState.INTAKE_HP));
 
-		autoChooser.addOption("auto", leftAuto);
+		autoChooser.addCmd("auto", this::buildLeftAuto);
 
 		// NamedCommands.registerCommand("Go to scoring", goToL4);
 		// NamedCommands.registerCommand("Dunk", dunk);
@@ -198,6 +214,9 @@ public class RobotContainer {
 		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4)
 				.alongWith(Commands.runOnce(() -> leds.setLevel(target))));
 
+		operatorController.povDown().onTrue(Commands.runOnce(() -> algaeTarget = AlgaeTarget.PROCESSOR));
+		operatorController.povUp().onTrue(Commands.runOnce(() -> algaeTarget = AlgaeTarget.NET));
+
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
 
 		// brake when we aren't driving
@@ -217,8 +236,7 @@ public class RobotContainer {
 	}
 
 	public Command getAutonomousCommand() {
-
-		return leftAuto;
+		return autoChooser.selectedCommand();
 	}
 
 	// log if robot is enabled
@@ -232,34 +250,47 @@ public class RobotContainer {
 		}
 	}
 
-	public void buildAutos() {
-		try {
-			leftAuto = Commands.sequence(
-					AutoBuilder.resetOdom(
-							PathPlannerPath.fromChoreoTrajectory("right start drive 1").getStartingDifferentialPose()),
-					AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("right start drive 1")));
-			// goToL4,
-			// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("score preload
-			// i")),
-			// dunk,
-			// new WaitCommand(0.5),
-			// eject,
-			// Commands.parallel(
-			// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("preload to
-			// HP")),
-			// Commands.sequence(new WaitCommand(0.5), intake)),
-			// new WaitCommand(1),
+	public Command buildLeftAuto() {
 
-			// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("hp to score
-			// 1")),
-			// goToL4,
-			// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("score K")),
-			// new WaitCommand(0.5),
-			// dunk,
-			// new WaitCommand(0.5),
-			// eject);
-		} catch (Exception e) {
-		}
+		return Commands.sequence(
+				autoFactory.resetOdometry("right start drive 1"),
+				autoFactory.trajectoryCmd("right start drive 1"));
+
+		// goToL4,
+		// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("score preload
+		// i")),
+		// dunk,
+		// new WaitCommand(0.5),
+		// eject,
+		// Commands.parallel(
+		// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("preload to
+		// HP")),
+		// Commands.sequence(new WaitCommand(0.5), intake)),
+		// new WaitCommand(1),
+
+		// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("hp to score
+		// 1")),
+		// goToL4,
+		// AutoBuilder.followPath(PathPlannerPath.fromChoreoTrajectory("score K")),
+		// new WaitCommand(0.5),
+		// dunk,
+		// new WaitCommand(0.5),
+		// eject);
+
+	}
+
+	public AutoRoutine buildAuto() {
+		AutoRoutine autoRoutine = autoFactory.newRoutine("autoroutine");
+		AutoTrajectory path = autoRoutine.trajectory("mirrored_right start drive 1");
+		AutoTrajectory path2 = autoRoutine.trajectory("mirrored_score preload i");
+		AutoTrajectory path3 = autoRoutine.trajectory("mirrored_preload to HP");
+		AutoTrajectory path4 = autoRoutine.trajectory("mirrored_hp to score 1");
+		AutoTrajectory path5 = autoRoutine.trajectory("mirrored_score K");
+
+		autoRoutine.active().onTrue(
+				path.resetOdometry().andThen(path.cmd(), path2.cmd(), path3.cmd(), path4.cmd(), path5.cmd()));
+
+		return autoRoutine;
 	}
 
 }

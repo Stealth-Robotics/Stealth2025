@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import com.playingwithfusion.TimeOfFlight;
 import com.playingwithfusion.TimeOfFlight.RangingMode;
+import com.playingwithfusion.TimeOfFlight.Status;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -121,7 +122,8 @@ public class Superstructure {
 		tof.setRangingMode(RangingMode.Short, 0.02);
 		// TODO FIND RANGE THAT WORKS WITH TIME OF FLIGHT
 
-		gamepieceDetectedInStagingArea = new Trigger(() -> tof.getRange() < 80).debounce(0.1);
+		gamepieceDetectedInStagingArea = new Trigger(() -> tof.getRange() < 80)
+				.and(() -> tof.getStatus() == Status.Valid).debounce(0.1);
 
 		// add all states to stateTriggers map
 		// for each state in the enum, construct a new trigger that will return true
@@ -191,7 +193,7 @@ public class Superstructure {
 		stateTriggers.get(SuperState.INTAKE_HP)
 				.whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
-				.whileTrue(transfer.pulseVoltage(1.5)) // todo: test voltage that works
+				.whileTrue(transfer.setVoltage(() -> 1.5)) // todo: test voltage that works
 				.and(gamepieceDetectedInStagingArea.or(overrideBeamBreakTrigger))
 				.onTrue(Commands.runOnce(() -> rumble.accept(0.5))
 						.andThen(
@@ -207,15 +209,15 @@ public class Superstructure {
 				.onFalse(this.forceState(SuperState.UNJAM));
 
 		stateTriggers.get(SuperState.READY_SCORE_CORAL)
-				.and(intakeTrigger)
-				.onFalse(this.forceState(SuperState.INTAKE_HP));
+				.and(gamepieceDetectedInStagingArea).debounce(0.25)
+				.onFalse(this.forceState(SuperState.GRAB_CORAL));
 
 		stateTriggers.get(SuperState.UNJAM)
 				// move arm up to flat out and reverse transfer
 				// then we try to intake again 1 second later
 				.whileTrue(arm.rotateToPositionCommand(() -> 0))
 				.whileTrue(transfer.setVoltage(() -> -2))
-				.onTrue(Commands.sequence(new WaitCommand(1), this.forceState(SuperState.INTAKE_HP)));
+				.onTrue(Commands.sequence(new WaitCommand(0.5), this.forceState(SuperState.INTAKE_HP)));
 
 		stateTriggers.get(SuperState.GRAB_CORAL)
 				// just drop elevator down and bring it back up
@@ -352,7 +354,7 @@ public class Superstructure {
 				.whileTrue(elevator.goToPosition(() -> Elevator.SCORE_L4_ROTATIONS))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.SCORE_L4_DEGREES))
 				.and(() -> elevator.isElevatorAtTarget())
-				.and(() -> arm.isMotorAtTarget())
+
 				.and(outtakeTrigger)
 				.onTrue(this.forceState(SuperState.SPIT));
 

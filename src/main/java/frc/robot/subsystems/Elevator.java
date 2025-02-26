@@ -70,7 +70,7 @@ public class Elevator extends SubsystemBase {
             SCORE_L4_ROTATIONS = 44.25, // todo tune
             REMOVE_ALGAE_HIGH_ROTATIONS = 30, // todo tune
             REMOVE_ALGAE_LOW_ROTATIONS = 20, // todo tune
-            PRE_PROCESSOR_ROTATIONS = 40.0, // todo tune
+            PRE_PROCESSOR_ROTATIONS = 0.25, // todo tune
             PRE_NET_ROTATIONS = 40.0, // todo tune
             GRAB_CORAL_ROTATIONS = 7.4, // todo tune
             STOWED_ROTATIONS = 12; // todo tune

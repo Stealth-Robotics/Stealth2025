@@ -49,7 +49,7 @@ public class Arm extends SubsystemBase {
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
     @NotLogged
-    public static final double INTAKE_HP_DEGREES = -92.4, // todo tune
+    public static final double INTAKE_HP_DEGREES = -90.5, // todo tune
             PRE_L1_DEGREES = -45, // todo tune
             PRE_L2_DEGREES = 65.5, // todo tune
             PRE_L3_DEGREES = 65.5, // todo tune
@@ -60,7 +60,7 @@ public class Arm extends SubsystemBase {
             SCORE_L4_DEGREES = 40, // todo tune
             REMOVE_ALGAE_HIGH_DEGREES = 0.0, // todo tune
             REMOVE_ALGAE_LOW_DEGREES = 0.0, // todo tune
-            PRE_PROCESSOR_DEGREES = 0.0, // todo tune
+            PRE_PROCESSOR_DEGREES = -10.0, // todo tune
             PRE_NET_DEGREES = 45.0, // todo tune
             READY_SCORE_ALGAE = 70.0,
             STOWED_DEGREES = 80; // todo tune

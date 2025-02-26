@@ -121,7 +121,7 @@ public class RobotContainer {
 		autoChooser = new AutoChooser();
 		SmartDashboard.putData("Auto Chooser", autoChooser);
 		autoFactory = dt.createAutoFactory();
-		buildAuto();
+
 		autoChooser.addRoutine("test auto", this::buildAuto);
 
 		superstructure = new Superstructure(
@@ -288,7 +288,8 @@ public class RobotContainer {
 		AutoTrajectory path5 = autoRoutine.trajectory("mirrored_score K");
 
 		autoRoutine.active().onTrue(
-				path.resetOdometry().andThen(path.cmd(), path2.cmd(), path3.cmd(), path4.cmd(), path5.cmd()));
+				path.resetOdometry().andThen(path.cmd(), dt.applyRequest(() -> brake), path2.cmd(), path3.cmd(),
+						path4.cmd(), path5.cmd()));
 
 		return autoRoutine;
 	}

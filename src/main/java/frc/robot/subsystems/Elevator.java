@@ -131,8 +131,7 @@ public class Elevator extends SubsystemBase {
         motor1.getTorqueCurrent().setUpdateFrequency(50);
 
         motor2.getDeviceTemp().setUpdateFrequency(1);
-        motor2.getSupplyCurrent().setUpdateFrequency(1);
-        motor2.getMotorVoltage().setUpdateFrequency(1);
+
         motor1.getPosition().setUpdateFrequency(200);
         // turn off everythign we dont need
         ParentDevice.optimizeBusUtilizationForAll(motor1, motor2);

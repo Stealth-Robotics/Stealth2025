@@ -121,6 +121,9 @@ public class Elevator extends SubsystemBase {
         config.MotionMagic.MotionMagicAcceleration = MOTION_MAGIC_ACCELERATION;
         config.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
 
+        config.CurrentLimits.SupplyCurrentLimit = 30;
+        config.CurrentLimits.SupplyCurrentLimitEnable = true;
+
         // turn down status signals
         motor1.getDeviceTemp().setUpdateFrequency(1);
         motor1.getSupplyCurrent().setUpdateFrequency(50);

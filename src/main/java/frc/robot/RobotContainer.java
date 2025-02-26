@@ -153,7 +153,7 @@ public class RobotContainer {
 		goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
 				new WaitUntilCommand(subsystemsAtSetpoints));
 		dunk = Commands.sequence(superstructure.forceState(SuperState.SCORE_CORAL),
-				new WaitUntilCommand(subsystemsAtSetpoints));
+				new WaitUntilCommand(() -> elevator.isElevatorAtTarget()));
 		eject = Commands.sequence(superstructure.forceState(SuperState.SPIT), new WaitCommand(0.5));
 		intake = Commands.sequence(superstructure.forceState(SuperState.INTAKE_HP));
 
@@ -236,7 +236,7 @@ public class RobotContainer {
 	}
 
 	public Command getAutonomousCommand() {
-		return autoChooser.selectedCommand();
+		return buildAuto().cmd();
 	}
 
 	// log if robot is enabled
@@ -286,10 +286,22 @@ public class RobotContainer {
 		AutoTrajectory path3 = autoRoutine.trajectory("mirrored_preload to HP");
 		AutoTrajectory path4 = autoRoutine.trajectory("mirrored_hp to score 1");
 		AutoTrajectory path5 = autoRoutine.trajectory("mirrored_score K");
-
+		AutoTrajectory PRE_F = autoRoutine.trajectory("path", 0);
+		AutoTrajectory SCORE_F = autoRoutine.trajectory("path", 1);
+		AutoTrajectory F_SOURCE = autoRoutine.trajectory("path", 2);
+		// autoRoutine.active().onTrue(
+		// path.resetOdometry().andThen(path.cmd(), /* dt.applyRequest(() -> brake), */
+		// path2.cmd(), path3.cmd(),
+		// path4.cmd(), path5.cmd()));
 		autoRoutine.active().onTrue(
-				path.resetOdometry().andThen(path.cmd(), dt.applyRequest(() -> brake), path2.cmd(), path3.cmd(),
-						path4.cmd(), path5.cmd()));
+				PRE_F.resetOdometry().andThen(
+						PRE_F.cmd(),
+						dt.applyRequest(() -> brake),
+						SCORE_F.cmd().alongWith(goToL4),
+						dunk,
+						eject,
+						F_SOURCE.cmd().alongWith(
+								Commands.sequence(new WaitCommand(0.5), intake))));
 
 		return autoRoutine;
 	}

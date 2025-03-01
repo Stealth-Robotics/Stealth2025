@@ -14,6 +14,8 @@ import java.lang.management.CompilationMXBean;
 
 import org.opencv.features2d.FlannBasedMatcher;
 
+import com.ctre.phoenix.motorcontrol.GroupMotorControllers;
+import com.ctre.phoenix.platform.can.AutocacheState;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
@@ -100,6 +102,7 @@ public class RobotContainer {
 	boolean driveAngled = false;
 
 	public Command leftAuto;
+	Trigger subsystemsAtSetpoints;
 
 	@Logged
 	SwerveSample[] trajSamples;
@@ -115,7 +118,7 @@ public class RobotContainer {
 		leds = new Leds();
 		climber = new Climber();
 
-		Trigger subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
+		subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
 
 		autoChooser = new AutoChooser();
@@ -236,7 +239,7 @@ public class RobotContainer {
 	}
 
 	public Command getAutonomousCommand() {
-		return buildAuto().cmd();
+		return autoChooser.selectedCommand();
 	}
 
 	// log if robot is enabled
@@ -289,6 +292,9 @@ public class RobotContainer {
 		AutoTrajectory PRE_F = autoRoutine.trajectory("path", 0);
 		AutoTrajectory SCORE_F = autoRoutine.trajectory("path", 1);
 		AutoTrajectory F_SOURCE = autoRoutine.trajectory("path", 2);
+		AutoTrajectory SCORE_D = autoRoutine.trajectory("path", 3);
+		AutoTrajectory D_SOURCE = autoRoutine.trajectory("path", 4);
+		AutoTrajectory SCORE_C = autoRoutine.trajectory("path", 5);
 		// autoRoutine.active().onTrue(
 		// path.resetOdometry().andThen(path.cmd(), /* dt.applyRequest(() -> brake), */
 		// path2.cmd(), path3.cmd(),
@@ -296,12 +302,25 @@ public class RobotContainer {
 		autoRoutine.active().onTrue(
 				PRE_F.resetOdometry().andThen(
 						PRE_F.cmd(),
-						dt.applyRequest(() -> brake),
-						SCORE_F.cmd().alongWith(goToL4),
+
+						SCORE_F.cmd()
+								.alongWith(superstructure.forceState(SuperState.PRE_L4)
+										.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
 						dunk,
-						eject,
-						F_SOURCE.cmd().alongWith(
-								Commands.sequence(new WaitCommand(0.5), intake))));
+						eject));
+		// F_SOURCE.cmd()
+		// .alongWith(Commands.sequence(new WaitCommand(0.5),
+		// superstructure.forceState(SuperState.INTAKE_HP))),
+		// // */,
+		// new WaitCommand(0.5),
+		// SCORE_D.cmd()/* */,
+		// dt.applyRequest(() -> brake).withTimeout(0.1),
+		// (Commands.sequence(new WaitUntilCommand(
+		// () -> superstructure.getState() == SuperState.READY_SCORE_CORAL),
+		// superstructure.forceState(SuperState.PRE_L4)))));
+		// D_SOURCE.cmd(),
+		// new WaitCommand(0.5),
+		// SCORE_C.cmd()));
 
 		return autoRoutine;
 	}

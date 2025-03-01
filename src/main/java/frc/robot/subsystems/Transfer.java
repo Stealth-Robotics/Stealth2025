@@ -42,4 +42,12 @@ public class Transfer extends SubsystemBase {
                 new WaitCommand(0.1));
     }
 
+    public double getLeftStatorCurrent() {
+        return leftMotor.getStatorCurrent().getValueAsDouble();
+    }
+
+    public double getRightStatorCurrent() {
+        return rightMotor.getStatorCurrent().getValueAsDouble();
+    }
+
 }

@@ -60,17 +60,17 @@ public class Elevator extends SubsystemBase {
 
     @NotLogged
     public static final double INTAKE_HP_ROTATIONS = 12.75, // todo tune
-            PRE_L1_ROTATIONS = 20, // todo tune
+            PRE_L1_ROTATIONS = 18, // todo tune
             PRE_L2_ROTATIONS = 4.2, // todo tune
             PRE_L3_ROTATIONS = 19.5, // todo tune
             PRE_L4_ROTATIONS = 43.5, // todo tune
-            SCORE_L1_ROTATIONS = 15, // todo tune
+            SCORE_L1_ROTATIONS = 18, // todo tune
             SCORE_L2_ROTATIONS = 2.0, // todo tune
             SCORE_L3_ROTATIONS = 17.0, // todo tune
             SCORE_L4_ROTATIONS = 44.25, // todo tune
             REMOVE_ALGAE_HIGH_ROTATIONS = 30, // todo tune
             REMOVE_ALGAE_LOW_ROTATIONS = 20, // todo tune
-            PRE_PROCESSOR_ROTATIONS = 0.25, // todo tune
+            PRE_PROCESSOR_ROTATIONS = 0.75, // todo tune
             PRE_NET_ROTATIONS = 40.0, // todo tune
             GRAB_CORAL_ROTATIONS = 7.4, // todo tune
             STOWED_ROTATIONS = 12; // todo tune
@@ -125,19 +125,19 @@ public class Elevator extends SubsystemBase {
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
         // turn down status signals
-        motor1.getDeviceTemp().setUpdateFrequency(1);
-        motor1.getSupplyCurrent().setUpdateFrequency(50);
+        // motor1.getDeviceTemp().setUpdateFrequency(1);
+        // motor1.getSupplyCurrent().setUpdateFrequency(50);
 
-        // IMPORTANT: MUST BE ENABLED FOR FOLLOWER
-        motor1.getMotorVoltage().setUpdateFrequency(50);
-        motor1.getDutyCycle().setUpdateFrequency(50);
-        motor1.getTorqueCurrent().setUpdateFrequency(50);
+        // // IMPORTANT: MUST BE ENABLED FOR FOLLOWER
+        // motor1.getMotorVoltage().setUpdateFrequency(50);
+        // motor1.getDutyCycle().setUpdateFrequency(50);
+        // motor1.getTorqueCurrent().setUpdateFrequency(50);
 
-        motor2.getDeviceTemp().setUpdateFrequency(1);
+        // motor2.getDeviceTemp().setUpdateFrequency(1);
 
-        motor1.getPosition().setUpdateFrequency(200);
+        // motor1.getPosition().setUpdateFrequency(200);
         // turn off everythign we dont need
-        ParentDevice.optimizeBusUtilizationForAll(motor1, motor2);
+        // ParentDevice.optimizeBusUtilizationForAll(motor1, motor2);
 
         motor1.getConfigurator().apply(config);
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
@@ -200,6 +200,10 @@ public class Elevator extends SubsystemBase {
 
     public boolean getIsHomed() {
         return isHomed;
+    }
+
+    public double getStatorCurrent() {
+        return motor1.getStatorCurrent().getValueAsDouble();
     }
 
 }

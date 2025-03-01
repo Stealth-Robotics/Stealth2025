@@ -41,7 +41,7 @@ public class Arm extends SubsystemBase {
             MOTION_MAGIC_ACCELERATION = 8,
             MOTION_MAGIC_CRUISE_VELOCITY = 4,
             DEGREES_TO_ROTATIONS = 1 / 360.0,
-            ZERO_OFFSET = 0.643;
+            ZERO_OFFSET = 0.031;
 
     private final TalonFXConfiguration armMotorConfiguration;
     private final CANcoderConfiguration canCoderConfiguration;
@@ -49,18 +49,18 @@ public class Arm extends SubsystemBase {
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
     @NotLogged
-    public static final double INTAKE_HP_DEGREES = -90.5, // todo tune
-            PRE_L1_DEGREES = -45, // todo tune
+    public static final double INTAKE_HP_DEGREES = -91.0, // todo tune
+            PRE_L1_DEGREES = -27, // todo tune
             PRE_L2_DEGREES = 65.5, // todo tune
             PRE_L3_DEGREES = 65.5, // todo tune
             PRE_L4_DEGREES = 67, // todo tune
-            SCORE_L1_DEGREES = -35, // todo tune
+            SCORE_L1_DEGREES = -27, // todo tune
             SCORE_L2_DEGREES = 60, // todo tune
             SCORE_L3_DEGREES = 60, // todo tune
             SCORE_L4_DEGREES = 40, // todo tune
             REMOVE_ALGAE_HIGH_DEGREES = 0.0, // todo tune
             REMOVE_ALGAE_LOW_DEGREES = 0.0, // todo tune
-            PRE_PROCESSOR_DEGREES = -10.0, // todo tune
+            PRE_PROCESSOR_DEGREES = -5.0, // todo tune
             PRE_NET_DEGREES = 45.0, // todo tune
             READY_SCORE_ALGAE = 70.0,
             STOWED_DEGREES = 80; // todo tune
@@ -86,9 +86,10 @@ public class Arm extends SubsystemBase {
         armMotorConfiguration.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
         armMotorConfiguration.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
-        armMotorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        armMotorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         canCoderConfiguration.MagnetSensor.MagnetOffset = ZERO_OFFSET;
+        canCoderConfiguration.MagnetSensor.AbsoluteSensorDiscontinuityPoint = -2;
         canCoderConfiguration.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
 
         armMotorConfiguration.Feedback.FeedbackRemoteSensorID = CANCODER_CAN_ID;
@@ -110,7 +111,7 @@ public class Arm extends SubsystemBase {
 
     // made public so this is logged
     public double getArmPosition() {
-        return armMotor.getPosition().getValueAsDouble() * 360.0;
+        return canCoder.getPosition().getValueAsDouble() * 360.0;
     }
 
     public double getTargetPosition() {

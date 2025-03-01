@@ -137,7 +137,8 @@ public class Superstructure {
 	private void configureStateTransitions() {
 		// allows us to cancel if anything goes wrong
 		forceIdleTrigger
-				.onTrue(this.forceState(SuperState.IDLE));
+				.onTrue(this.forceState(SuperState.IDLE)
+						.alongWith(rollers.setRollerVoltage(-1.5)));
 
 		// Idle -> stow
 		stateTriggers.get(SuperState.IDLE)
@@ -206,7 +207,12 @@ public class Superstructure {
 		// intake unjam state
 		stateTriggers.get(SuperState.INTAKE_HP)
 				.and(missedScoreTrigger)
+
 				.onFalse(this.forceState(SuperState.UNJAM));
+
+		stateTriggers.get(SuperState.INTAKE_HP)
+				.and(() -> transfer.getLeftStatorCurrent() > 8).debounce(0.5)
+				.onTrue(this.forceState(SuperState.UNJAM));
 
 		stateTriggers.get(SuperState.READY_SCORE_CORAL)
 				.and(gamepieceDetectedInStagingArea).debounce(0.25)
@@ -215,7 +221,7 @@ public class Superstructure {
 		stateTriggers.get(SuperState.UNJAM)
 				// move arm up to flat out and reverse transfer
 				// then we try to intake again 1 second later
-				.whileTrue(arm.rotateToPositionCommand(() -> 0))
+				.whileTrue(arm.rotateToPositionCommand(() -> -60))
 				.whileTrue(transfer.setVoltage(() -> -2))
 				.onTrue(Commands.sequence(new WaitCommand(0.5), this.forceState(SuperState.INTAKE_HP)));
 
@@ -228,6 +234,10 @@ public class Superstructure {
 				.onTrue(rollers.setRollerVoltage(0.6))
 
 				.onTrue(this.forceState(SuperState.READY_SCORE_CORAL));
+
+		stateTriggers.get(SuperState.GRAB_CORAL)
+				.and(() -> elevator.getStatorCurrent() > 40).debounce(0.5)
+				.onTrue(this.forceState(SuperState.STOW));
 
 		stateTriggers.get(SuperState.REMOVE_ALGAE_HIGH)
 				.whileTrue(elevator.goToPosition(() -> Elevator.REMOVE_ALGAE_HIGH_ROTATIONS))
@@ -306,9 +316,9 @@ public class Superstructure {
 
 		stateTriggers.get(SuperState.PRE_L3)
 				.whileTrue(elevator.goToPosition(() -> Elevator.PRE_L3_ROTATIONS))
-				.whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L3_DEGREES))
+				.onTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L3_DEGREES))
 				.and(() -> elevator.isElevatorAtTarget())
-				.and(() -> arm.isMotorAtTarget())
+				// .and(() -> arm.isMotorAtTarget())
 				.and(scoreTrigger)
 				.onFalse(this.forceState(SuperState.SCORE_CORAL));
 
@@ -382,14 +392,15 @@ public class Superstructure {
 		// ejecting gamepiece
 		stateTriggers.get(SuperState.SPIT)
 				.onTrue(rollers.setRollerVoltage(-1.5)
-						.andThen(new WaitCommand(1).andThen(rollers.setRollerVoltage(0))
-								.andThen(this.forceState(SuperState.IDLE))));
+						.andThen(new WaitCommand(1).andThen(rollers.setRollerVoltage(0))))
+				.and(stowTrigger)
+				.onFalse(
+						this.forceState(SuperState.STOW));
 
 		stateTriggers.get(SuperState.SPIT_ALGAE)
-				.onTrue(rollers.setRollerVoltage(-9)
-						.andThen(new WaitCommand(1).andThen(rollers.setRollerVoltage(0))
-								.andThen(this.forceState(SuperState.IDLE))));
-
+				.onTrue(rollers.setRollerVoltage(-9))
+				.and(stowTrigger)
+				.onTrue(this.forceState(SuperState.STOW).alongWith(rollers.setRollerVoltage(0)));
 		// algae scoring
 		stateTriggers.get(SuperState.READY_SCORE_ALGAE)
 				// .onTrue(arm.rotateToPositionCommand(() -> Arm.READY_SCORE_ALGAE))
@@ -408,7 +419,7 @@ public class Superstructure {
 				.and(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget())
 				.and(scoreTrigger)
-				.onFalse(this.forceState(SuperState.SPIT));
+				.onFalse(this.forceState(SuperState.SPIT_ALGAE));
 
 		stateTriggers.get(SuperState.PRE_NET)
 				.whileTrue(elevator.goToPosition(() -> Elevator.PRE_NET_ROTATIONS))

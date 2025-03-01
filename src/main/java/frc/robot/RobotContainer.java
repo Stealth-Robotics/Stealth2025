@@ -114,6 +114,7 @@ public class RobotContainer {
 		autoFactory = dt.createAutoFactory();
 
 		autoChooser.addRoutine("test auto", this::buildAuto);
+		autoChooser.addRoutine("preload auto", this::preloadAuto);
 
 		superstructure = new Superstructure(
 				elevator,
@@ -209,6 +210,9 @@ public class RobotContainer {
 
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
 
+		driverController.y().onTrue(Commands.runOnce(() -> arm.incrementArmStow(1)));
+		driverController.a().onTrue(Commands.runOnce(() -> arm.incrementArmStow(-1)));
+
 		// brake when we aren't driving
 		new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)
 				.and(() -> Math.abs(driverController.getLeftY()) < 0.1)
@@ -227,6 +231,7 @@ public class RobotContainer {
 
 	public Command getAutonomousCommand() {
 		return autoChooser.selectedCommand();
+
 	}
 
 	// log if robot is enabled
@@ -308,6 +313,23 @@ public class RobotContainer {
 		// D_SOURCE.cmd(),
 		// new WaitCommand(0.5),
 		// SCORE_C.cmd()));
+
+		return autoRoutine;
+	}
+
+	public AutoRoutine preloadAuto() {
+		AutoRoutine autoRoutine = autoFactory.newRoutine("auto");
+		AutoTrajectory path = autoRoutine.trajectory("preload", 0);
+		AutoTrajectory path2 = autoRoutine.trajectory("preload", 1);
+
+		autoRoutine.active().onTrue(
+				path.resetOdometry().andThen(
+						path.cmd().alongWith(superstructure.forceState(SuperState.PRE_L4)
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+						dunk,
+						eject,
+						path2.cmd(),
+						superstructure.forceState(SuperState.STOW)));
 
 		return autoRoutine;
 	}

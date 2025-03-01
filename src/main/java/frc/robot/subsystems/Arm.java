@@ -41,7 +41,7 @@ public class Arm extends SubsystemBase {
             MOTION_MAGIC_ACCELERATION = 8,
             MOTION_MAGIC_CRUISE_VELOCITY = 4,
             DEGREES_TO_ROTATIONS = 1 / 360.0,
-            ZERO_OFFSET = 0.031;
+            ZERO_OFFSET = 0.0249;
 
     private final TalonFXConfiguration armMotorConfiguration;
     private final CANcoderConfiguration canCoderConfiguration;
@@ -49,8 +49,7 @@ public class Arm extends SubsystemBase {
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
     @NotLogged
-    public static final double INTAKE_HP_DEGREES = -91.0, // todo tune
-            PRE_L1_DEGREES = -27, // todo tune
+    public static final double PRE_L1_DEGREES = -27, // todo tune
             PRE_L2_DEGREES = 65.5, // todo tune
             PRE_L3_DEGREES = 65.5, // todo tune
             PRE_L4_DEGREES = 67, // todo tune
@@ -64,6 +63,8 @@ public class Arm extends SubsystemBase {
             PRE_NET_DEGREES = 45.0, // todo tune
             READY_SCORE_ALGAE = 70.0,
             STOWED_DEGREES = 80; // todo tune
+
+    public static double INTAKE_HP_DEGREES = -92.5; // todo tune
 
     public Arm() {
         // TODO: Find CAN IDs
@@ -89,21 +90,22 @@ public class Arm extends SubsystemBase {
         armMotorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         canCoderConfiguration.MagnetSensor.MagnetOffset = ZERO_OFFSET;
-        canCoderConfiguration.MagnetSensor.AbsoluteSensorDiscontinuityPoint = -2;
+
         canCoderConfiguration.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+        // canCoderConfiguration.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.75;
 
         armMotorConfiguration.Feedback.FeedbackRemoteSensorID = CANCODER_CAN_ID;
         armMotorConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
         armMotorConfiguration.Feedback.SensorToMechanismRatio = 1;
         armMotorConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-        // turn down status signals
-        armMotor.getDeviceTemp().setUpdateFrequency(1);
-        armMotor.getSupplyCurrent().setUpdateFrequency(1);
-        armMotor.getMotorVoltage().setUpdateFrequency(1);
-        armMotor.getPosition().setUpdateFrequency(200);
-        // turn off everythign we dont need
-        armMotor.optimizeBusUtilization();
+        // // turn down status signals
+        // armMotor.getDeviceTemp().setUpdateFrequency(1);
+        // armMotor.getSupplyCurrent().setUpdateFrequency(1);
+        // armMotor.getMotorVoltage().setUpdateFrequency(1);
+        // armMotor.getPosition().setUpdateFrequency(200);
+        // // turn off everythign we dont need
+        // armMotor.optimizeBusUtilization();
 
         armMotor.getConfigurator().apply(armMotorConfiguration);
         canCoder.getConfigurator().apply(canCoderConfiguration);
@@ -111,7 +113,7 @@ public class Arm extends SubsystemBase {
 
     // made public so this is logged
     public double getArmPosition() {
-        return canCoder.getPosition().getValueAsDouble() * 360.0;
+        return armMotor.getPosition().getValueAsDouble() * 360.0;
     }
 
     public double getTargetPosition() {
@@ -137,6 +139,10 @@ public class Arm extends SubsystemBase {
 
     public Command neutral() {
         return this.runOnce(() -> armMotor.setControl(neutralOut));
+    }
+
+    public void incrementArmStow(double incr) {
+        INTAKE_HP_DEGREES += incr;
     }
 
 }

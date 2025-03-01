@@ -10,36 +10,22 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-import java.lang.management.CompilationMXBean;
-
-import org.opencv.features2d.FlannBasedMatcher;
-
-import com.ctre.phoenix.motorcontrol.GroupMotorControllers;
-import com.ctre.phoenix.platform.can.AutocacheState;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.path.PathPlannerPath;
-
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import choreo.trajectory.SwerveSample;
-import choreo.trajectory.Trajectory;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -58,6 +44,10 @@ import frc.robot.subsystems.Superstructure.SuperState;
 
 @Logged
 public class RobotContainer {
+
+	CommandXboxController driverController = new CommandXboxController(0);
+	CommandXboxController operatorController = new CommandXboxController(1);
+
 	@NotLogged
 	private final double MAX_VELO = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
 			MAX_ANGULAR_VELO = RotationsPerSecond.of(1.5).in(RadiansPerSecond);
@@ -73,8 +63,6 @@ public class RobotContainer {
 
 	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
-	CommandXboxController driverController = new CommandXboxController(0);
-	CommandXboxController operatorController = new CommandXboxController(1);
 	Superstructure superstructure;
 	Rollers rollers;
 	Elevator elevator;
@@ -87,7 +75,7 @@ public class RobotContainer {
 	AutoFactory autoFactory;
 
 	LevelTarget target = LevelTarget.L4;
-	AlgaeTarget algaeTarget = AlgaeTarget.NET;
+	AlgaeTarget algaeTarget = AlgaeTarget.PROCESSOR;
 
 	private final AutoChooser autoChooser;
 
@@ -133,7 +121,6 @@ public class RobotContainer {
 				arm,
 				transfer,
 				leds,
-				// TODO: DECIDE WHETHER WE USE TOUCHSCREEN OR CONTROLLER
 				() -> target,
 				() -> algaeTarget,
 				driverController.leftBumper(),
@@ -145,7 +132,7 @@ public class RobotContainer {
 				// TODO: BIND TO BUTTONS
 				operatorController.leftBumper(),
 				operatorController.rightBumper(),
-				new Trigger(() -> false),
+				driverController.leftTrigger(),
 				driverController.povLeft(),
 				driverController.povRight(),
 				(rumble) -> setRumble(rumble));

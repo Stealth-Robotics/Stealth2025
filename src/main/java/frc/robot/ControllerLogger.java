@@ -3,22 +3,36 @@ package frc.robot;
 import edu.wpi.first.epilogue.CustomLoggerFor;
 import edu.wpi.first.epilogue.logging.ClassSpecificLogger;
 import edu.wpi.first.epilogue.logging.EpilogueBackend;
-import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 
-@CustomLoggerFor(CommandPS5Controller.class)
-public class ControllerLogger extends ClassSpecificLogger<CommandPS5Controller> {
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+
+@CustomLoggerFor(CommandXboxController.class)
+public class ControllerLogger extends ClassSpecificLogger<CommandXboxController> {
 
     public ControllerLogger() {
-        super(CommandPS5Controller.class);
+        super(CommandXboxController.class);
     }
 
     @Override
-    public void update(EpilogueBackend backend, CommandPS5Controller controller) {
-        backend.log("Cross", controller.cross().getAsBoolean());
-        backend.log("Square", controller.square().getAsBoolean());
-        backend.log("Circle", controller.circle().getAsBoolean());
-        backend.log("Triangle", controller.triangle().getAsBoolean());
+    public void update(EpilogueBackend backend, CommandXboxController controller) {
+        backend.log("A", controller.a().getAsBoolean());
+        backend.log("B", controller.b().getAsBoolean());
+        backend.log("X", controller.x().getAsBoolean());
+        backend.log("Y", controller.y().getAsBoolean());
+        backend.log("Right bumper", controller.rightBumper().getAsBoolean());
+        backend.log("Left bumper", controller.leftBumper().getAsBoolean());
+
+        backend.log("Left X", controller.getLeftX());
         backend.log("Left Y", controller.getLeftY());
+        backend.log("Right X", controller.getRightX());
+
+        backend.log("DPAD Up", controller.povUp().getAsBoolean());
+        backend.log("DPAD Down", controller.povDown().getAsBoolean());
+        backend.log("DPAD Right", controller.povRight().getAsBoolean());
+        backend.log("DPAD Left", controller.povLeft().getAsBoolean());
+
+        backend.log("Left trigger", controller.getLeftTriggerAxis());
+        backend.log("Right trigger", controller.getRightTriggerAxis());
 
     }
 }

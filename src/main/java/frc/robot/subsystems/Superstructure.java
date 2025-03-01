@@ -117,11 +117,8 @@ public class Superstructure {
 
 		this.rumble = rumble;
 
-		// TODO FIND CAN ID
 		tof = new TimeOfFlight(0);
 		tof.setRangingMode(RangingMode.Short, 0.02);
-		// TODO FIND RANGE THAT WORKS WITH TIME OF FLIGHT
-
 		gamepieceDetectedInStagingArea = new Trigger(() -> tof.getRange() < 80)
 				.and(() -> tof.getStatus() == Status.Valid).debounce(0.1);
 
@@ -214,16 +211,16 @@ public class Superstructure {
 				.and(() -> transfer.getLeftStatorCurrent() > 8).debounce(0.5)
 				.onTrue(this.forceState(SuperState.UNJAM));
 
-		stateTriggers.get(SuperState.READY_SCORE_CORAL)
-				.and(gamepieceDetectedInStagingArea).debounce(0.25)
-				.onFalse(this.forceState(SuperState.GRAB_CORAL));
-
 		stateTriggers.get(SuperState.UNJAM)
 				// move arm up to flat out and reverse transfer
 				// then we try to intake again 1 second later
 				.whileTrue(arm.rotateToPositionCommand(() -> -60))
 				.whileTrue(transfer.setVoltage(() -> -2))
 				.onTrue(Commands.sequence(new WaitCommand(0.5), this.forceState(SuperState.INTAKE_HP)));
+
+		stateTriggers.get(SuperState.READY_SCORE_CORAL)
+				.and(gamepieceDetectedInStagingArea).debounce(0.25)
+				.onFalse(this.forceState(SuperState.GRAB_CORAL));
 
 		stateTriggers.get(SuperState.GRAB_CORAL)
 				// just drop elevator down and bring it back up
@@ -256,6 +253,15 @@ public class Superstructure {
 				.onTrue(this.forceState(SuperState.READY_SCORE_ALGAE)
 						// again, experiment
 						.alongWith(rollers.setRollerVoltage(8)));
+
+		// flip flop between states
+		stateTriggers.get(SuperState.REMOVE_ALGAE_LOW)
+				.and(removeAlgaeHighTrigger)
+				.onTrue(this.forceState(SuperState.REMOVE_ALGAE_HIGH));
+
+		stateTriggers.get(SuperState.REMOVE_ALGAE_HIGH)
+				.and(removeAlgaeLowTrigger)
+				.onTrue(this.forceState(SuperState.REMOVE_ALGAE_LOW));
 
 		// when we are in ready mode, meaning arm has a coral, we now need to check for
 		// when driver presses button to actually go to scoring location
@@ -318,7 +324,7 @@ public class Superstructure {
 				.whileTrue(elevator.goToPosition(() -> Elevator.PRE_L3_ROTATIONS))
 				.onTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L3_DEGREES))
 				.and(() -> elevator.isElevatorAtTarget())
-				// .and(() -> arm.isMotorAtTarget())
+				.and(() -> arm.isMotorAtTarget())
 				.and(scoreTrigger)
 				.onFalse(this.forceState(SuperState.SCORE_CORAL));
 
@@ -364,7 +370,6 @@ public class Superstructure {
 				.whileTrue(elevator.goToPosition(() -> Elevator.SCORE_L4_ROTATIONS))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.SCORE_L4_DEGREES))
 				.and(() -> elevator.isElevatorAtTarget())
-
 				.and(outtakeTrigger)
 				.onTrue(this.forceState(SuperState.SPIT));
 
@@ -397,13 +402,8 @@ public class Superstructure {
 				.onFalse(
 						this.forceState(SuperState.STOW));
 
-		stateTriggers.get(SuperState.SPIT_ALGAE)
-				.onTrue(rollers.setRollerVoltage(-9))
-				.and(stowTrigger)
-				.onTrue(this.forceState(SuperState.STOW).alongWith(rollers.setRollerVoltage(0)));
 		// algae scoring
 		stateTriggers.get(SuperState.READY_SCORE_ALGAE)
-				// .onTrue(arm.rotateToPositionCommand(() -> Arm.READY_SCORE_ALGAE))
 				.and(() -> algaeTarget.get() == AlgaeTarget.PROCESSOR)
 				.and(preScoreTrigger)
 				.onFalse(this.forceState(SuperState.PRE_PROCESSOR));
@@ -427,10 +427,11 @@ public class Superstructure {
 				.and(() -> (elevator.getElevatorMotorPosition() > 35))
 				.onTrue(this.forceState(SuperState.SPIT_ALGAE));
 
-	}
+		stateTriggers.get(SuperState.SPIT_ALGAE)
+				.onTrue(rollers.setRollerVoltage(-9))
+				.and(stowTrigger)
+				.onTrue(this.forceState(SuperState.STOW).alongWith(rollers.setRollerVoltage(0)));
 
-	public void printState() {
-		System.out.println(levelTarget.get());
 	}
 
 	public SuperState getPrevState() {

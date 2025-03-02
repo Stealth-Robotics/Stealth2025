@@ -94,9 +94,11 @@ public class Arm extends SubsystemBase {
         canCoderConfiguration.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
         // canCoderConfiguration.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.75;
 
-        armMotorConfiguration.Feedback.FeedbackRemoteSensorID = CANCODER_CAN_ID;
-        armMotorConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
-        armMotorConfiguration.Feedback.SensorToMechanismRatio = 1;
+        // armMotorConfiguration.Feedback.FeedbackRemoteSensorID = CANCODER_CAN_ID;
+        // armMotorConfiguration.Feedback.FeedbackSensorSource =
+        // FeedbackSensorSourceValue.RotorSensor;
+        armMotorConfiguration.Feedback.SensorToMechanismRatio = (80.0 / 10.0) * (50.0 / 16.0) * (36.0 / 18.0);
+
         armMotorConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
         // // turn down status signals
@@ -109,6 +111,7 @@ public class Arm extends SubsystemBase {
 
         armMotor.getConfigurator().apply(armMotorConfiguration);
         canCoder.getConfigurator().apply(canCoderConfiguration);
+        armMotor.setPosition(Units.degreesToRotations(-92.0));
     }
 
     // made public so this is logged

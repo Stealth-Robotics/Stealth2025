@@ -230,6 +230,9 @@ public class RobotContainer {
 	}
 
 	public Command getAutonomousCommand() {
+		if (Robot.isSimulation()) {
+			return preloadAuto().cmd();
+		}
 		return autoChooser.selectedCommand();
 
 	}
@@ -321,15 +324,19 @@ public class RobotContainer {
 		AutoRoutine autoRoutine = autoFactory.newRoutine("auto");
 		AutoTrajectory path = autoRoutine.trajectory("preload", 0);
 		AutoTrajectory path2 = autoRoutine.trajectory("preload", 1);
+		AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
 
 		autoRoutine.active().onTrue(
 				path.resetOdometry().andThen(
 						path.cmd().alongWith(superstructure.forceState(SuperState.PRE_L4)
 								.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
 						dunk,
+						new WaitCommand(0.5),
 						eject,
 						path2.cmd(),
-						superstructure.forceState(SuperState.STOW)));
+						superstructure.forceState(SuperState.STOW),
+						new WaitUntilCommand(subsystemsAtSetpoints),
+						path3.cmd()));
 
 		return autoRoutine;
 	}

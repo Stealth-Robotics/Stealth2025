@@ -69,10 +69,10 @@ public class Elevator extends SubsystemBase {
             SCORE_L3_ROTATIONS = 17.0, // todo tune
             SCORE_L4_ROTATIONS = 44.25, // todo tune
             REMOVE_ALGAE_HIGH_ROTATIONS = 30, // todo tune
-            REMOVE_ALGAE_LOW_ROTATIONS = 20, // todo tune
+            REMOVE_ALGAE_LOW_ROTATIONS = 17, // todo tune
             PRE_PROCESSOR_ROTATIONS = 0.75, // todo tune
             PRE_NET_ROTATIONS = 40.0, // todo tune
-            GRAB_CORAL_ROTATIONS = 7.4, // todo tune
+            GRAB_CORAL_ROTATIONS = 7.38, // todo tune
             STOWED_ROTATIONS = 12; // todo tune
 
     @NotLogged
@@ -98,8 +98,8 @@ public class Elevator extends SubsystemBase {
         motor1 = new TalonFX(2);
         motor2 = new TalonFX(3);
 
-        elevatorTargetPosition = 0;
-        motor1.setPosition(0);
+        elevatorTargetPosition = 7.2607;
+        motor1.setPosition(7.2607);
         applyConfigs();
     }
 

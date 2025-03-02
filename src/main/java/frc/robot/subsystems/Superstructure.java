@@ -223,7 +223,7 @@ public class Superstructure {
 
 		stateTriggers.get(SuperState.READY_SCORE_CORAL)
 				.and(gamepieceDetectedInStagingArea).debounce(0.25)
-				.onFalse(this.forceState(SuperState.GRAB_CORAL));
+				.onTrue(this.forceState(SuperState.GRAB_CORAL));
 
 		stateTriggers.get(SuperState.GRAB_CORAL)
 				// just drop elevator down and bring it back up
@@ -254,7 +254,7 @@ public class Superstructure {
 				.whileTrue(elevator.goToPosition(() -> Elevator.REMOVE_ALGAE_HIGH_ROTATIONS))
 				.whileTrue(rollers.setRollerVoltage(9))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_HIGH_DEGREES))
-				// .and(() -> rollers.getHasGamepiece())
+				.and(() -> rollers.getHasGamepiece() || overrideBeamBreakTrigger.getAsBoolean())
 				.onTrue(this.forceState(SuperState.READY_SCORE_ALGAE)
 						// need to experiment with good voltage that will keep algae in
 						.alongWith(rollers.setRollerVoltage(8)));
@@ -263,7 +263,7 @@ public class Superstructure {
 				.whileTrue(elevator.goToPosition(() -> Elevator.REMOVE_ALGAE_LOW_ROTATIONS))
 				.whileTrue(rollers.setRollerVoltage(9))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_LOW_DEGREES))
-				// .and(() -> rollers.getHasGamepiece())
+				.and(() -> rollers.getHasGamepiece() || overrideBeamBreakTrigger.getAsBoolean())
 				.onTrue(this.forceState(SuperState.READY_SCORE_ALGAE)
 						// again, experiment
 						.alongWith(rollers.setRollerVoltage(8)));

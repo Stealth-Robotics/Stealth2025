@@ -225,6 +225,10 @@ public class Superstructure {
 				.and(gamepieceDetectedInStagingArea).debounce(0.25)
 				.onTrue(this.forceState(SuperState.GRAB_CORAL));
 
+		stateTriggers.get(SuperState.READY_SCORE_CORAL)
+				.and(intakeTrigger)
+				.onFalse(this.forceState(SuperState.GRAB_CORAL));
+
 		stateTriggers.get(SuperState.GRAB_CORAL)
 				// just drop elevator down and bring it back up
 				.whileTrue(elevator.goToPosition(() -> Elevator.GRAB_CORAL_ROTATIONS))

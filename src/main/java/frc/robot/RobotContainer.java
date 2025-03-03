@@ -322,9 +322,9 @@ public class RobotContainer {
 
 	public AutoRoutine preloadAuto() {
 		AutoRoutine autoRoutine = autoFactory.newRoutine("auto");
-		AutoTrajectory path = autoRoutine.trajectory("preload", 0);
-		AutoTrajectory path2 = autoRoutine.trajectory("preload", 1);
-		AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
+		AutoTrajectory path = autoRoutine.trajectory("mirrored_preload", 0);
+		AutoTrajectory path2 = autoRoutine.trajectory("mirrored_preload", 1);
+		AutoTrajectory path3 = autoRoutine.trajectory("mirrored_preload", 2);
 
 		autoRoutine.active().onTrue(
 				path.resetOdometry().andThen(

@@ -62,7 +62,7 @@ public class Elevator extends SubsystemBase {
     public static final double INTAKE_HP_ROTATIONS = 12.75, // todo tune
             PRE_L1_ROTATIONS = 18, // todo tune
             PRE_L2_ROTATIONS = 4.2, // todo tune
-            PRE_L3_ROTATIONS = 19.5, // todo tune
+            PRE_L3_ROTATIONS = 18.0, // todo tune
             PRE_L4_ROTATIONS = 43.5, // todo tune
             SCORE_L1_ROTATIONS = 18, // todo tune
             SCORE_L2_ROTATIONS = 2.0, // todo tune

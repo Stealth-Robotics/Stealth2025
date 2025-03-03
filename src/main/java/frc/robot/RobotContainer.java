@@ -40,6 +40,7 @@ import frc.robot.subsystems.Rollers;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.SwerveLogger;
 import frc.robot.subsystems.Transfer;
+import frc.robot.subsystems.CommandSwerveDrivetrain.ReefSide;
 import frc.robot.subsystems.Superstructure.SuperState;
 
 @Logged
@@ -212,6 +213,9 @@ public class RobotContainer {
 
 		driverController.y().onTrue(Commands.runOnce(() -> arm.incrementArmStow(1)));
 		driverController.a().onTrue(Commands.runOnce(() -> arm.incrementArmStow(-1)));
+
+		driverController.x().whileTrue(dt.goToPose(ReefSide.LEFT));
+		driverController.b().whileTrue(dt.goToPose(ReefSide.RIGHT));
 
 		// brake when we aren't driving
 		new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)

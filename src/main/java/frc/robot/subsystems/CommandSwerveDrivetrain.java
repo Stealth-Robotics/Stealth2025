@@ -18,12 +18,21 @@ import choreo.trajectory.Trajectory;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.logging.EpilogueBackend;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -31,13 +40,14 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
+import frc.robot.Robot;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
  * Subsystem so it can easily be used in command-based projects.
  */
+@Logged
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
@@ -56,13 +66,43 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final PIDController m_pathYController = new PIDController(20, 0, 0);
     private final PIDController m_pathThetaController = new PIDController(7, 0, 0);
 
+    private final SwerveRequest.ApplyFieldSpeeds applyRobotSpeeds = new SwerveRequest.ApplyFieldSpeeds();
+
+    private final PIDController xController = new PIDController(20, 0, 0);
+    private final PIDController yController = new PIDController(20, 0, 0);
+    private final ProfiledPIDController thetaController = new ProfiledPIDController(0.2, 0, 0, new Constraints(90, 90));
+
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
-    @Logged
+    Pose2d targetPose2d;
+
+    public enum ReefSide {
+        LEFT,
+        RIGHT
+    }
+
+    // @Logged
     SwerveSample[] trajSamples;
+
+    // @Logged
+    Pose3d testPose3d = new Pose3d(
+            new Pose2d(Distance.ofBaseUnits(6, Meter), Distance.ofBaseUnits(3, Meter), new Rotation2d()));
+
+    Transform2d atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(22.5),
+            Units.inchesToMeters(-6.5), new Rotation2d());
+
+    Transform2d atagToRightTransform2d = new Transform2d(Units.inchesToMeters(22.5),
+            Units.inchesToMeters(6.5), new Rotation2d());
+
+    Pose3d test2 = testPose3d.transformBy(new Transform3d(atagToLeftTransform2d));
+
+    Pose2d testAtagPos = new Pose2d(Units.inchesToMeters(209.5), Units.inchesToMeters(158.5),
+            new Rotation2d(Units.degreesToRadians(0)));
+
+    Transform2d botToTag;
 
     /*
      * SysId routine for characterizing translation. This is used to find PID gains
@@ -218,6 +258,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
     public AutoFactory createAutoFactory() {
         return createAutoFactory((sample, isStart) -> {
+
         });
     }
 
@@ -248,7 +289,41 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     @Logged
     public Pose2d getPose() {
+        // if (Robot.isSimulation()) {
+        // return new Pose2d(5.5, 2.5, new Rotation2d());
+        // }
         return getState().Pose;
+    }
+
+    public Command goToPose(ReefSide side) {
+
+        return this.runOnce(() -> {
+            thetaController.enableContinuousInput(-180, 180);
+            targetPose2d = getTargetPose(side);
+        }).andThen(this.run(
+                () -> {
+                    double xSpeed = MathUtil.clamp(xController.calculate(getPose().getX(), targetPose2d.getX()),
+                            -2, 2);
+                    double ySpeed = MathUtil.clamp(yController.calculate(getPose().getY(), targetPose2d.getY()),
+                            -2, 2);
+                    double angularSpeed = thetaController.calculate(getPose().getRotation().getDegrees(),
+                            targetPose2d.getRotation().getDegrees());
+                    ChassisSpeeds speeds = new ChassisSpeeds(xSpeed,
+                            ySpeed, angularSpeed);
+                    setControl(applyRobotSpeeds.withSpeeds(speeds));
+                }).until(
+                        () -> (MathUtil.isNear(getPose().getX(), targetPose2d.getX(), Units.inchesToMeters(3))
+                                && MathUtil.isNear(getPose().getY(), targetPose2d.getY(),
+                                        Units.inchesToMeters(3)))));
+    }
+
+    public Pose2d getTargetPose(ReefSide side) {
+        botToTag = new Transform2d(getPose(), testAtagPos);
+        if (side == ReefSide.LEFT) {
+            return getPose().transformBy(botToTag).transformBy(atagToLeftTransform2d);
+        } else {
+            return getPose().transformBy(botToTag).transformBy(atagToRightTransform2d);
+        }
     }
 
     /**

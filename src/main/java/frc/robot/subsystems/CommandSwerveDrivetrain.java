@@ -22,8 +22,10 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -38,6 +40,7 @@ import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
  * Subsystem so it can easily be used in command-based projects.
  */
+@Logged
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
@@ -60,6 +63,26 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+
+    private final Pose2d aprilTagTestPose = new Pose2d(Units.inchesToMeters(144), Units.inchesToMeters(158.5),
+            new Rotation2d(Units.degreesToRadians(180)));
+
+    private final Transform2d leftTagOffset = new Transform2d(Units.inchesToMeters(20.5), Units.inchesToMeters(-6.5),
+            new Rotation2d());
+    private final Transform2d rightTagOffset = new Transform2d(Units.inchesToMeters(20.5), Units.inchesToMeters(6.5),
+            new Rotation2d());
+
+    private Pose2d testTarget = getPose().transformBy(new Transform2d(getPose(), aprilTagTestPose))
+            .transformBy(leftTagOffset);
+
+    private Transform2d robotToTag = new Transform2d();
+
+    Pose2d targetPose = new Pose2d();
+
+    public enum ReefSide {
+        LEFT,
+        RIGHT
+    }
 
     @Logged
     SwerveSample[] trajSamples;
@@ -251,6 +274,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return getState().Pose;
     }
 
+    public void setTarget(ReefSide side) {
+        if (side == ReefSide.LEFT) {
+            testTarget = getPose().transformBy(new Transform2d(getPose(), aprilTagTestPose)).transformBy(leftTagOffset);
+        } else {
+            testTarget = getPose().transformBy(new Transform2d(getPose(), aprilTagTestPose)).transformBy(rightTagOffset);
+        }
+    }
+
     /**
      * Returns a command that applies the specified control request to this swerve
      * drivetrain.
@@ -330,6 +361,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
             });
         }
+
+        
     }
 
     private void startSimThread() {

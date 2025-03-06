@@ -211,8 +211,10 @@ public class RobotContainer {
 
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
 
-		driverController.y().onTrue(Commands.runOnce(() -> arm.incrementArmStow(1)));
-		driverController.a().onTrue(Commands.runOnce(() -> arm.incrementArmStow(-1)));
+		driverController.b().onTrue(Commands.runOnce(() -> dt.setTarget(ReefSide.RIGHT)));
+		driverController.a().onTrue(Commands.runOnce(() -> dt.setTarget(ReefSide.LEFT)));
+
+		
 
 		driverController.x().whileTrue(dt.goToPose(ReefSide.LEFT));
 		driverController.b().whileTrue(dt.goToPose(ReefSide.RIGHT));
@@ -229,7 +231,7 @@ public class RobotContainer {
 		// swap to driving at angle
 		driverController.y().onTrue(drivePointingAtAngle);
 		// if we try to rotate the bot, go back to normal driving
-		new Trigger(() -> Math.abs(driverController.getRightTriggerAxis()) > 0.05).onTrue(driveFieldCentric);
+		// new Trigger(() -> Math.abs(driverController.getRightTriggerAxis()) > 0.05).onTrue(driveFieldCentric);
 
 	}
 

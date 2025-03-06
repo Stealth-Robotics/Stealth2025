@@ -192,9 +192,12 @@ public class Superstructure {
 				.onTrue(this.forceState(SuperState.REMOVE_ALGAE_LOW));
 
 		stateTriggers.get(SuperState.INTAKE_HP)
-				.whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
+				.and(() -> arm.isMotorAtTarget())
+				.whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
 				.whileTrue(transfer.setVoltage(() -> 1.5)) // todo: test voltage that works
+				.whileTrue(rollers.setRollerVoltage(() -> 1.5)) 
+
 				.and(gamepieceDetectedInStagingArea.or(overrideBeamBreakTrigger))
 				.onTrue(Commands.runOnce(() -> rumble.accept(0.5))
 						.andThen(
@@ -211,12 +214,14 @@ public class Superstructure {
 				.onFalse(this.forceState(SuperState.UNJAM));
 
 		stateTriggers.get(SuperState.INTAKE_HP)
-				.and(() -> transfer.getLeftStatorCurrent() > 8).debounce(0.5)
+				.and(() -> transfer.getLeftStatorCurrent() > 30).debounce(0.5)
 				.onTrue(this.forceState(SuperState.UNJAM));
 
 		stateTriggers.get(SuperState.UNJAM)
 				// move arm up to flat out and reverse transfer
 				// then we try to intake again 1 second later
+				.whileTrue(elevator.goToPosition(() -> 12.75))
+				.and(() -> elevator.isElevatorAtTarget())
 				.whileTrue(arm.rotateToPositionCommand(() -> -60))
 				.whileTrue(transfer.setVoltage(() -> -2))
 				.onTrue(Commands.sequence(new WaitCommand(0.5), this.forceState(SuperState.INTAKE_HP)));
@@ -327,7 +332,7 @@ public class Superstructure {
 				.onFalse(this.forceState(SuperState.SCORE_CORAL));
 
 		stateTriggers.get(SuperState.PRE_L2)
-				.whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
+				.whileTrue(elevator.goToPosition(() -> 10.5))
 				// make sure arm doesnt collide with anything
 				.and(() -> elevator.isElevatorAtTarget())
 				.onTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L2_DEGREES))

@@ -70,7 +70,7 @@ public class RobotContainer {
 	Arm arm;
 	Transfer transfer;
 	Leds leds;
-	Climber climber;
+	// Climber climber;
 	CommandSwerveDrivetrain dt = TunerConstants.createDrivetrain();
 	SwerveLogger logger = new SwerveLogger(dt);
 	AutoFactory autoFactory;
@@ -105,7 +105,7 @@ public class RobotContainer {
 		arm = new Arm();
 		transfer = new Transfer();
 		leds = new Leds();
-		climber = new Climber();
+		// climber = new Climber();
 
 		subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
@@ -139,8 +139,8 @@ public class RobotContainer {
 				driverController.povRight(),
 				(rumble) -> setRumble(rumble));
 
-		climber.setDefaultCommand(climber.setDutyCycle(
-				() -> operatorController.getRightTriggerAxis() - operatorController.getLeftTriggerAxis()));
+		// climber.setDefaultCommand(climber.setDutyCycle(
+		// 		() -> operatorController.getRightTriggerAxis() - operatorController.getLeftTriggerAxis()));
 
 		goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
 				new WaitUntilCommand(subsystemsAtSetpoints));
@@ -210,10 +210,6 @@ public class RobotContainer {
 		operatorController.povUp().onTrue(Commands.runOnce(() -> algaeTarget = AlgaeTarget.NET));
 
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
-
-		driverController.b().onTrue(Commands.runOnce(() -> dt.setTarget(ReefSide.RIGHT)));
-		driverController.a().onTrue(Commands.runOnce(() -> dt.setTarget(ReefSide.LEFT)));
-
 		
 
 		driverController.x().whileTrue(dt.goToPose(ReefSide.LEFT));

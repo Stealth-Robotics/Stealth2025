@@ -59,7 +59,7 @@ public class Elevator extends SubsystemBase {
             STOWED_INCHES = 24.0; // todo tune
 
     @NotLogged
-    public static final double INTAKE_HP_ROTATIONS = 12.75, // todo tune
+    public static final double INTAKE_HP_ROTATIONS = 8.6, // todo tune
             PRE_L1_ROTATIONS = 18, // todo tune
             PRE_L2_ROTATIONS = 4.2, // todo tune
             PRE_L3_ROTATIONS = 18.0, // todo tune
@@ -73,7 +73,7 @@ public class Elevator extends SubsystemBase {
             PRE_PROCESSOR_ROTATIONS = 0.75, // todo tune
             PRE_NET_ROTATIONS = 40.0, // todo tune
             GRAB_CORAL_ROTATIONS = 7.38, // todo tune
-            STOWED_ROTATIONS = 12; // todo tune
+            STOWED_ROTATIONS = 18; // todo tune
 
     @NotLogged
     private final double MAX_EXTENSION_IN_INCHES = 60.0,

@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -15,13 +17,16 @@ import choreo.Choreo.TrajectoryLogger;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.logging.EpilogueBackend;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -40,6 +45,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.LimelightHelpers;
 import frc.robot.Robot;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
@@ -70,12 +76,44 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private final PIDController xController = new PIDController(20, 0, 0);
     private final PIDController yController = new PIDController(20, 0, 0);
-    private final ProfiledPIDController thetaController = new ProfiledPIDController(0.2, 0, 0, new Constraints(90, 90));
+    private final ProfiledPIDController thetaController = new ProfiledPIDController(0.1, 0, 0, new Constraints(45, 45));
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+
+    private final Pose2d TAG_6 = new Pose2d(Inches.of(530.49), Inches.of(130.17), new Rotation2d(Degrees.of(300)));
+    private final Pose2d TAG_7 = new Pose2d(Inches.of(546.87), Inches.of(158.5), new Rotation2d(Degrees.of(0)));
+    private final Pose2d TAG_8 = new Pose2d(Inches.of(530.49), Inches.of(186.83), new Rotation2d(Degrees.of(60)));
+    private final Pose2d TAG_9 = new Pose2d(Inches.of(497.77), Inches.of(186.83), new Rotation2d(Degrees.of(120)));
+    private final Pose2d TAG_10 = new Pose2d(Inches.of(481.39), Inches.of(158.50), new Rotation2d(Degrees.of(180)));
+    private final Pose2d TAG_11 = new Pose2d(Inches.of(497.77), Inches.of(130.17), new Rotation2d(Degrees.of(240)));
+
+    private final Pose2d TAG_17 = new Pose2d(Inches.of(160.39), Inches.of(130.17), new Rotation2d(Degrees.of(240)));
+    private final Pose2d TAG_18 = new Pose2d(Inches.of(144), Inches.of(158.5), new Rotation2d(Degrees.of(180)));
+    private final Pose2d TAG_19 = new Pose2d(Inches.of(160.39), Inches.of(186.83), new Rotation2d(Degrees.of(120)));
+    private final Pose2d TAG_20 = new Pose2d(Inches.of(193.1), Inches.of(186.83), new Rotation2d(Degrees.of(60)));
+    private final Pose2d TAG_21 = new Pose2d(Inches.of(209.49), Inches.of(158.5), new Rotation2d(Degrees.of(0)));
+    private final Pose2d TAG_22 = new Pose2d(Inches.of(193.1), Inches.of(130.17), new Rotation2d(Degrees.of(300)));
+
+    private final List<Pose2d> tagPoses = Arrays.asList(
+            TAG_6,
+            TAG_7,
+            TAG_8,
+            TAG_9,
+            TAG_10,
+            TAG_11,
+            TAG_17,
+            TAG_18,
+            TAG_19,
+            TAG_20,
+            TAG_21,
+            TAG_22);
+
+    Pose3d limelightEst;
+
+    double measurementX, measurementY, measurementTheta;
 
     Pose2d targetPose2d;
 
@@ -95,7 +133,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             Units.inchesToMeters(-6.5), new Rotation2d());
 
     Transform2d atagToRightTransform2d = new Transform2d(Units.inchesToMeters(22.5),
-            Units.inchesToMeters(6.5), new Rotation2d());
+            Units.inchesToMeters(12.5), new Rotation2d());
 
     Pose3d test2 = testPose3d.transformBy(new Transform3d(atagToLeftTransform2d));
 
@@ -103,6 +141,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             new Rotation2d(Units.degreesToRadians(0)));
 
     Transform2d botToTag;
+
+    Pose2d tagPoseRobotRelative = new Pose2d();
+    boolean hastarget = false;
+
+    LinearFilter movingaverageX = LinearFilter.movingAverage(15);
+    LinearFilter movingaverageY = LinearFilter.movingAverage(15);
+    LinearFilter movingaverageTheta = LinearFilter.movingAverage(15);
+
+    private Pose2d targetRight = new Pose2d();
+    private Pose2d targetLeft = new Pose2d();
 
     /*
      * SysId routine for characterizing translation. This is used to find PID gains
@@ -300,30 +348,30 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return this.runOnce(() -> {
             thetaController.enableContinuousInput(-180, 180);
             targetPose2d = getTargetPose(side);
+
         }).andThen(this.run(
                 () -> {
-                    double xSpeed = MathUtil.clamp(xController.calculate(getPose().getX(), targetPose2d.getX()),
-                            -2, 2);
-                    double ySpeed = MathUtil.clamp(yController.calculate(getPose().getY(), targetPose2d.getY()),
-                            -2, 2);
+                    double xSpeed = MathUtil.clamp(xController.calculate(getPose().getX(), getTargetPose(side).getX()),
+                            -1, 1);
+                    double ySpeed = MathUtil.clamp(yController.calculate(getPose().getY(), getTargetPose(side).getY()),
+                            -1, 1);
                     double angularSpeed = thetaController.calculate(getPose().getRotation().getDegrees(),
-                            targetPose2d.getRotation().getDegrees());
+                            getTargetPose(side).getRotation().getDegrees());
                     ChassisSpeeds speeds = new ChassisSpeeds(xSpeed,
                             ySpeed, angularSpeed);
                     setControl(applyRobotSpeeds.withSpeeds(speeds));
                 }).until(
-                        () -> (MathUtil.isNear(getPose().getX(), targetPose2d.getX(), Units.inchesToMeters(3))
-                                && MathUtil.isNear(getPose().getY(), targetPose2d.getY(),
+                        () -> (MathUtil.isNear(getPose().getX(), getTargetPose(side).getX(), Units.inchesToMeters(3))
+                                && MathUtil.isNear(getPose().getY(), getTargetPose(side).getY(),
                                         Units.inchesToMeters(3)))));
     }
 
     public Pose2d getTargetPose(ReefSide side) {
-        botToTag = new Transform2d(getPose(), testAtagPos);
-        if (side == ReefSide.LEFT) {
-            return getPose().transformBy(botToTag).transformBy(atagToLeftTransform2d);
-        } else {
-            return getPose().transformBy(botToTag).transformBy(atagToRightTransform2d);
-        }
+        return side == ReefSide.LEFT ? targetLeft : targetRight;
+    }
+
+    public Pose2d solveClosestTagPose() {
+        return getPose().nearest(tagPoses);
     }
 
     /**
@@ -405,6 +453,47 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
             });
         }
+
+        // if (LimelightHelpers.getTV("limelight-left")) {
+
+        // limelightEst = LimelightHelpers.getBotPose3d_TargetSpace("limelight-left");
+
+        // measurementX = movingaverageX.calculate(limelightEst.getX());
+        // measurementY = movingaverageY.calculate(limelightEst.getZ());
+        // measurementTheta =
+        // movingaverageTheta.calculate(limelightEst.getRotation().getX());
+
+        // if (Math.abs(measurementY) > 0.25 &&
+        // (Math.abs(getState().Speeds.vxMetersPerSecond) < 0.5
+        // && Math.abs(getState().Speeds.vyMetersPerSecond) < 0.5)) {
+
+        // if (!hastarget || MathUtil.isNear(this.getState().RawHeading.getDegrees(),
+        // measurementTheta, 3)) {
+        // hastarget = true;
+        // botToTag = new Transform2d(measurementY, -measurementX,
+        // new Rotation2d(measurementTheta).plus(new Rotation2d(Degrees.of(180))));
+
+        // targetPose2d =
+        // getPose().transformBy(botToTag).transformBy(atagToRightTransform2d);
+
+        // tagPoseRobotRelative = getPose().transformBy(botToTag);
+        // }
+
+        // }
+
+        // }
+
+        targetRight = solveClosestTagPose().transformBy(atagToRightTransform2d);
+        targetLeft = solveClosestTagPose().transformBy(atagToLeftTransform2d);
+
+        double yaw = getPigeon2().getYaw().getValueAsDouble();
+        LimelightHelpers.SetRobotOrientation("limelight-left", yaw, 0, 0, 0, 0, 0);
+        LimelightHelpers.PoseEstimate est = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
+
+        if(est.tagCount > 0){
+            addVisionMeasurement(est.pose, est.timestampSeconds, VecBuilder.fill(.7, .7, 9999999));
+        }
+
     }
 
     private void startSimThread() {

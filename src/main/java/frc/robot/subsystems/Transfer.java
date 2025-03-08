@@ -31,7 +31,7 @@ public class Transfer extends SubsystemBase {
         return this.runOnce(() -> {
             voltageOut.Output = voltage.getAsDouble();
             leftMotor.setControl(voltageOut);
-            rightMotor.setControl(new Follower(25, true));
+            rightMotor.setControl(new Follower(leftMotor.getDeviceID(), true));
         });
     }
 

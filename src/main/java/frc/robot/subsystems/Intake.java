@@ -26,7 +26,7 @@ public class Intake extends SubsystemBase {
     private final TalonFX deployMotor;
     private final TalonFX intakeMotor;
 
-    private final double kP = 0.0,
+    private final double kP = 120.0,
             kI = 0.0,
             kD = 0.0,
             kS = 0.0,
@@ -34,7 +34,7 @@ public class Intake extends SubsystemBase {
             kG = 0.0,
             MOTION_MAGIC_ACCELERATION = (Degrees.of(90).in(Rotations) / 0.2),
             MOTION_MAGIC_CRUISE_VELOCITY = (Degrees.of(90).in(Rotations) / 0.4),
-            TOLERANCE = Degrees.of(0.5).in(Rotations);
+            TOLERANCE = Degrees.of(2).in(Rotations);
 
     private final TalonFXConfiguration deployMotorConfiguration;
     private final TalonFXConfiguration intakeMotorConfiguration;
@@ -47,13 +47,11 @@ public class Intake extends SubsystemBase {
             STOWED_ANGLE = Degrees.of(90);
 
     public Intake() {
-        deployMotor = new TalonFX(0);
-        intakeMotor = new TalonFX(1);
+        deployMotor = new TalonFX(10);
+        intakeMotor = new TalonFX(9);
 
         deployMotorConfiguration = new TalonFXConfiguration();
         intakeMotorConfiguration = new TalonFXConfiguration();
-
-        
 
         deployMotorConfiguration.Slot0.kP = kP;
         deployMotorConfiguration.Slot0.kI = kI;
@@ -65,19 +63,29 @@ public class Intake extends SubsystemBase {
         deployMotorConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         deployMotorConfiguration.Feedback.SensorToMechanismRatio = (64.0 / 10.0) * (60.0 / 20.0) * (50.0 / 14.0);
 
-        intakeMotorConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        intakeMotorConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-        intakeMotor.getConfigurator
+        intakeMotor.getConfigurator().apply(intakeMotorConfiguration);
+        deployMotor.getConfigurator().apply(deployMotorConfiguration);
+
+        deployMotor.setPosition(Degrees.of(0));
     }
 
     public Command rotateToPositionCommand(Angle angle) {
-        motionMagicVoltage.Position = angle.in(Rotations);
-        targetPosition = angle.in(Degrees);
-        return this.runOnce(() -> deployMotor.setControl(motionMagicVoltage));
+
+        return this.runOnce(() -> {
+            motionMagicVoltage.Position = angle.in(Rotations);
+            targetPosition = angle.in(Degrees);
+            deployMotor.setControl(motionMagicVoltage);
+        });
     }
 
     public boolean atPosition() {
         return MathUtil.isNear(deployMotor.getPosition().getValueAsDouble(), targetPosition, TOLERANCE);
+    }
+
+    public double getPositionDegrees() {
+        return Units.rotationsToDegrees(deployMotor.getPosition().getValueAsDouble());
     }
 
     public Command setIntakeVoltage(DoubleSupplier voltage) {

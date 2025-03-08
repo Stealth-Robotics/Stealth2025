@@ -77,7 +77,7 @@ public class RobotContainer {
 	SwerveLogger logger = new SwerveLogger(dt);
 	AutoFactory autoFactory;
 
-	LevelTarget target = LevelTarget.L4;
+	LevelTarget target = LevelTarget.L2;
 	AlgaeTarget algaeTarget = AlgaeTarget.PROCESSOR;
 
 	private final AutoChooser autoChooser;
@@ -133,19 +133,20 @@ public class RobotContainer {
 				driverController.leftBumper(),
 				new Trigger(() -> (driverController.getRightTriggerAxis() > 0.1)),
 				driverController.leftBumper(),
-				driverController.rightTrigger(),
+				driverController.b(),
 				driverController.rightBumper(),
 				// TODO: BIND TO BUTTONS
 				operatorController.leftBumper(),
 				operatorController.rightBumper(),
-				driverController.leftTrigger(),
+				driverController.povUp(),
 				driverController.povLeft(),
 				driverController.povRight(),
 				() -> (driverController.getRightTriggerAxis() - driverController.getLeftTriggerAxis()),
 				(rumble) -> setRumble(rumble));
 
 		// climber.setDefaultCommand(climber.setDutyCycle(
-		// 		() -> operatorController.getRightTriggerAxis() - operatorController.getLeftTriggerAxis()));
+		// () -> operatorController.getRightTriggerAxis() -
+		// operatorController.getLeftTriggerAxis()));
 
 		goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
 				new WaitUntilCommand(subsystemsAtSetpoints));
@@ -211,14 +212,10 @@ public class RobotContainer {
 		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4)
 				.alongWith(Commands.runOnce(() -> leds.setLevel(target))));
 
-		operatorController.povDown().onTrue(Commands.runOnce(() -> algaeTarget = AlgaeTarget.PROCESSOR));
-		operatorController.povUp().onTrue(Commands.runOnce(() -> algaeTarget = AlgaeTarget.NET));
-
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
-		
 
-		driverController.x().whileTrue(dt.goToPose(ReefSide.LEFT));
-		driverController.b().whileTrue(dt.goToPose(ReefSide.RIGHT));
+		driverController.a().onTrue(intake.rotateToPositionCommand(Degrees.of(45)));
+		driverController.x().onTrue(intake.rotateToPositionCommand(Degrees.of(0)));
 
 		// brake when we aren't driving
 		new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)
@@ -232,7 +229,8 @@ public class RobotContainer {
 		// swap to driving at angle
 		driverController.y().onTrue(drivePointingAtAngle);
 		// if we try to rotate the bot, go back to normal driving
-		// new Trigger(() -> Math.abs(driverController.getRightTriggerAxis()) > 0.05).onTrue(driveFieldCentric);
+		// new Trigger(() -> Math.abs(driverController.getRightTriggerAxis()) >
+		// 0.05).onTrue(driveFieldCentric);
 
 	}
 

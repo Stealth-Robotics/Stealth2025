@@ -31,6 +31,7 @@ public class Transfer extends SubsystemBase {
         return this.runOnce(() -> {
             voltageOut.Output = voltage.getAsDouble();
             leftMotor.setControl(voltageOut);
+            rightMotor.setControl(new Follower(25, true));
         });
     }
 
@@ -40,6 +41,13 @@ public class Transfer extends SubsystemBase {
                 new WaitCommand(0.5),
                 setVoltage(() -> 0),
                 new WaitCommand(0.1));
+    }
+
+    public Command setLeftRightVoltage(double left, double right){
+        return this.runOnce(() -> {
+            leftMotor.setVoltage(left);
+            rightMotor.setVoltage(-right);
+        });
     }
 
     public double getLeftStatorCurrent() {

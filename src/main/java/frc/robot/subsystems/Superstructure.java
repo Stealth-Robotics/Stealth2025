@@ -41,7 +41,8 @@ public class Superstructure {
 		UNJAM,
 		HOMING,
 		SPIT_ALGAE,
-		SAFE_MODE
+		SAFE_MODE,
+		TRANSFER
 	}
 
 	private final Supplier<LevelTarget> levelTarget;
@@ -206,16 +207,11 @@ public class Superstructure {
 				.whileTrue(intake.setIntakeVoltage(() -> (intakeSpeed.getAsDouble() * 12)))
 				.and(() -> arm.isMotorAtTarget())
 				.whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
-				.whileTrue(transfer.setVoltage(() -> 1.5)) // todo: test voltage that works
+				.whileTrue(transfer.setLeftRightVoltage(4, 2)) // todo: test voltage that works
 				.whileTrue(rollers.setRollerVoltage(() -> 1.5))
+				.and(gamepieceDetectedInStagingArea)
+				.onTrue(this.forceState(SuperState.TRANSFER));
 
-				.and(gamepieceDetectedInStagingArea.or(overrideBeamBreakTrigger))
-				.onTrue(Commands.runOnce(() -> rumble.accept(0.5))
-						.andThen(
-								Commands.sequence(new WaitCommand(0.25), Commands.runOnce(() -> rumble.accept(0)))))
-				.onTrue(transfer.setVoltage(() -> 0))
-
-				.onTrue(this.forceState(SuperState.GRAB_CORAL));
 
 		// intake unjam state
 		stateTriggers.get(SuperState.INTAKE)
@@ -224,8 +220,21 @@ public class Superstructure {
 				.onFalse(this.forceState(SuperState.UNJAM));
 
 		stateTriggers.get(SuperState.INTAKE)
-				.and(() -> transfer.getLeftStatorCurrent() > 30).debounce(0.5)
-				.onTrue(this.forceState(SuperState.UNJAM));
+				.and(() -> transfer.getLeftStatorCurrent() > 30 || transfer.getRightStatorCurrent() > 30).debounce(0.5)
+				.onTrue(
+						this.forceState(SuperState.TRANSFER));
+
+		stateTriggers.get(SuperState.TRANSFER)
+		.onTrue(intake.setIntakeVoltage(() -> 0))
+			.onTrue(
+				transfer.setVoltage(() -> -1).andThen(
+						new WaitCommand(0.5),
+						transfer.setVoltage(() -> 1),
+						new WaitCommand(0.5),
+						transfer.setVoltage(() -> 0)
+			))
+			.and(gamepieceDetectedInStagingArea.or(overrideBeamBreakTrigger))
+			.onTrue(this.forceState(SuperState.GRAB_CORAL));
 
 		stateTriggers.get(SuperState.UNJAM)
 				// move arm up to flat out and reverse transfer
@@ -237,7 +246,7 @@ public class Superstructure {
 				.onTrue(Commands.sequence(new WaitCommand(0.5), this.forceState(SuperState.INTAKE)));
 
 		stateTriggers.get(SuperState.READY_SCORE_CORAL)
-				.and(gamepieceDetectedInStagingArea).debounce(0.25)
+				.and(gamepieceDetectedInStagingArea).debounce(0.5)
 				.onTrue(this.forceState(SuperState.GRAB_CORAL));
 
 		stateTriggers.get(SuperState.READY_SCORE_CORAL)

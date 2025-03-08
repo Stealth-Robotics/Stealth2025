@@ -35,6 +35,7 @@ import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.Rollers;
 import frc.robot.subsystems.Superstructure;
@@ -70,6 +71,7 @@ public class RobotContainer {
 	Arm arm;
 	Transfer transfer;
 	Leds leds;
+	Intake intake;
 	// Climber climber;
 	CommandSwerveDrivetrain dt = TunerConstants.createDrivetrain();
 	SwerveLogger logger = new SwerveLogger(dt);
@@ -82,7 +84,7 @@ public class RobotContainer {
 
 	Command goToL4;
 	Command dunk;
-	Command intake;
+	Command intakeCmd;
 	Command eject;
 
 	Command driveFieldCentric;
@@ -105,6 +107,7 @@ public class RobotContainer {
 		arm = new Arm();
 		transfer = new Transfer();
 		leds = new Leds();
+		intake = new Intake();
 		// climber = new Climber();
 
 		subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
@@ -123,11 +126,12 @@ public class RobotContainer {
 				arm,
 				transfer,
 				leds,
+				intake,
 				() -> target,
 				() -> algaeTarget,
 				driverController.leftBumper(),
 				driverController.leftBumper(),
-				driverController.rightBumper(),
+				new Trigger(() -> (driverController.getRightTriggerAxis() > 0.1)),
 				driverController.leftBumper(),
 				driverController.rightTrigger(),
 				driverController.rightBumper(),
@@ -137,6 +141,7 @@ public class RobotContainer {
 				driverController.leftTrigger(),
 				driverController.povLeft(),
 				driverController.povRight(),
+				() -> (driverController.getRightTriggerAxis() - driverController.getLeftTriggerAxis()),
 				(rumble) -> setRumble(rumble));
 
 		// climber.setDefaultCommand(climber.setDutyCycle(
@@ -147,7 +152,7 @@ public class RobotContainer {
 		dunk = Commands.sequence(superstructure.forceState(SuperState.SCORE_CORAL),
 				new WaitUntilCommand(() -> elevator.isElevatorAtTarget()));
 		eject = Commands.sequence(superstructure.forceState(SuperState.SPIT), new WaitCommand(0.5));
-		intake = Commands.sequence(superstructure.forceState(SuperState.INTAKE_HP));
+		intakeCmd = Commands.sequence(superstructure.forceState(SuperState.INTAKE));
 
 		autoChooser.addCmd("auto", this::buildLeftAuto);
 

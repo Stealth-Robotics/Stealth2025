@@ -43,12 +43,17 @@ public class Intake extends SubsystemBase {
 
     private double targetPosition = 0.0;
 
+    public static final Angle DEPLOYED_ANGLE = Degrees.of(0),
+            STOWED_ANGLE = Degrees.of(90);
+
     public Intake() {
         deployMotor = new TalonFX(0);
         intakeMotor = new TalonFX(1);
 
         deployMotorConfiguration = new TalonFXConfiguration();
         intakeMotorConfiguration = new TalonFXConfiguration();
+
+        
 
         deployMotorConfiguration.Slot0.kP = kP;
         deployMotorConfiguration.Slot0.kI = kI;
@@ -61,6 +66,8 @@ public class Intake extends SubsystemBase {
         deployMotorConfiguration.Feedback.SensorToMechanismRatio = (64.0 / 10.0) * (60.0 / 20.0) * (50.0 / 14.0);
 
         intakeMotorConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+        intakeMotor.getConfigurator
     }
 
     public Command rotateToPositionCommand(Angle angle) {
@@ -69,7 +76,7 @@ public class Intake extends SubsystemBase {
         return this.runOnce(() -> deployMotor.setControl(motionMagicVoltage));
     }
 
-    public boolean atPosition(Angle angle) {
+    public boolean atPosition() {
         return MathUtil.isNear(deployMotor.getPosition().getValueAsDouble(), targetPosition, TOLERANCE);
     }
 

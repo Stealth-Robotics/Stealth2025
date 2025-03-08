@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.DoubleConsumer;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import com.playingwithfusion.TimeOfFlight;
@@ -17,10 +18,11 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotContainer.LevelTarget;
 import frc.robot.RobotContainer.AlgaeTarget;
 
+@Logged
 public class Superstructure {
 
 	public enum SuperState {
-		INTAKE_HP,
+		INTAKE,
 		GRAB_CORAL,
 		READY_SCORE_CORAL,
 		PRE_L1,
@@ -58,6 +60,7 @@ public class Superstructure {
 	private final Trigger forceIdleTrigger;
 	private final Trigger overrideBeamBreakTrigger;
 	private final Trigger homeTrigger;
+	private final DoubleSupplier intakeSpeed;
 	@Logged
 	private final Trigger gamepieceDetectedInStagingArea;
 
@@ -77,12 +80,14 @@ public class Superstructure {
 	private final Arm arm;
 	private final Transfer transfer;
 	private final Leds leds;
+	private final Intake intake;
 
 	public Superstructure(Elevator elevator,
 			Rollers rollers,
 			Arm arm,
 			Transfer transfer,
 			Leds leds,
+			Intake intake,
 			Supplier<LevelTarget> levelTarget,
 			Supplier<AlgaeTarget> algaeTarget,
 			Trigger preScoreTrigger,
@@ -96,12 +101,15 @@ public class Superstructure {
 			Trigger forceIdleTrigger,
 			Trigger overrideBeamBreakTrigger,
 			Trigger homeTrigger,
+			DoubleSupplier intakeSpeed,
 			DoubleConsumer rumble) {
 		this.elevator = elevator;
 		this.rollers = rollers;
 		this.arm = arm;
 		this.transfer = transfer;
 		this.leds = leds;
+		this.intake = intake;
+
 		this.levelTarget = levelTarget;
 		this.algaeTarget = algaeTarget;
 		this.preScoreTrigger = preScoreTrigger;
@@ -115,7 +123,7 @@ public class Superstructure {
 		this.forceIdleTrigger = forceIdleTrigger;
 		this.overrideBeamBreakTrigger = overrideBeamBreakTrigger;
 		this.homeTrigger = homeTrigger;
-
+		this.intakeSpeed = intakeSpeed;
 		this.rumble = rumble;
 
 		tof = new TimeOfFlight(0);
@@ -181,7 +189,7 @@ public class Superstructure {
 				// to intake
 				// so, we just check intake trigger if we need to intake
 				.and(intakeTrigger)
-				.onTrue(this.forceState(SuperState.INTAKE_HP));
+				.onTrue(this.forceState(SuperState.INTAKE));
 
 		// Stow -> removing algae state
 		stateTriggers.get(SuperState.STOW)
@@ -191,29 +199,31 @@ public class Superstructure {
 				.and(removeAlgaeLowTrigger)
 				.onTrue(this.forceState(SuperState.REMOVE_ALGAE_LOW));
 
-		stateTriggers.get(SuperState.INTAKE_HP)
+		stateTriggers.get(SuperState.INTAKE)
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
+				.whileTrue(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE))
+				.and(() -> intake.atPosition())
+				.whileTrue(intake.setIntakeVoltage(() -> (intakeSpeed.getAsDouble() * 12)))
 				.and(() -> arm.isMotorAtTarget())
 				.whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
 				.whileTrue(transfer.setVoltage(() -> 1.5)) // todo: test voltage that works
-				.whileTrue(rollers.setRollerVoltage(() -> 1.5)) 
+				.whileTrue(rollers.setRollerVoltage(() -> 1.5))
 
 				.and(gamepieceDetectedInStagingArea.or(overrideBeamBreakTrigger))
 				.onTrue(Commands.runOnce(() -> rumble.accept(0.5))
 						.andThen(
 								Commands.sequence(new WaitCommand(0.25), Commands.runOnce(() -> rumble.accept(0)))))
 				.onTrue(transfer.setVoltage(() -> 0))
-				.and(() -> arm.isMotorAtTarget())
 
 				.onTrue(this.forceState(SuperState.GRAB_CORAL));
 
 		// intake unjam state
-		stateTriggers.get(SuperState.INTAKE_HP)
+		stateTriggers.get(SuperState.INTAKE)
 				.and(missedScoreTrigger)
 
 				.onFalse(this.forceState(SuperState.UNJAM));
 
-		stateTriggers.get(SuperState.INTAKE_HP)
+		stateTriggers.get(SuperState.INTAKE)
 				.and(() -> transfer.getLeftStatorCurrent() > 30).debounce(0.5)
 				.onTrue(this.forceState(SuperState.UNJAM));
 
@@ -224,7 +234,7 @@ public class Superstructure {
 				.and(() -> elevator.isElevatorAtTarget())
 				.whileTrue(arm.rotateToPositionCommand(() -> -60))
 				.whileTrue(transfer.setVoltage(() -> -2))
-				.onTrue(Commands.sequence(new WaitCommand(0.5), this.forceState(SuperState.INTAKE_HP)));
+				.onTrue(Commands.sequence(new WaitCommand(0.5), this.forceState(SuperState.INTAKE)));
 
 		stateTriggers.get(SuperState.READY_SCORE_CORAL)
 				.and(gamepieceDetectedInStagingArea).debounce(0.25)
@@ -238,6 +248,7 @@ public class Superstructure {
 				// just drop elevator down and bring it back up
 				.whileTrue(elevator.goToPosition(() -> Elevator.GRAB_CORAL_ROTATIONS))
 				.whileTrue(rollers.setRollerVoltage(6))
+				.whileTrue(intake.rotateToPositionCommand(Intake.STOWED_ANGLE))
 				.onTrue(leds.blink())
 				.and(() -> elevator.isElevatorAtTarget())
 				.onTrue(rollers.setRollerVoltage(0.6))
@@ -257,7 +268,7 @@ public class Superstructure {
 
 		stateTriggers.get(SuperState.SAFE_MODE)
 				.and(intakeTrigger)
-				.onTrue(this.forceState(SuperState.INTAKE_HP));
+				.onTrue(this.forceState(SuperState.INTAKE));
 
 		stateTriggers.get(SuperState.REMOVE_ALGAE_HIGH)
 				.whileTrue(elevator.goToPosition(() -> Elevator.REMOVE_ALGAE_HIGH_ROTATIONS))

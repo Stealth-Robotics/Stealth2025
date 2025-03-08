@@ -63,7 +63,7 @@ public class Rollers extends SubsystemBase {
     }
 
     public void configureStateSupplierTrigger() {
-        stateSupplierTrigger = new Trigger(() -> stateSupplier.get() == SuperState.INTAKE_HP)
+        stateSupplierTrigger = new Trigger(() -> stateSupplier.get() == SuperState.INTAKE)
                 .onTrue(Commands.runOnce(() -> this.hasGamepiece = false));
     }
 

@@ -76,7 +76,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private final PIDController xController = new PIDController(20, 0, 0);
     private final PIDController yController = new PIDController(20, 0, 0);
-    private final ProfiledPIDController thetaController = new ProfiledPIDController(0.1, 0, 0, new Constraints(45, 45));
+    private final ProfiledPIDController thetaController = new ProfiledPIDController(0.2, 0, 0, new Constraints(90, 180));
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -151,6 +151,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private Pose2d targetRight = new Pose2d();
     private Pose2d targetLeft = new Pose2d();
+
+    private Pose2d leftLimelightPoseEst;
+    private Pose2d rightLimelightPoseEst;
+
+    boolean updatePose;
 
     /*
      * SysId routine for characterizing translation. This is used to find PID gains
@@ -352,9 +357,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }).andThen(this.run(
                 () -> {
                     double xSpeed = MathUtil.clamp(xController.calculate(getPose().getX(), getTargetPose(side).getX()),
-                            -1, 1);
+                            -2, 2);
                     double ySpeed = MathUtil.clamp(yController.calculate(getPose().getY(), getTargetPose(side).getY()),
-                            -1, 1);
+                            -2, 2);
                     double angularSpeed = thetaController.calculate(getPose().getRotation().getDegrees(),
                             getTargetPose(side).getRotation().getDegrees());
                     ChassisSpeeds speeds = new ChassisSpeeds(xSpeed,
@@ -488,10 +493,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         double yaw = getPigeon2().getYaw().getValueAsDouble();
         LimelightHelpers.SetRobotOrientation("limelight-left", yaw, 0, 0, 0, 0, 0);
-        LimelightHelpers.PoseEstimate est = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
+        LimelightHelpers.PoseEstimate leftEst = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
 
-        if(est.tagCount > 0){
-            addVisionMeasurement(est.pose, est.timestampSeconds, VecBuilder.fill(.7, .7, 9999999));
+        if (leftEst != null && leftEst.tagCount > 0) {
+            //log where limelight thinks we are
+            leftLimelightPoseEst = leftEst.pose;
+            //only add vision measurement if we arent spinning quickly
+            if (Math.abs(Units.radiansToDegrees(getState().Speeds.omegaRadiansPerSecond)) < 360) {
+                addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.7, .7, 9999999));
+            }
         }
 
     }

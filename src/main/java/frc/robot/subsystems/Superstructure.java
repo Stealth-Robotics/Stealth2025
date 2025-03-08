@@ -128,7 +128,7 @@ public class Superstructure {
 		this.rumble = rumble;
 
 		tof = new TimeOfFlight(0);
-		tof.setRangingMode(RangingMode.Short, 0.02);
+		tof.setRangingMode(RangingMode.Short, 24);
 		gamepieceDetectedInStagingArea = new Trigger(() -> tof.getRange() < 80)
 				.and(() -> tof.getStatus() == Status.Valid).debounce(0.1);
 
@@ -202,9 +202,6 @@ public class Superstructure {
 
 		stateTriggers.get(SuperState.INTAKE)
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
-				.whileTrue(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE))
-				.and(() -> intake.atPosition())
-				.whileTrue(intake.setIntakeVoltage(() -> (intakeSpeed.getAsDouble() * 12)))
 				.and(() -> arm.isMotorAtTarget())
 				.whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
 				.whileTrue(transfer.setLeftRightVoltage(4, 2)) // todo: test voltage that works
@@ -212,6 +209,17 @@ public class Superstructure {
 				.and(gamepieceDetectedInStagingArea)
 				.onTrue(this.forceState(SuperState.TRANSFER));
 
+		stateTriggers.get(SuperState.INTAKE)
+				.and(() -> Math.abs(intakeSpeed.getAsDouble()) > 0.1)
+				.whileTrue(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE))
+				.and(() -> intake.atPosition())
+				.whileTrue(intake.setIntakeVoltage(() -> (intakeSpeed.getAsDouble() * 12)));
+
+		stateTriggers.get(SuperState.INTAKE)
+				.and(() -> Math.abs(intakeSpeed.getAsDouble()) < 0.1)
+				.onTrue(intake.rotateToPositionCommand(Intake.STOWED_ANGLE))
+				.and(() -> intake.atPosition())
+				.onTrue(intake.setIntakeVoltage(() -> 0));
 
 		// intake unjam state
 		stateTriggers.get(SuperState.INTAKE)
@@ -220,21 +228,19 @@ public class Superstructure {
 				.onFalse(this.forceState(SuperState.UNJAM));
 
 		stateTriggers.get(SuperState.INTAKE)
-				.and(() -> transfer.getLeftStatorCurrent() > 30 || transfer.getRightStatorCurrent() > 30).debounce(0.5)
-				.onTrue(
-						this.forceState(SuperState.TRANSFER));
+				.and(() -> transfer.getLeftStatorCurrent() > 30 || transfer.getRightStatorCurrent() > 30).debounce(0.25)
+				.onTrue(this.forceState(SuperState.TRANSFER));
 
 		stateTriggers.get(SuperState.TRANSFER)
-		.onTrue(intake.setIntakeVoltage(() -> 0))
-			.onTrue(
-				transfer.setVoltage(() -> -1).andThen(
-						new WaitCommand(0.5),
-						transfer.setVoltage(() -> 1),
-						new WaitCommand(0.5),
-						transfer.setVoltage(() -> 0)
-			))
-			.and(gamepieceDetectedInStagingArea.or(overrideBeamBreakTrigger))
-			.onTrue(this.forceState(SuperState.GRAB_CORAL));
+				.onTrue(intake.setIntakeVoltage(() -> 0))
+				.onTrue(
+						transfer.setVoltage(() -> -1).andThen(
+								new WaitCommand(0.5),
+								transfer.setVoltage(() -> 1),
+								new WaitCommand(0.5),
+								transfer.setVoltage(() -> 0)))
+				.and(gamepieceDetectedInStagingArea.or(overrideBeamBreakTrigger))
+				.onTrue(this.forceState(SuperState.GRAB_CORAL));
 
 		stateTriggers.get(SuperState.UNJAM)
 				// move arm up to flat out and reverse transfer
@@ -352,9 +358,9 @@ public class Superstructure {
 				.onFalse(this.forceState(SuperState.SCORE_CORAL));
 
 		stateTriggers.get(SuperState.PRE_L2)
-				.whileTrue(elevator.goToPosition(() -> 10.5))
-				// make sure arm doesnt collide with anything
-				.and(() -> elevator.isElevatorAtTarget())
+				// .whileTrue(elevator.goToPosition(() -> 10.5))
+				// // make sure arm doesnt collide with anything
+				// .and(() -> elevator.isElevatorAtTarget())
 				.onTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L2_DEGREES))
 				.and(() -> arm.getArmPosition() > 0)
 				.onTrue(elevator.goToPosition(() -> Elevator.PRE_L2_ROTATIONS))
@@ -443,7 +449,7 @@ public class Superstructure {
 						.andThen(new WaitCommand(1).andThen(rollers.setRollerVoltage(0))))
 				.and(stowTrigger)
 				.onFalse(
-						this.forceState(SuperState.STOW));
+						this.forceState(SuperState.INTAKE));
 
 		// algae scoring
 		stateTriggers.get(SuperState.READY_SCORE_ALGAE)

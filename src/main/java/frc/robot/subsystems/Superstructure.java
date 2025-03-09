@@ -365,16 +365,16 @@ public class Superstructure {
 				.onTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L2_DEGREES))
 				.and(() -> arm.getArmPosition() > 0)
 				.onTrue(elevator.goToPosition(() -> Elevator.PRE_L2_ROTATIONS))
-				.and(() -> arm.isMotorAtTarget())
-				.and(() -> elevator.isElevatorAtTarget())
+				// .and(() -> arm.isMotorAtTarget())
+				// .and(() -> elevator.isElevatorAtTarget())
 				.and(scoreTrigger)
 				.onFalse(this.forceState(SuperState.SCORE_CORAL));
 
 		stateTriggers.get(SuperState.PRE_L3)
 				.whileTrue(elevator.goToPosition(() -> Elevator.PRE_L3_ROTATIONS))
 				.onTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L3_DEGREES))
-				.and(() -> elevator.isElevatorAtTarget())
-				.and(() -> arm.isMotorAtTarget())
+				// .and(() -> elevator.isElevatorAtTarget())
+				// .and(() -> arm.isMotorAtTarget())
 				.and(scoreTrigger)
 				.onFalse(this.forceState(SuperState.SCORE_CORAL));
 
@@ -450,18 +450,18 @@ public class Superstructure {
 						.andThen(new WaitCommand(1).andThen(rollers.setRollerVoltage(0))))
 				.and(stowTrigger)
 				.onFalse(
-						this.forceState(SuperState.INTAKE));
+						this.forceState(SuperState.STOW));
 
 		// algae scoring
 		stateTriggers.get(SuperState.READY_SCORE_ALGAE)
 				.and(() -> algaeTarget.get() == AlgaeTarget.PROCESSOR)
 				.and(preScoreTrigger)
-				.onFalse(this.forceState(SuperState.PRE_PROCESSOR));
+				.onFalse(this.forceState(SuperState.SPIT_ALGAE));
 
 		stateTriggers.get(SuperState.READY_SCORE_ALGAE)
 				.and(() -> algaeTarget.get() == AlgaeTarget.NET)
 				.and(preScoreTrigger)
-				.onFalse(this.forceState(SuperState.PRE_NET));
+				.onFalse(this.forceState(SuperState.SPIT_ALGAE));
 
 		stateTriggers.get(SuperState.PRE_PROCESSOR)
 				.whileTrue(elevator.goToPosition(() -> Elevator.PRE_PROCESSOR_ROTATIONS))

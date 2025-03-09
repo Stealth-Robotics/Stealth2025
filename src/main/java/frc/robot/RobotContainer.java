@@ -226,7 +226,7 @@ public class RobotContainer {
 
 		
 		driverController.x().whileTrue(dt.goToPose(ReefSide.LEFT));
-		driverController.x().whileTrue(dt.goToPose(ReefSide.RIGHT));
+		driverController.b().whileTrue(dt.goToPose(ReefSide.RIGHT));
 
 		// brake when we aren't driving
 		new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)

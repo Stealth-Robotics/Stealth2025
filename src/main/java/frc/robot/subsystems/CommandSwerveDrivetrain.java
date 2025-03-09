@@ -129,11 +129,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     Pose3d testPose3d = new Pose3d(
             new Pose2d(Distance.ofBaseUnits(6, Meter), Distance.ofBaseUnits(3, Meter), new Rotation2d()));
 
-    Transform2d atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(22.5),
-            Units.inchesToMeters(-6.5), new Rotation2d());
+    Transform2d atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(24.5),
+            Units.inchesToMeters(-7.5), new Rotation2d());
 
-    Transform2d atagToRightTransform2d = new Transform2d(Units.inchesToMeters(22.5),
-            Units.inchesToMeters(6.5), new Rotation2d());
+    Transform2d atagToRightTransform2d = new Transform2d(Units.inchesToMeters(24.5),
+            Units.inchesToMeters(7.5), new Rotation2d());
 
     Pose3d test2 = testPose3d.transformBy(new Transform3d(atagToLeftTransform2d));
 
@@ -357,9 +357,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }).andThen(this.run(
                 () -> {
                     double xSpeed = MathUtil.clamp(xController.calculate(getPose().getX(), getTargetPose(side).getX()),
-                            -2, 2);
+                            -1, 1);
                     double ySpeed = MathUtil.clamp(yController.calculate(getPose().getY(), getTargetPose(side).getY()),
-                            -2, 2);
+                            -1, 1);
                     double angularSpeed = thetaController.calculate(getPose().getRotation().getDegrees(),
                             getTargetPose(side).getRotation().getDegrees());
                     ChassisSpeeds speeds = new ChassisSpeeds(xSpeed,

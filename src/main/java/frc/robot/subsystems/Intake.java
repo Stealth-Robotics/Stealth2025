@@ -33,7 +33,7 @@ public class Intake extends SubsystemBase {
             kS = 0.0,
             kV = 0.0,
             kG = 0.0,
-            MOTION_MAGIC_ACCELERATION = 6,
+            MOTION_MAGIC_ACCELERATION = 8,
             MOTION_MAGIC_CRUISE_VELOCITY = 1.1,
             TOLERANCE = 2;
 
@@ -66,10 +66,13 @@ public class Intake extends SubsystemBase {
 
         intakeMotorConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
+        intakeMotorConfiguration.CurrentLimits.SupplyCurrentLimit = 30.0;
+        intakeMotorConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
+
         intakeMotor.getConfigurator().apply(intakeMotorConfiguration);
         deployMotor.getConfigurator().apply(deployMotorConfiguration);
 
-        deployMotor.setPosition(Degrees.of(0));
+        deployMotor.setPosition(Degrees.of(134));
     }
 
     public Command rotateToPositionCommand(Angle angle) {

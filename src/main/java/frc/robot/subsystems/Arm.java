@@ -54,9 +54,9 @@ public class Arm extends SubsystemBase {
             PRE_L3_DEGREES = 65.5, // todo tune
             PRE_L4_DEGREES = 67, // todo tune
             SCORE_L1_DEGREES = -27, // todo tune
-            SCORE_L2_DEGREES = 60, // todo tune
-            SCORE_L3_DEGREES = 60, // todo tune
-            SCORE_L4_DEGREES = 40, // todo tune
+            SCORE_L2_DEGREES = 45, // todo tune
+            SCORE_L3_DEGREES = 45, // todo tune
+            SCORE_L4_DEGREES = 30, // todo tune
             REMOVE_ALGAE_HIGH_DEGREES = 0.0, // todo tune
             REMOVE_ALGAE_LOW_DEGREES = 0.0, // todo tune
             PRE_PROCESSOR_DEGREES = -5.0, // todo tune

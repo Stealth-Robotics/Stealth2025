@@ -76,7 +76,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private final PIDController xController = new PIDController(20, 0, 0);
     private final PIDController yController = new PIDController(20, 0, 0);
-    private final ProfiledPIDController thetaController = new ProfiledPIDController(0.2, 0, 0, new Constraints(90, 180));
+    private final ProfiledPIDController thetaController = new ProfiledPIDController(0.0, 0, 0, new Constraints(90, 180));
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -500,7 +500,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             leftLimelightPoseEst = leftEst.pose;
             //only add vision measurement if we arent spinning quickly
             if (Math.abs(Units.radiansToDegrees(getState().Speeds.omegaRadiansPerSecond)) < 360) {
-                addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.7, .7, 9999999));
+                addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.4, .4, 9999999));
             }
         }
 

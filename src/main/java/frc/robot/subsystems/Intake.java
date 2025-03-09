@@ -18,6 +18,7 @@ import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.TimeUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 @Logged
@@ -26,15 +27,15 @@ public class Intake extends SubsystemBase {
     private final TalonFX deployMotor;
     private final TalonFX intakeMotor;
 
-    private final double kP = 120.0,
+    private final double kP = 500.0,
             kI = 0.0,
             kD = 0.0,
             kS = 0.0,
             kV = 0.0,
             kG = 0.0,
-            MOTION_MAGIC_ACCELERATION = (Degrees.of(90).in(Rotations) / 0.2),
-            MOTION_MAGIC_CRUISE_VELOCITY = (Degrees.of(90).in(Rotations) / 0.4),
-            TOLERANCE = Degrees.of(2).in(Rotations);
+            MOTION_MAGIC_ACCELERATION = 6,
+            MOTION_MAGIC_CRUISE_VELOCITY = 1.1,
+            TOLERANCE = 2;
 
     private final TalonFXConfiguration deployMotorConfiguration;
     private final TalonFXConfiguration intakeMotorConfiguration;
@@ -44,7 +45,7 @@ public class Intake extends SubsystemBase {
     private double targetPosition = 0.0;
 
     public static final Angle DEPLOYED_ANGLE = Degrees.of(0),
-            STOWED_ANGLE = Degrees.of(90);
+            STOWED_ANGLE = Degrees.of(134);
 
     public Intake() {
         deployMotor = new TalonFX(10);
@@ -61,7 +62,7 @@ public class Intake extends SubsystemBase {
         deployMotorConfiguration.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
 
         deployMotorConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        deployMotorConfiguration.Feedback.SensorToMechanismRatio = (64.0 / 10.0) * (60.0 / 20.0) * (50.0 / 14.0);
+        deployMotorConfiguration.Feedback.SensorToMechanismRatio = (64.0 / 10.0) * (60.0 / 20.0) * (50.0 / 16.0);
 
         intakeMotorConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
@@ -89,7 +90,7 @@ public class Intake extends SubsystemBase {
     }
 
     public Command setIntakeVoltage(DoubleSupplier voltage) {
-        return this.run(() -> intakeMotor.setVoltage(voltage.getAsDouble()));
+        return Commands.run(() -> intakeMotor.setVoltage(voltage.getAsDouble()));
     }
 
 

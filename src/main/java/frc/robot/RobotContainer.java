@@ -165,8 +165,8 @@ public class RobotContainer {
 		rollers.configureStateSupplierTrigger();
 
 		driveFieldCentric = dt.applyRequest(
-				() -> drive.withVelocityY(-driverController.getLeftX() * MAX_VELO)
-						.withVelocityX(-driverController.getLeftY() * MAX_VELO)
+				() -> drive.withVelocityY(driverController.getLeftX() * MAX_VELO)
+						.withVelocityX(driverController.getLeftY() * MAX_VELO)
 						.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO))
 				.alongWith(Commands.runOnce(() -> driveAngled = false));
 
@@ -214,8 +214,8 @@ public class RobotContainer {
 
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
 
-		driverController.a().onTrue(intake.rotateToPositionCommand(Degrees.of(45)));
-		driverController.x().onTrue(intake.rotateToPositionCommand(Degrees.of(0)));
+		
+		driverController.x().whileTrue(dt.goToPose(ReefSide.LEFT));
 
 		// brake when we aren't driving
 		new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)

@@ -201,10 +201,12 @@ public class Superstructure {
 				.onTrue(this.forceState(SuperState.REMOVE_ALGAE_LOW));
 
 		stateTriggers.get(SuperState.INTAKE)
+				.whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))
+				.and(() -> elevator.isElevatorAtTarget())
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
 				.and(() -> arm.isMotorAtTarget())
 				.whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
-				.whileTrue(transfer.setLeftRightVoltage(4, 2)) // todo: test voltage that works
+				.whileTrue(transfer.setLeftRightVoltage(1, 1)) // todo: test voltage that works
 				.whileTrue(rollers.setRollerVoltage(() -> 1.5))
 				.and(gamepieceDetectedInStagingArea)
 				.onTrue(this.forceState(SuperState.TRANSFER));
@@ -217,9 +219,9 @@ public class Superstructure {
 
 		stateTriggers.get(SuperState.INTAKE)
 				.and(() -> Math.abs(intakeSpeed.getAsDouble()) < 0.1)
+				.onTrue(intake.setIntakeVoltage(() -> 0))
 				.onTrue(intake.rotateToPositionCommand(Intake.STOWED_ANGLE))
-				.and(() -> intake.atPosition())
-				.onTrue(intake.setIntakeVoltage(() -> 0));
+				.and(() -> intake.atPosition());
 
 		// intake unjam state
 		stateTriggers.get(SuperState.INTAKE)
@@ -228,7 +230,7 @@ public class Superstructure {
 				.onFalse(this.forceState(SuperState.UNJAM));
 
 		stateTriggers.get(SuperState.INTAKE)
-				.and(() -> transfer.getLeftStatorCurrent() > 30 || transfer.getRightStatorCurrent() > 30).debounce(0.25)
+				.and(() -> transfer.getLeftStatorCurrent() > 30 || transfer.getRightStatorCurrent() > 30).debounce(0.15)
 				.onTrue(this.forceState(SuperState.TRANSFER));
 
 		stateTriggers.get(SuperState.TRANSFER)
@@ -236,10 +238,9 @@ public class Superstructure {
 				.onTrue(
 						transfer.setVoltage(() -> -1).andThen(
 								new WaitCommand(0.5),
-								transfer.setVoltage(() -> 1),
-								new WaitCommand(0.5),
-								transfer.setVoltage(() -> 0)))
+								transfer.setVoltage(() -> 1)))
 				.and(gamepieceDetectedInStagingArea.or(overrideBeamBreakTrigger))
+				.onTrue(transfer.setVoltage(() -> 0))
 				.onTrue(this.forceState(SuperState.GRAB_CORAL));
 
 		stateTriggers.get(SuperState.UNJAM)
@@ -262,11 +263,11 @@ public class Superstructure {
 		stateTriggers.get(SuperState.GRAB_CORAL)
 				// just drop elevator down and bring it back up
 				.whileTrue(elevator.goToPosition(() -> Elevator.GRAB_CORAL_ROTATIONS))
-				.whileTrue(rollers.setRollerVoltage(6))
+				.whileTrue(rollers.setRollerVoltage(9))
 				.whileTrue(intake.rotateToPositionCommand(Intake.STOWED_ANGLE))
 				.onTrue(leds.blink())
 				.and(() -> elevator.isElevatorAtTarget())
-				.onTrue(rollers.setRollerVoltage(0.6))
+				.onTrue(new WaitCommand(0.25).andThen(rollers.setRollerVoltage(1)))
 
 				.onTrue(this.forceState(SuperState.READY_SCORE_CORAL));
 

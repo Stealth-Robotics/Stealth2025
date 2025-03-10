@@ -330,7 +330,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 () -> getState().Pose,
                 this::resetPose,
                 this::followPath,
-                false,
+                true,
                 this,
                 (traj, starting) -> {
                     System.out.println("Trajectory starting? " + starting);

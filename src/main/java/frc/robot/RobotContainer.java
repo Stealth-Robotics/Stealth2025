@@ -225,7 +225,7 @@ public class RobotContainer {
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
 
 		
-		driverController.x().whileTrue(dt.goToPose(ReefSide.LEFT));
+		driverController.x().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target))).whileTrue(dt.goToPose(ReefSide.LEFT));
 		driverController.b().whileTrue(dt.goToPose(ReefSide.RIGHT));
 
 		// brake when we aren't driving

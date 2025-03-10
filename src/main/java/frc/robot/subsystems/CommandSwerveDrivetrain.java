@@ -47,6 +47,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.LimelightHelpers;
 import frc.robot.Robot;
+import frc.robot.RobotContainer.LevelTarget;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
@@ -74,9 +75,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private final SwerveRequest.ApplyFieldSpeeds applyRobotSpeeds = new SwerveRequest.ApplyFieldSpeeds();
 
-    private final PIDController xController = new PIDController(20, 0, 0);
-    private final PIDController yController = new PIDController(20, 0, 0);
-    private final ProfiledPIDController thetaController = new ProfiledPIDController(0.0, 0, 0, new Constraints(90, 180));
+    private final ProfiledPIDController xController = new ProfiledPIDController(20, 3, 0, new Constraints(1.5, 2.5));
+    private final ProfiledPIDController yController = new ProfiledPIDController(20, 3, 0, new Constraints(1.5, 2.5));
+    private final ProfiledPIDController thetaController = new ProfiledPIDController(0.4, 0.06, 0,
+            new Constraints(200, 300));
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -352,23 +354,47 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         return this.runOnce(() -> {
             thetaController.enableContinuousInput(-180, 180);
+            thetaController.reset(getPose().getRotation().getDegrees());
+            xController.reset(getPose().getX());
+            yController.reset(getPose().getY());
+
             targetPose2d = getTargetPose(side);
 
         }).andThen(this.run(
                 () -> {
-                    double xSpeed = MathUtil.clamp(xController.calculate(getPose().getX(), getTargetPose(side).getX()),
-                            -1, 1);
-                    double ySpeed = MathUtil.clamp(yController.calculate(getPose().getY(), getTargetPose(side).getY()),
-                            -1, 1);
+                    double xSpeed = xController.calculate(getPose().getX(), getTargetPose(side).getX());
+                    double ySpeed = yController.calculate(getPose().getY(), getTargetPose(side).getY());
                     double angularSpeed = thetaController.calculate(getPose().getRotation().getDegrees(),
-                            getTargetPose(side).getRotation().getDegrees());
+                            getTargetPose(side).getRotation().minus(new Rotation2d(Degrees.of(0))).getDegrees());
                     ChassisSpeeds speeds = new ChassisSpeeds(xSpeed,
                             ySpeed, angularSpeed);
                     setControl(applyRobotSpeeds.withSpeeds(speeds));
                 }).until(
-                        () -> (MathUtil.isNear(getPose().getX(), getTargetPose(side).getX(), Units.inchesToMeters(3))
+                        () -> (MathUtil.isNear(getPose().getX(), getTargetPose(side).getX(), Units.inchesToMeters(1))
                                 && MathUtil.isNear(getPose().getY(), getTargetPose(side).getY(),
-                                        Units.inchesToMeters(3)))));
+                                        Units.inchesToMeters(1)))
+                                && MathUtil.isNear(
+                                        getPose().getRotation().getDegrees(),
+                                        getTargetPose(side).getRotation().getDegrees(), 0.5)));
+    }
+
+    public void setTransforms(Supplier<LevelTarget> target) {
+        switch (target.get()) {
+            case L4:
+                // further back
+                atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(24.5),
+                        Units.inchesToMeters(-7.5), new Rotation2d());
+                atagToRightTransform2d = new Transform2d(Units.inchesToMeters(24.5),
+                        Units.inchesToMeters(7.5), new Rotation2d());
+                break;
+            // for other levels, closer to reef
+            default:
+                atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(20.5),
+                        Units.inchesToMeters(-7.5), new Rotation2d());
+                atagToRightTransform2d = new Transform2d(Units.inchesToMeters(20.5),
+                        Units.inchesToMeters(7.5), new Rotation2d());
+                break;
+        }
     }
 
     public Pose2d getTargetPose(ReefSide side) {
@@ -496,9 +522,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         LimelightHelpers.PoseEstimate leftEst = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-left");
 
         if (leftEst != null && leftEst.tagCount > 0) {
-            //log where limelight thinks we are
+            // log where limelight thinks we are
             leftLimelightPoseEst = leftEst.pose;
-            //only add vision measurement if we arent spinning quickly
+            // only add vision measurement if we arent spinning quickly
             if (Math.abs(Units.radiansToDegrees(getState().Speeds.omegaRadiansPerSecond)) < 360) {
                 addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.4, .4, 9999999));
             }

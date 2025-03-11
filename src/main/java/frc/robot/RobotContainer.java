@@ -58,6 +58,10 @@ public class RobotContainer {
 			.withDeadband(MAX_VELO * 0.1).withRotationalDeadband(MAX_ANGULAR_VELO * 0.1)
 			.withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
+	private final SwerveRequest.RobotCentric robotSpeeds = new SwerveRequest.RobotCentric()
+			.withDeadband(MAX_VELO * 0.1).withRotationalDeadband(MAX_ANGULAR_VELO * 0.1)
+			.withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
 	private final SwerveRequest.FieldCentricFacingAngle driveAngle = new SwerveRequest.FieldCentricFacingAngle()
 			.withDeadband(MAX_VELO * 0.1).withRotationalDeadband(MAX_ANGULAR_VELO * 0.1)
 			.withDriveRequestType(DriveRequestType.OpenLoopVoltage)
@@ -88,6 +92,7 @@ public class RobotContainer {
 	Command eject;
 
 	Command driveFieldCentric;
+	Command driveRobotCentric;
 	Command drivePointingAtAngle;
 
 	boolean driveAngled = false;
@@ -170,17 +175,12 @@ public class RobotContainer {
 						.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO))
 				.alongWith(Commands.runOnce(() -> driveAngled = false));
 
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-				drivePointingAtAngle = dt.applyRequest(
+		driveRobotCentric = dt.applyRequest(
+				() -> robotSpeeds.withVelocityY(0)
+						.withVelocityX(driverController.getLeftY() * MAX_VELO)
+						.withRotationalRate(0));
+
+		drivePointingAtAngle = dt.applyRequest(
 				() -> driveAngle.withVelocityY(-driverController.getLeftX() * MAX_VELO)
 						.withVelocityX(-driverController.getLeftY() * MAX_VELO))
 				.alongWith(Commands.runOnce(() -> driveAngled = true));
@@ -223,19 +223,20 @@ public class RobotContainer {
 				.alongWith(Commands.runOnce(() -> leds.setLevel(target))));
 
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
-
-		
-		driverController.x().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target))).whileTrue(dt.goToPose(ReefSide.LEFT));
-		driverController.b().whileTrue(dt.goToPose(ReefSide.RIGHT));
-
 		// brake when we aren't driving
 		new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)
 				.and(() -> Math.abs(driverController.getLeftY()) < 0.1)
 				.and(() -> Math.abs(driverController.getRightX()) < 0.1)
-				.whileTrue(dt.applyRequest(() -> brake))
-				.onFalse(/*
-							 * Commands.either(drivePointingAtAngle, driveFieldCentric, () -> driveAngled)
-							 */ driveFieldCentric);
+				.and(driverController.x().negate())
+				.and(driverController.b().negate())
+				.whileTrue(dt.applyRequest(() -> brake));
+
+		driverController.x().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target)))
+				.whileTrue(dt.goToPose(ReefSide.LEFT));
+		driverController.b().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target)))
+				.whileTrue(dt.goToPose(ReefSide.RIGHT));
+
+		driverController.x().or(driverController.b()).and(() -> dt.getAtPose()).whileTrue(driveRobotCentric);
 
 		// swap to driving at angle
 		driverController.y().onTrue(drivePointingAtAngle);

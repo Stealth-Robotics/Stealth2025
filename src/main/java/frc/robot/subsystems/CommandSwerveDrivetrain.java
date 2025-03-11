@@ -43,6 +43,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.LimelightHelpers;
@@ -118,6 +119,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     double measurementX, measurementY, measurementTheta;
 
     Pose2d targetPose2d;
+
+    private boolean atPose;
 
     public enum ReefSide {
         LEFT,
@@ -359,6 +362,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             yController.reset(getPose().getY());
 
             targetPose2d = getTargetPose(side);
+            atPose = false;
 
         }).andThen(this.run(
                 () -> {
@@ -375,7 +379,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                         Units.inchesToMeters(1)))
                                 && MathUtil.isNear(
                                         getPose().getRotation().getDegrees(),
-                                        getTargetPose(side).getRotation().getDegrees(), 0.5)));
+                                        getTargetPose(side).getRotation().getDegrees(), 0.5))
+                                        .andThen(Commands.runOnce(() -> atPose = true)));
+    }
+
+    public boolean getAtPose() {
+        return atPose;
     }
 
     public void setTransforms(Supplier<LevelTarget> target) {
@@ -389,9 +398,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 break;
             // for other levels, closer to reef
             default:
-                atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(20.5),
+                atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(30),
                         Units.inchesToMeters(-7.5), new Rotation2d());
-                atagToRightTransform2d = new Transform2d(Units.inchesToMeters(20.5),
+                atagToRightTransform2d = new Transform2d(Units.inchesToMeters(30),
                         Units.inchesToMeters(7.5), new Rotation2d());
                 break;
         }

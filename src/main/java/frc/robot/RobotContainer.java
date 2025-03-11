@@ -165,8 +165,8 @@ public class RobotContainer {
 		rollers.configureStateSupplierTrigger();
 
 		driveFieldCentric = dt.applyRequest(
-				() -> drive.withVelocityY(-driverController.getLeftX() * MAX_VELO)
-						.withVelocityX(-driverController.getLeftY() * MAX_VELO)
+				() -> drive.withVelocityY(driverController.getLeftX() * MAX_VELO)
+						.withVelocityX(driverController.getLeftY() * MAX_VELO)
 						.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO))
 				.alongWith(Commands.runOnce(() -> driveAngled = false));
 

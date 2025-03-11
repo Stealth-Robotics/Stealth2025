@@ -36,8 +36,8 @@ public class Elevator extends SubsystemBase {
             kV = 0.0,
             kG = 0.0,
             // TODO tune
-            MOTION_MAGIC_ACCELERATION = 150,
-            MOTION_MAGIC_CRUISE_VELOCITY = 75;
+            MOTION_MAGIC_ACCELERATION = 250,
+            MOTION_MAGIC_CRUISE_VELOCITY = 65;
 
     private final double TOLERANCE = 0.05; // todo tune
 

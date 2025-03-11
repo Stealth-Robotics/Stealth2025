@@ -206,7 +206,7 @@ public class Superstructure {
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
 				.and(() -> arm.isMotorAtTarget())
 				.whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
-				.whileTrue(transfer.setLeftRightVoltage(1, 1)) // todo: test voltage that works
+				.whileTrue(transfer.setLeftRightVoltage(2, 2)) // todo: test voltage that works
 				.whileTrue(rollers.setRollerVoltage(() -> 1.5))
 				.and(gamepieceDetectedInStagingArea)
 				.onTrue(this.forceState(SuperState.TRANSFER));
@@ -381,7 +381,7 @@ public class Superstructure {
 		stateTriggers.get(SuperState.PRE_L4)
 				.whileTrue(elevator.goToPosition(() -> Elevator.PRE_L4_ROTATIONS))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L4_DEGREES))
-				.and(() -> elevator.isElevatorAtTarget())
+				// .and(() -> elevator.isElevatorAtTarget())
 				// .and(() -> arm.isMotorAtTarget())
 				.and(scoreTrigger)
 				.onFalse(this.forceState(SuperState.SCORE_CORAL));
@@ -401,8 +401,8 @@ public class Superstructure {
 				.and(() -> levelTarget.get() == LevelTarget.L2)
 				.whileTrue(elevator.goToPosition(() -> Elevator.SCORE_L2_ROTATIONS))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.SCORE_L2_DEGREES))
-				.and(() -> elevator.isElevatorAtTarget())
-				.and(() -> arm.isMotorAtTarget())
+				// .and(() -> elevator.isElevatorAtTarget())
+				// .and(() -> arm.isMotorAtTarget())
 				.and(outtakeTrigger)
 				.onTrue(this.forceState(SuperState.SPIT));
 
@@ -410,8 +410,8 @@ public class Superstructure {
 				.and(() -> levelTarget.get() == LevelTarget.L3)
 				.whileTrue(elevator.goToPosition(() -> Elevator.SCORE_L3_ROTATIONS))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.SCORE_L3_DEGREES))
-				.and(() -> elevator.isElevatorAtTarget())
-				.and(() -> arm.isMotorAtTarget())
+				// .and(() -> elevator.isElevatorAtTarget())
+				// .and(() -> arm.isMotorAtTarget())
 				.and(outtakeTrigger)
 				.onTrue(this.forceState(SuperState.SPIT));
 

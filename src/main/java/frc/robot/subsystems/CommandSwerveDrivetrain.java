@@ -75,8 +75,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private final SwerveRequest.ApplyFieldSpeeds applyRobotSpeeds = new SwerveRequest.ApplyFieldSpeeds();
 
-    private final ProfiledPIDController xController = new ProfiledPIDController(20, 3, 0, new Constraints(1.5, 2.5));
-    private final ProfiledPIDController yController = new ProfiledPIDController(20, 3, 0, new Constraints(1.5, 2.5));
+    private final ProfiledPIDController xController = new ProfiledPIDController(20, 3, 0, new Constraints(1.5, 1.5));
+    private final ProfiledPIDController yController = new ProfiledPIDController(20, 3, 0, new Constraints(1.5, 1.5));
     private final ProfiledPIDController thetaController = new ProfiledPIDController(0.4, 0.06, 0,
             new Constraints(200, 300));
 
@@ -132,10 +132,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             new Pose2d(Distance.ofBaseUnits(6, Meter), Distance.ofBaseUnits(3, Meter), new Rotation2d()));
 
     Transform2d atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(24.5),
-            Units.inchesToMeters(-7.5), new Rotation2d());
+            Units.inchesToMeters(-6.5), new Rotation2d());
 
     Transform2d atagToRightTransform2d = new Transform2d(Units.inchesToMeters(24.5),
-            Units.inchesToMeters(7.5), new Rotation2d());
+            Units.inchesToMeters(6.5), new Rotation2d());
 
     Pose3d test2 = testPose3d.transformBy(new Transform3d(atagToLeftTransform2d));
 
@@ -517,9 +517,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         targetRight = solveClosestTagPose().transformBy(atagToRightTransform2d);
         targetLeft = solveClosestTagPose().transformBy(atagToLeftTransform2d);
 
-        double yaw = getPigeon2().getYaw().getValueAsDouble();
-        // LimelightHelpers.SetRobotOrientation("limelight-left", yaw, 0, 0, 0, 0, 0);
-        LimelightHelpers.PoseEstimate leftEst = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-left");
+        double yaw = getPose().getRotation().getDegrees();
+        LimelightHelpers.SetRobotOrientation("limelight-left", yaw, 0, 0, 0, 0, 0);
+        LimelightHelpers.PoseEstimate leftEst = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
 
         if (leftEst != null && leftEst.tagCount > 0) {
             // log where limelight thinks we are

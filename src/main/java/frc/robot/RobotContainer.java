@@ -21,6 +21,7 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -100,6 +101,8 @@ public class RobotContainer {
 	public Command leftAuto;
 	Trigger subsystemsAtSetpoints;
 
+	double driveMultiplier;
+
 	@Logged
 	SwerveSample[] trajSamples;
 
@@ -170,9 +173,18 @@ public class RobotContainer {
 		rollers.configureStateSupplierTrigger();
 
 		driveFieldCentric = dt.applyRequest(
-				() -> drive.withVelocityY(driverController.getLeftX() * MAX_VELO)
-						.withVelocityX(driverController.getLeftY() * MAX_VELO)
-						.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO))
+
+				() -> {
+					if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+						driveMultiplier = 1;
+					} else {
+						driveMultiplier = -1;
+					}
+					drive.withVelocityY(driverController.getLeftX() * MAX_VELO * driveMultiplier)
+							.withVelocityX(driverController.getLeftY() * MAX_VELO * driveMultiplier)
+							.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO);
+					return drive;
+				})
 				.alongWith(Commands.runOnce(() -> driveAngled = false));
 
 		driveRobotCentric = dt.applyRequest(
@@ -339,21 +351,30 @@ public class RobotContainer {
 
 	public AutoRoutine preloadAuto() {
 		AutoRoutine autoRoutine = autoFactory.newRoutine("auto");
-		AutoTrajectory path = autoRoutine.trajectory("mirrored_preload", 0);
-		AutoTrajectory path2 = autoRoutine.trajectory("mirrored_preload", 1);
-		AutoTrajectory path3 = autoRoutine.trajectory("mirrored_preload", 2);
+		AutoTrajectory path = autoRoutine.trajectory("preload", 0);
+		AutoTrajectory path2 = autoRoutine.trajectory("preload", 1);
+		// AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
 
 		autoRoutine.active().onTrue(
 				path.resetOdometry().andThen(
-						path.cmd().alongWith(superstructure.forceState(SuperState.PRE_L4)
-								.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+						Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)),
+						path.cmd(),
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						dt.goToPose(ReefSide.LEFT)
+													 .alongWith(superstructure.forceState(SuperState.PRE_L4)
+													  .andThen(new WaitUntilCommand(subsystemsAtSetpoints)))
+													 ,
+
+						dt.applyRequest(() -> brake).withTimeout(0.1),
 						dunk,
 						new WaitCommand(0.5),
 						eject,
+						dt.goToPose(path.getFinalPose().get()),
 						path2.cmd(),
 						superstructure.forceState(SuperState.STOW),
 						new WaitUntilCommand(subsystemsAtSetpoints),
-						path3.cmd()));
+						// path3.cmd(),
+						dt.goToPose(ReefSide.LEFT)));
 
 		return autoRoutine;
 	}

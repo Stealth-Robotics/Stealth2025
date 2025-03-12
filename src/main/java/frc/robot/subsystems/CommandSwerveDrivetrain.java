@@ -10,6 +10,8 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.util.DriveFeedforwards;
+import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -33,6 +35,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
@@ -122,10 +125,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private boolean atPose;
 
+    private SwerveSetpoint previousSetpoint; 
+
     public enum ReefSide {
         LEFT,
         RIGHT
     }
+
+    Rotation2d zeroRotation = new Rotation2d();
 
     // @Logged
     SwerveSample[] trajSamples;
@@ -364,8 +371,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             targetPose2d = getTargetPose(side);
             atPose = false;
 
+            ChassisSpeeds currentSpeeds = getState().Speeds;
+            SwerveModuleState[] currentStates = getState().ModuleStates;
+            previousSetpoint = new SwerveSetpoint(currentSpeeds, currentStates, DriveFeedforwards.zeros(4));
+
         }).andThen(this.run(
                 () -> {
+
+
                     double xSpeed = xController.calculate(getPose().getX(), getTargetPose(side).getX());
                     double ySpeed = yController.calculate(getPose().getY(), getTargetPose(side).getY());
                     double angularSpeed = thetaController.calculate(getPose().getRotation().getDegrees(),
@@ -380,7 +393,37 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                 && MathUtil.isNear(
                                         getPose().getRotation().getDegrees(),
                                         getTargetPose(side).getRotation().getDegrees(), 0.5))
-                                        .andThen(Commands.runOnce(() -> atPose = true)));
+                .andThen(Commands.runOnce(() -> atPose = true)));
+    }
+
+    public Command goToPose(Pose2d pose) {
+
+        return this.runOnce(() -> {
+            thetaController.enableContinuousInput(-180, 180);
+            thetaController.reset(getPose().getRotation().getDegrees());
+            xController.reset(getPose().getX());
+            yController.reset(getPose().getY());
+
+            targetPose2d = pose;
+            atPose = false;
+
+        }).andThen(this.run(
+                () -> {
+                    double xSpeed = xController.calculate(getPose().getX(), pose.getX());
+                    double ySpeed = yController.calculate(getPose().getY(), pose.getY());
+                    double angularSpeed = thetaController.calculate(getPose().getRotation().getDegrees(),
+                            pose.getRotation().minus(new Rotation2d(Degrees.of(0))).getDegrees());
+                    ChassisSpeeds speeds = new ChassisSpeeds(xSpeed,
+                            ySpeed, angularSpeed);
+                    setControl(applyRobotSpeeds.withSpeeds(speeds));
+                }).until(
+                        () -> (MathUtil.isNear(getPose().getX(), pose.getX(), Units.inchesToMeters(4))
+                                && MathUtil.isNear(getPose().getY(), pose.getY(),
+                                        Units.inchesToMeters(4)))
+                                && MathUtil.isNear(
+                                        getPose().getRotation().getDegrees(),
+                                        pose.getRotation().getDegrees(), 0.5))
+                .andThen(Commands.runOnce(() -> atPose = true)));
     }
 
     public boolean getAtPose() {
@@ -471,6 +514,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return m_sysIdRoutineToApply.dynamic(direction);
     }
 
+    public Command zeroGyro() {
+        return this.runOnce(() -> this.resetRotation(zeroRotation));
+    }
+
     @Override
     public void periodic() {
         /*
@@ -538,6 +585,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.4, .4, 9999999));
             }
         }
+
+        zeroRotation = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? Rotation2d.kZero
+                : Rotation2d.k180deg;
 
     }
 

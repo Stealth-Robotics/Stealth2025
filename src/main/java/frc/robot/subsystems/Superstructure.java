@@ -209,7 +209,7 @@ public class Superstructure {
 				.whileTrue(transfer.setLeftRightVoltage(2, 2)) // todo: test voltage that works
 				.whileTrue(rollers.setRollerVoltage(() -> 1.5))
 				.and(gamepieceDetectedInStagingArea)
-				.onTrue(this.forceState(SuperState.TRANSFER));
+				.onTrue(this.forceState(SuperState.GRAB_CORAL));
 
 		stateTriggers.get(SuperState.INTAKE)
 				.and(() -> Math.abs(intakeSpeed.getAsDouble()) > 0.1)
@@ -231,7 +231,7 @@ public class Superstructure {
 
 		stateTriggers.get(SuperState.INTAKE)
 				.and(() -> transfer.getLeftStatorCurrent() > 30 || transfer.getRightStatorCurrent() > 30).debounce(0.15)
-				.onTrue(this.forceState(SuperState.TRANSFER));
+				.onTrue(this.forceState(SuperState.UNJAM));
 
 		stateTriggers.get(SuperState.TRANSFER)
 				.onTrue(intake.setIntakeVoltage(() -> 0))
@@ -265,6 +265,8 @@ public class Superstructure {
 				.whileTrue(elevator.goToPosition(() -> Elevator.GRAB_CORAL_ROTATIONS))
 				.whileTrue(rollers.setRollerVoltage(9))
 				.whileTrue(intake.rotateToPositionCommand(Intake.STOWED_ANGLE))
+				.onTrue(Commands.runOnce(() -> rumble.accept(0.5)).andThen(new WaitCommand(0.5),
+						Commands.runOnce(() -> rumble.accept(0))))
 				.onTrue(leds.blink())
 				.and(() -> elevator.isElevatorAtTarget())
 				.onTrue(new WaitCommand(0.25).andThen(rollers.setRollerVoltage(1)))
@@ -386,8 +388,7 @@ public class Superstructure {
 				.and(scoreTrigger)
 				.onFalse(this.forceState(SuperState.SCORE_CORAL));
 
-
-		//pre-level back to ready score coral
+		// pre-level back to ready score coral
 		stateTriggers.get(SuperState.PRE_L1)
 				.and(stowTrigger)
 				.onFalse(this.forceState(SuperState.READY_SCORE_CORAL));
@@ -403,7 +404,6 @@ public class Superstructure {
 		stateTriggers.get(SuperState.PRE_L4)
 				.and(stowTrigger)
 				.onFalse(this.forceState(SuperState.READY_SCORE_CORAL));
-
 
 		// when driver presses button to score, we lower elevator/arm to scoring level,
 		// then command rollers to spit
@@ -465,17 +465,21 @@ public class Superstructure {
 
 		// ejecting gamepiece
 		stateTriggers.get(SuperState.SPIT)
-				.onTrue(rollers.setRollerVoltage(-1.5)
-						.andThen(new WaitCommand(1).andThen(rollers.setRollerVoltage(0))))
+				.onTrue(rollers.setRollerVoltage(-1.5))
 				.and(stowTrigger)
-				.onFalse(
-						this.forceState(SuperState.STOW));
+				.onFalse(this.forceState(SuperState.STOW));
 
 		// algae scoring
 		stateTriggers.get(SuperState.READY_SCORE_ALGAE)
 				.and(() -> algaeTarget.get() == AlgaeTarget.PROCESSOR)
 				.and(preScoreTrigger)
-				.onFalse(this.forceState(SuperState.SPIT_ALGAE));
+				.onFalse(this.forceState(SuperState.PRE_PROCESSOR));
+
+		// eject algae immediately instead of scoring
+		stateTriggers.get(SuperState.READY_SCORE_ALGAE)
+				.and(stowTrigger)
+				.onFalse(rollers.setRollerVoltage(-6)
+						.andThen(new WaitCommand(0.5), this.forceState(SuperState.STOW)));
 
 		stateTriggers.get(SuperState.READY_SCORE_ALGAE)
 				.and(() -> algaeTarget.get() == AlgaeTarget.NET)

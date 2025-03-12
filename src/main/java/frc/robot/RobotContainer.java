@@ -33,7 +33,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Arm;
-import frc.robot.subsystems.Climber;
+
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Intake;
@@ -116,7 +116,6 @@ public class RobotContainer {
 		transfer = new Transfer();
 		leds = new Leds();
 		intake = new Intake();
-		// climber = new Climber();
 
 		subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
@@ -152,10 +151,6 @@ public class RobotContainer {
 				() -> (driverController.getRightTriggerAxis() - driverController.getLeftTriggerAxis()),
 				(rumble) -> setRumble(rumble));
 
-		// climber.setDefaultCommand(climber.setDutyCycle(
-		// () -> operatorController.getRightTriggerAxis() -
-		// operatorController.getLeftTriggerAxis()));
-
 		goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
 				new WaitUntilCommand(subsystemsAtSetpoints));
 		dunk = Commands.sequence(superstructure.forceState(SuperState.SCORE_CORAL),
@@ -164,11 +159,6 @@ public class RobotContainer {
 		intakeCmd = Commands.sequence(superstructure.forceState(SuperState.INTAKE));
 
 		autoChooser.addCmd("auto", this::buildLeftAuto);
-
-		// NamedCommands.registerCommand("Go to scoring", goToL4);
-		// NamedCommands.registerCommand("Dunk", dunk);
-		// NamedCommands.registerCommand("Eject", eject);
-		// NamedCommands.registerCommand("Intake", intake);
 
 		rollers.configureStateSupplierTrigger();
 
@@ -361,9 +351,8 @@ public class RobotContainer {
 						path.cmd(),
 						dt.applyRequest(() -> brake).withTimeout(0.1),
 						dt.goToPose(ReefSide.LEFT)
-													 .alongWith(superstructure.forceState(SuperState.PRE_L4)
-													  .andThen(new WaitUntilCommand(subsystemsAtSetpoints)))
-													 ,
+								.alongWith(superstructure.forceState(SuperState.PRE_L4)
+										.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
 
 						dt.applyRequest(() -> brake).withTimeout(0.1),
 						dunk,

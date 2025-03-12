@@ -12,6 +12,7 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
+import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -125,7 +126,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private boolean atPose;
 
-    private SwerveSetpoint previousSetpoint; 
+    private SwerveSetpoint previousSetpoint;
+    // private SwerveSetpointGenerator setpointGenerator = new
+    // SwerveSetpointGenerator(null, null)
 
     public enum ReefSide {
         LEFT,
@@ -378,11 +381,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }).andThen(this.run(
                 () -> {
 
-
                     double xSpeed = xController.calculate(getPose().getX(), getTargetPose(side).getX());
                     double ySpeed = yController.calculate(getPose().getY(), getTargetPose(side).getY());
                     double angularSpeed = thetaController.calculate(getPose().getRotation().getDegrees(),
                             getTargetPose(side).getRotation().minus(new Rotation2d(Degrees.of(0))).getDegrees());
+
+                    // previousSetpoint = setpointge
                     ChassisSpeeds speeds = new ChassisSpeeds(xSpeed,
                             ySpeed, angularSpeed);
                     setControl(applyRobotSpeeds.withSpeeds(speeds));
@@ -577,11 +581,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         LimelightHelpers.SetRobotOrientation("limelight-left", yaw, 0, 0, 0, 0, 0);
         LimelightHelpers.PoseEstimate leftEst = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
 
+        LimelightHelpers.PoseEstimate leftMT1Estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-left");
+
+        //if we are disabled and still, we add mt1 estimates to get correct heading
+        if (DriverStation.isDisabled() && leftMT1Estimate != null && leftMT1Estimate.tagCount > 0) {
+            addVisionMeasurement(leftMT1Estimate.pose, leftMT1Estimate.timestampSeconds,
+                    VecBuilder.fill(.4, .4, Units.degreesToRadians(1)));
+        }
+
         if (leftEst != null && leftEst.tagCount > 0) {
             // log where limelight thinks we are
             leftLimelightPoseEst = leftEst.pose;
             // only add vision measurement if we arent spinning quickly
-            if (Math.abs(Units.radiansToDegrees(getState().Speeds.omegaRadiansPerSecond)) < 360) {
+            if (Math.abs(Units.radiansToDegrees(getState().Speeds.omegaRadiansPerSecond)) < 360 && DriverStation.isEnabled()) {
                 addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.4, .4, 9999999));
             }
         }

@@ -60,7 +60,7 @@ public class Arm extends SubsystemBase {
             REMOVE_ALGAE_HIGH_DEGREES = 0.0, // todo tune
             REMOVE_ALGAE_LOW_DEGREES = 0.0, // todo tune
             PRE_PROCESSOR_DEGREES = -5.0, // todo tune
-            PRE_NET_DEGREES = 45.0, // todo tune
+            PRE_NET_DEGREES = 80, // todo tune
             READY_SCORE_ALGAE = 70.0,
             STOWED_DEGREES = 80; // todo tune
 

@@ -386,6 +386,25 @@ public class Superstructure {
 				.and(scoreTrigger)
 				.onFalse(this.forceState(SuperState.SCORE_CORAL));
 
+
+		//pre-level back to ready score coral
+		stateTriggers.get(SuperState.PRE_L1)
+				.and(stowTrigger)
+				.onFalse(this.forceState(SuperState.READY_SCORE_CORAL));
+
+		stateTriggers.get(SuperState.PRE_L2)
+				.and(stowTrigger)
+				.onFalse(this.forceState(SuperState.READY_SCORE_CORAL));
+
+		stateTriggers.get(SuperState.PRE_L3)
+				.and(stowTrigger)
+				.onFalse(this.forceState(SuperState.READY_SCORE_CORAL));
+
+		stateTriggers.get(SuperState.PRE_L4)
+				.and(stowTrigger)
+				.onFalse(this.forceState(SuperState.READY_SCORE_CORAL));
+
+
 		// when driver presses button to score, we lower elevator/arm to scoring level,
 		// then command rollers to spit
 		stateTriggers.get(SuperState.SCORE_CORAL)
@@ -461,7 +480,7 @@ public class Superstructure {
 		stateTriggers.get(SuperState.READY_SCORE_ALGAE)
 				.and(() -> algaeTarget.get() == AlgaeTarget.NET)
 				.and(preScoreTrigger)
-				.onFalse(this.forceState(SuperState.SPIT_ALGAE));
+				.onFalse(this.forceState(SuperState.PRE_NET));
 
 		stateTriggers.get(SuperState.PRE_PROCESSOR)
 				.whileTrue(elevator.goToPosition(() -> Elevator.PRE_PROCESSOR_ROTATIONS))
@@ -473,8 +492,10 @@ public class Superstructure {
 
 		stateTriggers.get(SuperState.PRE_NET)
 				.whileTrue(elevator.goToPosition(() -> Elevator.PRE_NET_ROTATIONS))
-				.whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_NET_DEGREES))
 				.and(() -> (elevator.getElevatorMotorPosition() > 35))
+				.whileTrue(rollers.setRollerVoltage(12))
+				.whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_NET_DEGREES))
+				.and(() -> (elevator.getElevatorMotorPosition() > 40))
 				.onTrue(this.forceState(SuperState.SPIT_ALGAE));
 
 		stateTriggers.get(SuperState.SPIT_ALGAE)

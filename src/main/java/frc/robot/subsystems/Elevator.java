@@ -71,7 +71,7 @@ public class Elevator extends SubsystemBase {
             REMOVE_ALGAE_HIGH_ROTATIONS = 30, // todo tune
             REMOVE_ALGAE_LOW_ROTATIONS = 17, // todo tune
             PRE_PROCESSOR_ROTATIONS = 0.75, // todo tune
-            PRE_NET_ROTATIONS = 40.0, // todo tune
+            PRE_NET_ROTATIONS = 43.5, // todo tune
             GRAB_CORAL_ROTATIONS = 7.38, // todo tune
             STOWED_ROTATIONS = 18; // todo tune
 

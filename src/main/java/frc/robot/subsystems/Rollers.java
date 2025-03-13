@@ -46,7 +46,7 @@ public class Rollers extends SubsystemBase {
 
     public Rollers(Trigger trigger, Supplier<SuperState> stateSupplier) {
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // todo check
-        config.CurrentLimits.SupplyCurrentLimit = 30; // limit current so we dont draw too much when stalling rollers to
+        config.CurrentLimits.SupplyCurrentLimit = 50; // limit current so we dont draw too much when stalling rollers to
                                                       // keep gamepeice
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
         motor.getConfigurator().apply(config);

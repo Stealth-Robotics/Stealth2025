@@ -170,8 +170,8 @@ public class RobotContainer {
 					} else {
 						driveMultiplier = -1;
 					}
-					drive.withVelocityY(driverController.getLeftX() * MAX_VELO * driveMultiplier)
-							.withVelocityX(driverController.getLeftY() * MAX_VELO * driveMultiplier)
+					drive.withVelocityY(-driverController.getLeftX() * MAX_VELO * driveMultiplier)
+							.withVelocityX(-driverController.getLeftY() * MAX_VELO * driveMultiplier)
 							.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO);
 					return drive;
 				})
@@ -242,6 +242,9 @@ public class RobotContainer {
 
 		// swap to driving at angle
 		driverController.y().onTrue(drivePointingAtAngle);
+
+		operatorController.povDown().onTrue(Commands.runOnce(() -> algaeTarget = AlgaeTarget.PROCESSOR));
+		operatorController.povUp().onTrue(Commands.runOnce(() -> algaeTarget = AlgaeTarget.NET));
 		// if we try to rotate the bot, go back to normal driving
 		// new Trigger(() -> Math.abs(driverController.getRightTriggerAxis()) >
 		// 0.05).onTrue(driveFieldCentric);

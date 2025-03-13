@@ -290,7 +290,7 @@ public class Superstructure {
 
 		stateTriggers.get(SuperState.REMOVE_ALGAE_HIGH)
 				.whileTrue(elevator.goToPosition(() -> Elevator.REMOVE_ALGAE_HIGH_ROTATIONS))
-				.whileTrue(rollers.setRollerVoltage(9))
+				.whileTrue(rollers.setRollerVoltage(12))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_HIGH_DEGREES))
 				.and(() -> rollers.getHasGamepiece() || overrideBeamBreakTrigger.getAsBoolean())
 				.onTrue(this.forceState(SuperState.READY_SCORE_ALGAE)
@@ -299,7 +299,7 @@ public class Superstructure {
 
 		stateTriggers.get(SuperState.REMOVE_ALGAE_LOW)
 				.whileTrue(elevator.goToPosition(() -> Elevator.REMOVE_ALGAE_LOW_ROTATIONS))
-				.whileTrue(rollers.setRollerVoltage(9))
+				.whileTrue(rollers.setRollerVoltage(12))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_LOW_DEGREES))
 				.and(() -> rollers.getHasGamepiece() || overrideBeamBreakTrigger.getAsBoolean())
 				.onTrue(this.forceState(SuperState.READY_SCORE_ALGAE)
@@ -495,11 +495,13 @@ public class Superstructure {
 				.onFalse(this.forceState(SuperState.SPIT_ALGAE));
 
 		stateTriggers.get(SuperState.PRE_NET)
-				.whileTrue(elevator.goToPosition(() -> Elevator.PRE_NET_ROTATIONS))
-				.and(() -> (elevator.getElevatorMotorPosition() > 35))
 				.whileTrue(rollers.setRollerVoltage(12))
+				.whileTrue(elevator.goToPosition(() -> Elevator.PRE_NET_ROTATIONS))
+				.onTrue(arm.rotateToPositionCommand(() -> -45))
+				.and(() -> (elevator.getElevatorMotorPosition() > 35))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_NET_DEGREES))
 				.and(() -> (elevator.getElevatorMotorPosition() > 40))
+				.and(() -> arm.getArmPosition() > 30)
 				.onTrue(this.forceState(SuperState.SPIT_ALGAE));
 
 		stateTriggers.get(SuperState.SPIT_ALGAE)

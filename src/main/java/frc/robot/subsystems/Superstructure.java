@@ -203,10 +203,10 @@ public class Superstructure {
 		stateTriggers.get(SuperState.INTAKE)
 				.whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))
 				.and(() -> elevator.isElevatorAtTarget())
+				.whileTrue(transfer.setLeftRightVoltage(1.5, 1.5)) // todo: test voltage that works
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
 				.and(() -> arm.isMotorAtTarget())
 				.whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
-				.whileTrue(transfer.setLeftRightVoltage(2, 2)) // todo: test voltage that works
 				.whileTrue(rollers.setRollerVoltage(() -> 1.5))
 				.and(gamepieceDetectedInStagingArea)
 				.onTrue(this.forceState(SuperState.GRAB_CORAL));
@@ -250,7 +250,7 @@ public class Superstructure {
 				.and(() -> elevator.isElevatorAtTarget())
 				.whileTrue(arm.rotateToPositionCommand(() -> -60))
 				.whileTrue(transfer.setVoltage(() -> -2))
-				.onTrue(Commands.sequence(new WaitCommand(0.5), this.forceState(SuperState.INTAKE)));
+				.onTrue(Commands.sequence(new WaitCommand(0.5), transfer.setVoltage(() -> 0), this.forceState(SuperState.INTAKE)));
 
 		stateTriggers.get(SuperState.READY_SCORE_CORAL)
 				.and(gamepieceDetectedInStagingArea).debounce(0.5)
@@ -269,7 +269,7 @@ public class Superstructure {
 						Commands.runOnce(() -> rumble.accept(0))))
 				.onTrue(leds.blink())
 				.and(() -> elevator.isElevatorAtTarget())
-				.onTrue(new WaitCommand(0.25).andThen(rollers.setRollerVoltage(1)))
+				.onTrue(new WaitCommand(0.25).andThen(rollers.setRollerVoltage(1.5)))
 
 				.onTrue(this.forceState(SuperState.READY_SCORE_CORAL));
 
@@ -501,7 +501,7 @@ public class Superstructure {
 				.and(() -> (elevator.getElevatorMotorPosition() > 35))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_NET_DEGREES))
 				.and(() -> (elevator.getElevatorMotorPosition() > 40))
-				.and(() -> arm.getArmPosition() > 30)
+				.and(() -> arm.getArmPosition() > 25)
 				.onTrue(this.forceState(SuperState.SPIT_ALGAE));
 
 		stateTriggers.get(SuperState.SPIT_ALGAE)

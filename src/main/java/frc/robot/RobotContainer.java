@@ -344,8 +344,8 @@ public class RobotContainer {
 
 	public AutoRoutine preloadAuto() {
 		AutoRoutine autoRoutine = autoFactory.newRoutine("auto");
-		AutoTrajectory path = autoRoutine.trajectory("preload", 0);
-		AutoTrajectory path2 = autoRoutine.trajectory("preload", 1);
+		AutoTrajectory path = autoRoutine.trajectory("mirrored_preload", 0);
+		AutoTrajectory path2 = autoRoutine.trajectory("mirrored_preload", 1);
 		// AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
 
 		autoRoutine.active().onTrue(
@@ -353,7 +353,7 @@ public class RobotContainer {
 						Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)),
 						path.cmd(),
 						dt.applyRequest(() -> brake).withTimeout(0.1),
-						dt.goToPose(ReefSide.LEFT)
+						dt.goToPose(ReefSide.RIGHT)
 								.alongWith(superstructure.forceState(SuperState.PRE_L4)
 										.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
 
@@ -362,9 +362,9 @@ public class RobotContainer {
 						new WaitCommand(0.5),
 						eject,
 						dt.goToPose(path.getFinalPose().get()),
-						path2.cmd(),
 						superstructure.forceState(SuperState.STOW),
 						new WaitUntilCommand(subsystemsAtSetpoints),
+						path2.cmd(),
 						// path3.cmd(),
 						dt.goToPose(ReefSide.LEFT)));
 

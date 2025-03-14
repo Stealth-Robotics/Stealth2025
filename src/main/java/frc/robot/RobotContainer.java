@@ -82,7 +82,7 @@ public class RobotContainer {
 	SwerveLogger logger = new SwerveLogger(dt);
 	AutoFactory autoFactory;
 
-	LevelTarget target = LevelTarget.L2;
+	LevelTarget target = LevelTarget.L4;
 	AlgaeTarget algaeTarget = AlgaeTarget.PROCESSOR;
 
 	private final AutoChooser autoChooser;
@@ -166,9 +166,9 @@ public class RobotContainer {
 
 				() -> {
 					if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
-						driveMultiplier = 1;
-					} else {
 						driveMultiplier = -1;
+					} else {
+						driveMultiplier = 1;
 					}
 					drive.withVelocityY(-driverController.getLeftX() * MAX_VELO * driveMultiplier)
 							.withVelocityX(-driverController.getLeftY() * MAX_VELO * driveMultiplier)
@@ -344,28 +344,32 @@ public class RobotContainer {
 
 	public AutoRoutine preloadAuto() {
 		AutoRoutine autoRoutine = autoFactory.newRoutine("auto");
-		AutoTrajectory path = autoRoutine.trajectory("mirrored_preload", 0);
-		AutoTrajectory path2 = autoRoutine.trajectory("mirrored_preload", 1);
+		AutoTrajectory path = autoRoutine.trajectory("preload", 0);
+		AutoTrajectory path2 = autoRoutine.trajectory("preload", 1);
 		// AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
 
 		autoRoutine.active().onTrue(
-				path.resetOdometry().andThen(
-						Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)),
+
+				Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
 						path.cmd(),
 						dt.applyRequest(() -> brake).withTimeout(0.1),
-						dt.goToPose(ReefSide.RIGHT)
-								.alongWith(superstructure.forceState(SuperState.PRE_L4)
-										.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+						dt.goToPose(ReefSide.LEFT),
+								// .alongWith(superstructure.forceState(SuperState.PRE_L4)
+								// 		.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+						dt.goToPose(ReefSide.LEFT),
 
 						dt.applyRequest(() -> brake).withTimeout(0.1),
-						dunk,
-						new WaitCommand(0.5),
-						eject,
+						// dunk,
+						new WaitCommand(0.25),
+						// eject,
 						dt.goToPose(path.getFinalPose().get()),
-						superstructure.forceState(SuperState.STOW),
+						superstructure.forceState(SuperState.INTAKE),
 						new WaitUntilCommand(subsystemsAtSetpoints),
-						path2.cmd(),
+						path2.cmd()
+								.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
+										.alongWith(intake.setIntakeVoltage(12).asProxy())),
 						// path3.cmd(),
+						dt.applyRequest(() -> brake).withTimeout(0.1),
 						dt.goToPose(ReefSide.LEFT)));
 
 		return autoRoutine;

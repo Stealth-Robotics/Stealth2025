@@ -3,7 +3,9 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.*;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -52,6 +54,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.LimelightHelpers;
 import frc.robot.Robot;
+import frc.robot.LimelightHelpers.RawFiducial;
 import frc.robot.RobotContainer.LevelTarget;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
@@ -103,6 +106,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final Pose2d TAG_20 = new Pose2d(Inches.of(193.1), Inches.of(186.83), new Rotation2d(Degrees.of(60)));
     private final Pose2d TAG_21 = new Pose2d(Inches.of(209.49), Inches.of(158.5), new Rotation2d(Degrees.of(0)));
     private final Pose2d TAG_22 = new Pose2d(Inches.of(193.1), Inches.of(130.17), new Rotation2d(Degrees.of(300)));
+
+    private final Map<Pose2d, Integer> poseTagMap = new HashMap<>();
+
+    boolean isAligning = false;
+
+    private int nearestTagId;
 
     private final List<Pose2d> tagPoses = Arrays.asList(
             TAG_6,
@@ -374,6 +383,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             targetPose2d = getTargetPose(side);
             atPose = false;
 
+            isAligning = true;
+
             ChassisSpeeds currentSpeeds = getState().Speeds;
             SwerveModuleState[] currentStates = getState().ModuleStates;
             previousSetpoint = new SwerveSetpoint(currentSpeeds, currentStates, DriveFeedforwards.zeros(4));
@@ -397,7 +408,26 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                 && MathUtil.isNear(
                                         getPose().getRotation().getDegrees(),
                                         getTargetPose(side).getRotation().getDegrees(), 0.5))
-                .andThen(Commands.runOnce(() -> atPose = true)));
+                .andThen(Commands.runOnce(() -> {
+                    atPose = true;
+                    isAligning = false;
+                })));
+    }
+
+    public void configMap() {
+        poseTagMap.put(TAG_6, 6);
+        poseTagMap.put(TAG_7, 7);
+        poseTagMap.put(TAG_8, 8);
+        poseTagMap.put(TAG_9, 9);
+        poseTagMap.put(TAG_10, 10);
+        poseTagMap.put(TAG_11, 11);
+        poseTagMap.put(TAG_17, 17);
+        poseTagMap.put(TAG_18, 18);
+        poseTagMap.put(TAG_19, 19);
+        poseTagMap.put(TAG_20, 20);
+        poseTagMap.put(TAG_21, 21);
+        poseTagMap.put(TAG_22, 22);
+
     }
 
     public Command goToPose(Pose2d pose) {
@@ -583,18 +613,28 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         LimelightHelpers.PoseEstimate leftMT1Estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-left");
 
-        //if we are disabled and still, we add mt1 estimates to get correct heading
-        if (DriverStation.isDisabled() && leftMT1Estimate != null && leftMT1Estimate.tagCount > 0) {
-            addVisionMeasurement(leftMT1Estimate.pose, leftMT1Estimate.timestampSeconds,
-                    VecBuilder.fill(.4, .4, Units.degreesToRadians(1)));
-        }
+        nearestTagId = poseTagMap.getOrDefault(solveClosestTagPose(), 0);
 
         if (leftEst != null && leftEst.tagCount > 0) {
             // log where limelight thinks we are
             leftLimelightPoseEst = leftEst.pose;
             // only add vision measurement if we arent spinning quickly
-            if (Math.abs(Units.radiansToDegrees(getState().Speeds.omegaRadiansPerSecond)) < 360 && DriverStation.isEnabled()) {
-                addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.4, .4, 9999999));
+            if (Math.abs(Units.radiansToDegrees(getState().Speeds.omegaRadiansPerSecond)) < 360) {
+                // we dont care a ton about the tag id if we are not aligning
+                if (!isAligning) {
+                    addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.4, .4, 9999999));
+                    return;
+                }
+
+                RawFiducial[] rawFiducials = leftEst.rawFiducials;
+                // if the pose estimate includes the tag we're aligning to
+                for (RawFiducial rawFiducial : rawFiducials) {
+
+                    if (rawFiducial.id == nearestTagId) {
+                        addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.4, .4, 9999999));
+                    }
+                }
+
             }
         }
 

@@ -117,6 +117,8 @@ public class RobotContainer {
 		leds = new Leds();
 		intake = new Intake();
 
+		dt.configMap();
+
 		subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
 
@@ -126,6 +128,7 @@ public class RobotContainer {
 
 		autoChooser.addRoutine("test auto", this::buildAuto);
 		autoChooser.addRoutine("preload auto", this::preloadAuto);
+		autoChooser.addCmd("systems check", this::checkAuto);
 
 		superstructure = new Superstructure(
 				elevator,
@@ -369,6 +372,32 @@ public class RobotContainer {
 						dt.goToPose(ReefSide.LEFT)));
 
 		return autoRoutine;
+	}
+
+	public Command checkAuto(){
+		AutoRoutine auto = autoFactory.newRoutine("check");
+
+		return intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).andThen(Commands.sequence(
+				superstructure.forceState(SuperState.STOW),
+				new WaitUntilCommand(subsystemsAtSetpoints),
+				superstructure.forceState(SuperState.PRE_L2),
+				new WaitUntilCommand(subsystemsAtSetpoints),
+				superstructure.forceState(SuperState.STOW),
+				new WaitUntilCommand(subsystemsAtSetpoints),
+				superstructure.forceState(SuperState.PRE_L3),
+				
+				new WaitUntilCommand(subsystemsAtSetpoints),
+				superstructure.forceState(SuperState.STOW),
+				new WaitUntilCommand(subsystemsAtSetpoints),
+				superstructure.forceState(SuperState.PRE_L4),
+				new WaitUntilCommand(subsystemsAtSetpoints),
+				superstructure.forceState(SuperState.STOW),
+				new WaitUntilCommand(subsystemsAtSetpoints),
+				intake.rotateToPositionCommand(Intake.STOWED_ANGLE)
+
+			));
+	
+		
 	}
 
 }

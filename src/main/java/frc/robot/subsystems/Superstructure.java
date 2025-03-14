@@ -43,7 +43,8 @@ public class Superstructure {
 		HOMING,
 		SPIT_ALGAE,
 		SAFE_MODE,
-		TRANSFER
+		TRANSFER,
+		THROW
 	}
 
 	private final Supplier<LevelTarget> levelTarget;
@@ -509,10 +510,10 @@ public class Superstructure {
 				.onTrue(arm.rotateToPositionCommand(() -> 60))
 				.and(preScoreTrigger)
 				.onFalse(
-						arm.rotateToPositionCommand(() -> 80))
-				.and(() -> arm.getArmPosition() > 72)
-				.onTrue(this.forceState(SuperState.SPIT_ALGAE));
+						this.forceState(SuperState.THROW))
+				
 
+		
 		// stateTriggers.get(SuperState.PRE_NET)
 		// .whileTrue(rollers.setRollerVoltage(12))
 		// .whileTrue(elevator.goToPosition(() -> 43.5))

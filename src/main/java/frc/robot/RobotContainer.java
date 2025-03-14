@@ -117,6 +117,8 @@ public class RobotContainer {
 		leds = new Leds();
 		intake = new Intake();
 
+		dt.configMap();
+
 		subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
 
@@ -349,36 +351,36 @@ public class RobotContainer {
 		// AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
 
 		autoRoutine.active().onTrue(
+				path.resetOdometry().andThen(
+						Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
+								path.cmd(),
+								dt.applyRequest(() -> brake).withTimeout(0.1),
+								dt.goToPose(ReefSide.LEFT)
+										.alongWith(superstructure.forceState(SuperState.PRE_L4)
+												.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+								dt.goToPose(ReefSide.LEFT),
 
-				Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
-						path.cmd(),
-						dt.applyRequest(() -> brake).withTimeout(0.1),
-						dt.goToPose(ReefSide.LEFT)
-								.alongWith(superstructure.forceState(SuperState.PRE_L4)
-										.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
-						dt.goToPose(ReefSide.LEFT),
+								dt.applyRequest(() -> brake).withTimeout(0.1),
+								dunk,
+								new WaitCommand(0.25),
+								eject,
+								superstructure.forceState(SuperState.INTAKE),
+								new WaitUntilCommand(subsystemsAtSetpoints),
+								path2.cmd()
+										.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
+												.alongWith(intake.setIntakeVoltage(12).asProxy())),
+								// path3.cmd(),
+								dt.applyRequest(() -> brake).withTimeout(0.1),
+								dt.goToPose(ReefSide.LEFT)
+										.alongWith(superstructure.forceState(SuperState.PRE_L4)
+												.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+								dt.goToPose(ReefSide.LEFT),
 
-						dt.applyRequest(() -> brake).withTimeout(0.1),
-						dunk,
-						new WaitCommand(0.25),
-						eject,
-						dt.goToPose(path.getFinalPose().get()),
-						superstructure.forceState(SuperState.INTAKE),
-						new WaitUntilCommand(subsystemsAtSetpoints),
-						path2.cmd()
-								.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
-										.alongWith(intake.setIntakeVoltage(12).asProxy())),
-						// path3.cmd(),
-						dt.applyRequest(() -> brake).withTimeout(0.1),
-						dt.goToPose(ReefSide.LEFT)
-								.alongWith(superstructure.forceState(SuperState.PRE_L4)
-										.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
-						dt.goToPose(ReefSide.LEFT),
-
-						dt.applyRequest(() -> brake).withTimeout(0.1),
-						dunk,
-						new WaitCommand(0.25),
-						eject));
+								dt.applyRequest(() -> brake).withTimeout(0.1),
+								superstructure.forceState(SuperState.SCORE_CORAL)
+										.andThen(new WaitUntilCommand(subsystemsAtSetpoints)),
+								new WaitCommand(0.25),
+								superstructure.forceState(SuperState.SPIT))));
 
 		return autoRoutine;
 	}

@@ -3,7 +3,9 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.*;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -51,6 +53,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.LimelightHelpers;
+import frc.robot.LimelightHelpers.RawFiducial;
 import frc.robot.Robot;
 import frc.robot.RobotContainer.LevelTarget;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
@@ -119,15 +122,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             TAG_22);
 
     private final Transform2d L4_APRILTAG_LEFT_TRANSFORM = new Transform2d(Units.inchesToMeters(25.5),
-                        Units.inchesToMeters(-6.0), new Rotation2d());
+            Units.inchesToMeters(-6.0), new Rotation2d());
 
     private final Transform2d L4_APRILTAG_RIGHT_TRANSFORM = new Transform2d(Units.inchesToMeters(25.5),
-                        Units.inchesToMeters(7.5), new Rotation2d());
+            Units.inchesToMeters(7.5), new Rotation2d());
 
     private final Transform2d LOWER_APRILTAG_LEFT_TRANSFORM = new Transform2d(Units.inchesToMeters(30),
-                        Units.inchesToMeters(-6.5), new Rotation2d());
+            Units.inchesToMeters(-6.5), new Rotation2d());
     private final Transform2d LOWER_APRILTAG_RIGHT_TRANSFORM = new Transform2d(Units.inchesToMeters(30),
-                        Units.inchesToMeters(6.5), new Rotation2d());
+            Units.inchesToMeters(6.5), new Rotation2d());
 
     Transform2d APRILTAG_LEFT_TRANSFORM = L4_APRILTAG_LEFT_TRANSFORM;
     Transform2d APRILTAG_RIGHT_TRANSFORM = L4_APRILTAG_RIGHT_TRANSFORM;
@@ -139,6 +142,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     Pose2d targetPose2d;
 
     private boolean atPose;
+
+    private final Map<Pose2d, Integer> poseTagMap = new HashMap<>();
+
+    boolean isAligning = false;
+
+    private int nearestTagId;
 
     private SwerveSetpoint previousSetpoint;
     // private SwerveSetpointGenerator setpointGenerator = new
@@ -382,6 +391,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             targetPose2d = getTargetPose(side);
             atPose = false;
 
+            isAligning = true;
+
             ChassisSpeeds currentSpeeds = getState().Speeds;
             SwerveModuleState[] currentStates = getState().ModuleStates;
             previousSetpoint = new SwerveSetpoint(currentSpeeds, currentStates, DriveFeedforwards.zeros(4));
@@ -405,7 +416,26 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                 && MathUtil.isNear(
                                         getPose().getRotation().getDegrees(),
                                         getTargetPose(side).getRotation().getDegrees(), 0.5))
-                .andThen(Commands.runOnce(() -> atPose = true)));
+                .andThen(Commands.runOnce(() -> {
+                    atPose = true;
+                    isAligning = false;
+                })));
+    }
+
+    public void configMap() {
+        poseTagMap.put(TAG_6, 6);
+        poseTagMap.put(TAG_7, 7);
+        poseTagMap.put(TAG_8, 8);
+        poseTagMap.put(TAG_9, 9);
+        poseTagMap.put(TAG_10, 10);
+        poseTagMap.put(TAG_11, 11);
+        poseTagMap.put(TAG_17, 17);
+        poseTagMap.put(TAG_18, 18);
+        poseTagMap.put(TAG_19, 19);
+        poseTagMap.put(TAG_20, 20);
+        poseTagMap.put(TAG_21, 21);
+        poseTagMap.put(TAG_22, 22);
+
     }
 
     public Command goToPose(Pose2d pose) {
@@ -526,7 +556,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return this.runOnce(() -> this.resetRotation(zeroRotation));
     }
 
-    @Override
+     @Override
     public void periodic() {
         /*
          * Periodically try to apply the operator perspective.
@@ -587,18 +617,28 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         LimelightHelpers.PoseEstimate leftMT1Estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-left");
 
-        //if we are disabled and still, we add mt1 estimates to get correct heading
-        // if (DriverStation.isDisabled() && leftMT1Estimate != null && leftMT1Estimate.tagCount > 0) {
-        //     addVisionMeasurement(leftMT1Estimate.pose, leftMT1Estimate.timestampSeconds,
-        //             VecBuilder.fill(.6, .6, Units.degreesToRadians(1.5)));
-        // }
+        nearestTagId = poseTagMap.getOrDefault(solveClosestTagPose(), 0);
 
         if (leftEst != null && leftEst.tagCount > 0) {
             // log where limelight thinks we are
             leftLimelightPoseEst = leftEst.pose;
             // only add vision measurement if we arent spinning quickly
-            if (Math.abs(Units.radiansToDegrees(getState().Speeds.omegaRadiansPerSecond)) < 360/* && DriverStation.isEnabled()*/) {
-                addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.6, .6, 9999999));
+            if (Math.abs(Units.radiansToDegrees(getState().Speeds.omegaRadiansPerSecond)) < 360) {
+                // we dont care a ton about the tag id if we are not aligning
+                if (!isAligning) {
+                    addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.4, .4, 9999999));
+                    return;
+                }
+
+                RawFiducial[] rawFiducials = leftEst.rawFiducials;
+                // if the pose estimate includes the tag we're aligning to
+                for (RawFiducial rawFiducial : rawFiducials) {
+
+                    if (rawFiducial.id == nearestTagId) {
+                        addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.4, .4, 9999999));
+                    }
+                }
+
             }
         }
 

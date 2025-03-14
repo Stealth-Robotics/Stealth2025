@@ -373,6 +373,8 @@ public class RobotContainer {
 						dt.goToPose(ReefSide.LEFT)
 								.alongWith(superstructure.forceState(SuperState.PRE_L4)
 										.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+						dt.goToPose(ReefSide.LEFT),
+
 						dt.applyRequest(() -> brake).withTimeout(0.1),
 						dunk,
 						new WaitCommand(0.25),

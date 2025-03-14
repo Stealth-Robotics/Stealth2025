@@ -272,6 +272,7 @@ public class Superstructure {
 				// just drop elevator down and bring it back up
 				.whileTrue(elevator.goToPosition(() -> Elevator.GRAB_CORAL_ROTATIONS))
 				.whileTrue(rollers.setRollerVoltage(9))
+				.whileTrue(intake.setIntakeVoltage(0))
 				.whileTrue(intake.rotateToPositionCommand(Intake.STOWED_ANGLE))
 				.onTrue(Commands.runOnce(() -> rumble.accept(0.5)).andThen(new WaitCommand(0.5),
 						Commands.runOnce(() -> rumble.accept(0))))

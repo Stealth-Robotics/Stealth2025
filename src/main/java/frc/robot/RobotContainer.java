@@ -353,15 +353,15 @@ public class RobotContainer {
 				Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
 						path.cmd(),
 						dt.applyRequest(() -> brake).withTimeout(0.1),
-						dt.goToPose(ReefSide.LEFT),
-								// .alongWith(superstructure.forceState(SuperState.PRE_L4)
-								// 		.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+						dt.goToPose(ReefSide.LEFT)
+								.alongWith(superstructure.forceState(SuperState.PRE_L4)
+										.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
 						dt.goToPose(ReefSide.LEFT),
 
 						dt.applyRequest(() -> brake).withTimeout(0.1),
-						// dunk,
+						dunk,
 						new WaitCommand(0.25),
-						// eject,
+						eject,
 						dt.goToPose(path.getFinalPose().get()),
 						superstructure.forceState(SuperState.INTAKE),
 						new WaitUntilCommand(subsystemsAtSetpoints),

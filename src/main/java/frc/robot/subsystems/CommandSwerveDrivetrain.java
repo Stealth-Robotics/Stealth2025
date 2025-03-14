@@ -83,8 +83,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private final SwerveRequest.ApplyFieldSpeeds applyRobotSpeeds = new SwerveRequest.ApplyFieldSpeeds();
 
-    private final ProfiledPIDController xController = new ProfiledPIDController(20, 3, 0, new Constraints(1.5, 1.5));
-    private final ProfiledPIDController yController = new ProfiledPIDController(20, 3, 0, new Constraints(1.5, 1.5));
+    private final ProfiledPIDController xController = new ProfiledPIDController(15, 3, 0, new Constraints(1.5, 1.0));
+    private final ProfiledPIDController yController = new ProfiledPIDController(15, 3, 0, new Constraints(1.5, 1.0));
     private final ProfiledPIDController thetaController = new ProfiledPIDController(0.4, 0.06, 0,
             new Constraints(200, 300));
 
@@ -154,10 +154,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             new Pose2d(Distance.ofBaseUnits(6, Meter), Distance.ofBaseUnits(3, Meter), new Rotation2d()));
 
     Transform2d atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(24.5),
-            Units.inchesToMeters(-6.5), new Rotation2d());
+            Units.inchesToMeters(-4.5), new Rotation2d());
 
     Transform2d atagToRightTransform2d = new Transform2d(Units.inchesToMeters(24.5),
-            Units.inchesToMeters(6.5), new Rotation2d());
+            Units.inchesToMeters(5.5), new Rotation2d());
 
     Pose3d test2 = testPose3d.transformBy(new Transform3d(atagToLeftTransform2d));
 
@@ -468,17 +468,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         switch (target.get()) {
             case L4:
                 // further back
-                atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(24.5),
-                        Units.inchesToMeters(-7.5), new Rotation2d());
-                atagToRightTransform2d = new Transform2d(Units.inchesToMeters(24.5),
+                atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(25.5),
+                        Units.inchesToMeters(-6.0), new Rotation2d());
+                atagToRightTransform2d = new Transform2d(Units.inchesToMeters(25.5),
                         Units.inchesToMeters(7.5), new Rotation2d());
                 break;
             // for other levels, closer to reef
             default:
                 atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(30),
-                        Units.inchesToMeters(-7.5), new Rotation2d());
+                        Units.inchesToMeters(-6.5), new Rotation2d());
                 atagToRightTransform2d = new Transform2d(Units.inchesToMeters(30),
-                        Units.inchesToMeters(7.5), new Rotation2d());
+                        Units.inchesToMeters(6.5), new Rotation2d());
                 break;
         }
     }

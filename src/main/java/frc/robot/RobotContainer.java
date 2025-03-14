@@ -370,7 +370,13 @@ public class RobotContainer {
 										.alongWith(intake.setIntakeVoltage(12).asProxy())),
 						// path3.cmd(),
 						dt.applyRequest(() -> brake).withTimeout(0.1),
-						dt.goToPose(ReefSide.LEFT)));
+						dt.goToPose(ReefSide.LEFT)
+								.alongWith(superstructure.forceState(SuperState.PRE_L4)
+										.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						dunk,
+						new WaitCommand(0.25),
+						eject));
 
 		return autoRoutine;
 	}

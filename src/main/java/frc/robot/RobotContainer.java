@@ -255,7 +255,7 @@ public class RobotContainer {
 
 	public Command getAutonomousCommand() {
 		if (Robot.isSimulation()) {
-			return preloadAuto().cmd();
+			return testAuto().cmd();
 		}
 		return autoChooser.selectedCommand();
 
@@ -345,9 +345,92 @@ public class RobotContainer {
 	}
 
 	public AutoRoutine preloadAuto() {
+		AutoRoutine autoRoutine = autoFactory.newRoutine("test");
+		AutoTrajectory path = autoRoutine.trajectory("center_start", 0);
+		AutoTrajectory path2 = autoRoutine.trajectory("center_start", 1);
+		// AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
+
+		autoRoutine.active().onTrue(
+				path.resetOdometry().andThen(
+						Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
+								path.cmd(),
+								// dt.applyRequest(() -> brake).withTimeout(0.1),
+								dt.goToPose(ReefSide.LEFT)
+										.alongWith(superstructure.forceState(SuperState.PRE_L4)
+												.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+								dt.goToPose(ReefSide.LEFT),
+
+								dt.applyRequest(() -> brake).withTimeout(0.1),
+								dunk,
+								new WaitCommand(0.25),
+								eject,
+								superstructure.forceState(SuperState.STOW),
+								path2.cmd()
+										.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
+												.alongWith(Commands.sequence(
+														new WaitCommand(0.5),
+														superstructure.forceState(SuperState.INTAKE)).asProxy())),
+								// path3.cmd(),
+								dt.applyRequest(() -> brake).withTimeout(0.1),
+								dt.goToPose(ReefSide.LEFT)
+										.alongWith(superstructure.forceState(SuperState.PRE_L4)
+												.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+								dt.goToPose(ReefSide.LEFT),
+
+								dt.applyRequest(() -> brake).withTimeout(0.1),
+								superstructure.forceState(SuperState.SCORE_CORAL)
+										.andThen(new WaitUntilCommand(subsystemsAtSetpoints)),
+								new WaitCommand(0.25),
+								superstructure.forceState(SuperState.SPIT))));
+
+		return autoRoutine;
+	}
+
+	public AutoRoutine testAuto() {
+		AutoRoutine autoRoutine = autoFactory.newRoutine("test");
+		AutoTrajectory path = autoRoutine.trajectory("center_start", 0);
+		AutoTrajectory path2 = autoRoutine.trajectory("center_start", 1);
+		// AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
+
+		autoRoutine.active().onTrue(
+				Commands.sequence(Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)), path.resetOdometry(),
+						path.cmd()));
+
+		path.done().onTrue(
+				Commands.sequence(
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						dt.goToPose(ReefSide.LEFT).alongWith(superstructure.forceState(SuperState.PRE_L4)
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+						dt.goToPose(ReefSide.LEFT),
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						dunk,
+						new WaitCommand(0.25),
+						eject,
+						path2.cmd()));
+
+		path2.active().onTrue(
+				Commands.sequence(new WaitCommand(0.5),
+						superstructure.forceState(SuperState.INTAKE),
+						intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE)));
+
+		path2.done().onTrue(
+				Commands.sequence(
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						dt.goToPose(ReefSide.LEFT).alongWith(goToL4),
+						dt.goToPose(ReefSide.LEFT),
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						superstructure.forceState(SuperState.SCORE_CORAL)
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints)),
+						new WaitCommand(0.25),
+						superstructure.forceState(SuperState.SPIT)));
+
+		return autoRoutine;
+	}
+
+	public AutoRoutine oppositColorAuto() {
 		AutoRoutine autoRoutine = autoFactory.newRoutine("auto");
-		AutoTrajectory path = autoRoutine.trajectory("preload", 0);
-		AutoTrajectory path2 = autoRoutine.trajectory("preload", 1);
+		AutoTrajectory path = autoRoutine.trajectory("opposite_color_start", 0);
+		AutoTrajectory path2 = autoRoutine.trajectory("opposite_color_start", 1);
 		// AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
 
 		autoRoutine.active().onTrue(
@@ -355,11 +438,9 @@ public class RobotContainer {
 						Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
 								path.cmd(),
 								dt.applyRequest(() -> brake).withTimeout(0.1),
-								dt.goToPose(ReefSide.LEFT)
+								dt.goToPose(ReefSide.RIGHT)
 										.alongWith(superstructure.forceState(SuperState.PRE_L4)
 												.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
-								dt.goToPose(ReefSide.LEFT),
-
 								dt.applyRequest(() -> brake).withTimeout(0.1),
 								dunk,
 								new WaitCommand(0.25),

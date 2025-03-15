@@ -510,7 +510,7 @@ public class Superstructure {
 				.onTrue(arm.rotateToPositionCommand(() -> 60))
 				.and(preScoreTrigger)
 				.onFalse(
-						this.forceState(SuperState.THROW))
+						this.forceState(SuperState.THROW));
 				
 
 		

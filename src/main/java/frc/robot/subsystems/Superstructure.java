@@ -511,9 +511,12 @@ public class Superstructure {
 				.and(preScoreTrigger)
 				.onFalse(
 						this.forceState(SuperState.THROW));
-				
 
-		
+		stateTriggers.get(SuperState.THROW)
+				.onTrue(arm.rotateToPositionCommand(() -> 80))
+				.and(() -> arm.getArmPosition() > 72)
+				.onTrue(this.forceState(SuperState.SPIT_ALGAE));
+
 		// stateTriggers.get(SuperState.PRE_NET)
 		// .whileTrue(rollers.setRollerVoltage(12))
 		// .whileTrue(elevator.goToPosition(() -> 43.5))

@@ -11,6 +11,7 @@ import com.playingwithfusion.TimeOfFlight.RangingMode;
 import com.playingwithfusion.TimeOfFlight.Status;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -42,7 +43,8 @@ public class Superstructure {
 		HOMING,
 		SPIT_ALGAE,
 		SAFE_MODE,
-		TRANSFER
+		TRANSFER,
+		THROW
 	}
 
 	private final Supplier<LevelTarget> levelTarget;
@@ -212,12 +214,18 @@ public class Superstructure {
 				.onTrue(this.forceState(SuperState.GRAB_CORAL));
 
 		stateTriggers.get(SuperState.INTAKE)
+				.and(() -> DriverStation.isAutonomous())
+				.whileTrue(intake.setIntakeVoltage(() -> 12));
+
+		stateTriggers.get(SuperState.INTAKE)
+				.and(() -> DriverStation.isTeleop())
 				.and(() -> Math.abs(intakeSpeed.getAsDouble()) > 0.1)
 				.whileTrue(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE))
 				.and(() -> intake.atPosition())
 				.whileTrue(intake.setIntakeVoltage(() -> (intakeSpeed.getAsDouble() * 12)));
 
 		stateTriggers.get(SuperState.INTAKE)
+				.and(() -> DriverStation.isTeleop())
 				.and(() -> Math.abs(intakeSpeed.getAsDouble()) < 0.1)
 				.onTrue(intake.setIntakeVoltage(() -> 0))
 				.onTrue(intake.rotateToPositionCommand(Intake.STOWED_ANGLE))
@@ -250,7 +258,8 @@ public class Superstructure {
 				.and(() -> elevator.isElevatorAtTarget())
 				.whileTrue(arm.rotateToPositionCommand(() -> -60))
 				.whileTrue(transfer.setVoltage(() -> -2))
-				.onTrue(Commands.sequence(new WaitCommand(0.5), transfer.setVoltage(() -> 0), this.forceState(SuperState.INTAKE)));
+				.onTrue(Commands.sequence(new WaitCommand(0.5), transfer.setVoltage(() -> 0),
+						this.forceState(SuperState.INTAKE)));
 
 		stateTriggers.get(SuperState.READY_SCORE_CORAL)
 				.and(gamepieceDetectedInStagingArea).debounce(0.5)
@@ -264,12 +273,13 @@ public class Superstructure {
 				// just drop elevator down and bring it back up
 				.whileTrue(elevator.goToPosition(() -> Elevator.GRAB_CORAL_ROTATIONS))
 				.whileTrue(rollers.setRollerVoltage(9))
+				.whileTrue(intake.setIntakeVoltage(0))
 				.whileTrue(intake.rotateToPositionCommand(Intake.STOWED_ANGLE))
 				.onTrue(Commands.runOnce(() -> rumble.accept(0.5)).andThen(new WaitCommand(0.5),
 						Commands.runOnce(() -> rumble.accept(0))))
 				.onTrue(leds.blink())
 				.and(() -> elevator.isElevatorAtTarget())
-				.onTrue(new WaitCommand(0.25).andThen(rollers.setRollerVoltage(1.5)))
+				.onTrue(new WaitCommand(0.25).andThen(rollers.setRollerVoltage(1.0)))
 
 				.onTrue(this.forceState(SuperState.READY_SCORE_CORAL));
 
@@ -497,12 +507,22 @@ public class Superstructure {
 		stateTriggers.get(SuperState.PRE_NET)
 				.whileTrue(rollers.setRollerVoltage(12))
 				.whileTrue(elevator.goToPosition(() -> Elevator.PRE_NET_ROTATIONS))
-				.onTrue(arm.rotateToPositionCommand(() -> -45))
-				.and(() -> (elevator.getElevatorMotorPosition() > 35))
-				.whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_NET_DEGREES))
-				.and(() -> (elevator.getElevatorMotorPosition() > 40))
-				.and(() -> arm.getArmPosition() > 25)
+				.onTrue(arm.rotateToPositionCommand(() -> 60))
+				.and(preScoreTrigger)
+				.onFalse(
+						this.forceState(SuperState.THROW));
+
+		stateTriggers.get(SuperState.THROW)
+				.onTrue(arm.rotateToPositionCommand(() -> 80))
+				.and(() -> arm.getArmPosition() > 72)
 				.onTrue(this.forceState(SuperState.SPIT_ALGAE));
+
+		// stateTriggers.get(SuperState.PRE_NET)
+		// .whileTrue(rollers.setRollerVoltage(12))
+		// .whileTrue(elevator.goToPosition(() -> 43.5))
+		// .whileTrue(arm.rotateToPositionCommand(() -> 80))
+		// .and(scoreTrigger)
+		// .onFalse(this.forceState(SuperState.SPIT_ALGAE));
 
 		stateTriggers.get(SuperState.SPIT_ALGAE)
 				.onTrue(rollers.setRollerVoltage(-9))

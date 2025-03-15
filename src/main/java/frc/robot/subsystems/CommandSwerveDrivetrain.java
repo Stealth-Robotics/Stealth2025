@@ -53,6 +53,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.LimelightHelpers;
+import frc.robot.LimelightHelpers.RawFiducial;
 import frc.robot.Robot;
 import frc.robot.LimelightHelpers.RawFiducial;
 import frc.robot.RobotContainer.LevelTarget;
@@ -127,6 +128,20 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             TAG_21,
             TAG_22);
 
+    private final Transform2d L4_APRILTAG_LEFT_TRANSFORM = new Transform2d(Units.inchesToMeters(25.5),
+            Units.inchesToMeters(-6.0), new Rotation2d());
+
+    private final Transform2d L4_APRILTAG_RIGHT_TRANSFORM = new Transform2d(Units.inchesToMeters(25.5),
+            Units.inchesToMeters(7.5), new Rotation2d());
+
+    private final Transform2d LOWER_APRILTAG_LEFT_TRANSFORM = new Transform2d(Units.inchesToMeters(30),
+            Units.inchesToMeters(-6.5), new Rotation2d());
+    private final Transform2d LOWER_APRILTAG_RIGHT_TRANSFORM = new Transform2d(Units.inchesToMeters(30),
+            Units.inchesToMeters(6.5), new Rotation2d());
+
+    Transform2d APRILTAG_LEFT_TRANSFORM = L4_APRILTAG_LEFT_TRANSFORM;
+    Transform2d APRILTAG_RIGHT_TRANSFORM = L4_APRILTAG_RIGHT_TRANSFORM;
+
     Pose3d limelightEst;
 
     double measurementX, measurementY, measurementTheta;
@@ -134,6 +149,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     Pose2d targetPose2d;
 
     private boolean atPose;
+
+    private final Map<Pose2d, Integer> poseTagMap = new HashMap<>();
+
+    boolean isAligning = false;
+
+    private int nearestTagId;
 
     private SwerveSetpoint previousSetpoint;
     // private SwerveSetpointGenerator setpointGenerator = new
@@ -153,13 +174,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     Pose3d testPose3d = new Pose3d(
             new Pose2d(Distance.ofBaseUnits(6, Meter), Distance.ofBaseUnits(3, Meter), new Rotation2d()));
 
-    Transform2d atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(24.5),
-            Units.inchesToMeters(-4.5), new Rotation2d());
-
-    Transform2d atagToRightTransform2d = new Transform2d(Units.inchesToMeters(24.5),
-            Units.inchesToMeters(5.5), new Rotation2d());
-
-    Pose3d test2 = testPose3d.transformBy(new Transform3d(atagToLeftTransform2d));
+    Pose3d test2 = testPose3d.transformBy(new Transform3d(APRILTAG_LEFT_TRANSFORM));
 
     Pose2d testAtagPos = new Pose2d(Units.inchesToMeters(209.5), Units.inchesToMeters(158.5),
             new Rotation2d(Units.degreesToRadians(0)));
@@ -466,20 +481,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void setTransforms(Supplier<LevelTarget> target) {
         switch (target.get()) {
-            case L4:
-                // further back
-                atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(25.5),
-                        Units.inchesToMeters(-6.0), new Rotation2d());
-                atagToRightTransform2d = new Transform2d(Units.inchesToMeters(25.5),
-                        Units.inchesToMeters(7.5), new Rotation2d());
-                break;
-            // for other levels, closer to reef
-            default:
-                atagToLeftTransform2d = new Transform2d(Units.inchesToMeters(30),
-                        Units.inchesToMeters(-6.5), new Rotation2d());
-                atagToRightTransform2d = new Transform2d(Units.inchesToMeters(30),
-                        Units.inchesToMeters(6.5), new Rotation2d());
-                break;
+            // Further from reef for L4
+            case L4 -> {
+                APRILTAG_LEFT_TRANSFORM = L4_APRILTAG_LEFT_TRANSFORM;
+                APRILTAG_RIGHT_TRANSFORM = L4_APRILTAG_RIGHT_TRANSFORM;
+            }
+            // For other levels, closer to reef
+            default -> {
+                APRILTAG_LEFT_TRANSFORM = LOWER_APRILTAG_LEFT_TRANSFORM;
+                APRILTAG_RIGHT_TRANSFORM = LOWER_APRILTAG_RIGHT_TRANSFORM;
+            }
         }
     }
 
@@ -552,7 +563,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return this.runOnce(() -> this.resetRotation(zeroRotation));
     }
 
-    @Override
+     @Override
     public void periodic() {
         /*
          * Periodically try to apply the operator perspective.
@@ -604,8 +615,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         // }
 
-        targetRight = solveClosestTagPose().transformBy(atagToRightTransform2d);
-        targetLeft = solveClosestTagPose().transformBy(atagToLeftTransform2d);
+        targetRight = solveClosestTagPose().transformBy(APRILTAG_RIGHT_TRANSFORM);
+        targetLeft = solveClosestTagPose().transformBy(APRILTAG_LEFT_TRANSFORM);
 
         double yaw = getPose().getRotation().getDegrees();
         LimelightHelpers.SetRobotOrientation("limelight-left", yaw, 0, 0, 0, 0, 0);

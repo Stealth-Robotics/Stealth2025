@@ -58,7 +58,7 @@ public class Elevator extends SubsystemBase {
             STOWED_INCHES = 24.0; // todo tune
 
     @NotLogged
-    public static final double INTAKE_HP_ROTATIONS = 10, // todo tune
+    public static final double INTAKE_HP_ROTATIONS = 12, // todo tune
             PRE_L1_ROTATIONS = 18, // todo tune
             PRE_L2_ROTATIONS = 4.2, // todo tune
             PRE_L3_ROTATIONS = 19.0, // todo tune

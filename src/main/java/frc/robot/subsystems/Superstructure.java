@@ -132,7 +132,7 @@ public class Superstructure {
 		tof = new TimeOfFlight(0);
 		tof.setRangingMode(RangingMode.Short, 24);
 		gamepieceDetectedInStagingArea = new Trigger(() -> tof.getRange() < 80)
-				.and(() -> tof.getStatus() == Status.Valid).debounce(0.1);
+				.and(() -> tof.getStatus() == Status.Valid).debounce(0.2);
 
 		// add all states to stateTriggers map
 		// for each state in the enum, construct a new trigger that will return true

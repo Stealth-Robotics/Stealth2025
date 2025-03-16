@@ -362,9 +362,11 @@ public class RobotContainer {
 								dt.goToPose(ReefSide.LEFT),
 
 								dt.applyRequest(() -> brake).withTimeout(0.1),
-								dunk,
+								superstructure.forceState(SuperState.SCORE_CORAL)
+										.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
 								new WaitCommand(0.25),
-								eject,
+								superstructure.forceState(SuperState.SPIT),
+								new WaitCommand(0.5),
 								superstructure.forceState(SuperState.STOW),
 								path2.cmd()
 										.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
@@ -404,9 +406,11 @@ public class RobotContainer {
 								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))),
 						dt.goToPose(ReefSide.LEFT),
 						dt.applyRequest(() -> brake).withTimeout(0.1),
-						dunk,
+						superstructure.forceState(SuperState.SCORE_CORAL)
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
 						new WaitCommand(0.25),
-						eject,
+						superstructure.forceState(SuperState.SCORE_CORAL),
+						superstructure.forceState(SuperState.SPIT),
 						path2.cmd()));
 
 		path2.active().onTrue(
@@ -445,19 +449,24 @@ public class RobotContainer {
 								.alongWith(dt.goToPose(ReefSide.LEFT).beforeStarting(new WaitCommand(0.75))),
 
 						dt.applyRequest(() -> brake).withTimeout(0.1),
-						dunk,
+						superstructure.forceState(SuperState.SCORE_CORAL)
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
+						superstructure.forceState(SuperState.SCORE_CORAL),
 						new WaitCommand(0.25),
-						eject,
-						superstructure.forceState(SuperState.INTAKE),
-						new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2),
+						superstructure.forceState(SuperState.SPIT),
+						new WaitCommand(0.5),
 						path2.cmd()
 								.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
-										.alongWith(intake.setIntakeVoltage(12).asProxy())),
+										.alongWith(intake.setIntakeVoltage(12).asProxy())
+										.alongWith(Commands.sequence(
+												new WaitCommand(0.5),
+												superstructure.forceState(SuperState.INTAKE)).asProxy())),
 						// path3.cmd(),
 						dt.applyRequest(() -> brake).withTimeout(0.1),
 						dt.goToPose(ReefSide.LEFT)
 								.alongWith(superstructure.forceState(SuperState.PRE_L4)
-										.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)).beforeStarting(new WaitCommand(0.5))),
+										.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))
+										.beforeStarting(new WaitCommand(0.5))),
 						dt.goToPose(ReefSide.LEFT),
 
 						dt.applyRequest(() -> brake).withTimeout(0.1),
@@ -486,19 +495,25 @@ public class RobotContainer {
 								.alongWith(dt.goToPose(ReefSide.LEFT).beforeStarting(new WaitCommand(0.75))),
 
 						dt.applyRequest(() -> brake).withTimeout(0.1),
-						dunk,
+						superstructure.forceState(SuperState.SCORE_CORAL)
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
+						superstructure.forceState(SuperState.SCORE_CORAL),
 						new WaitCommand(0.25),
-						eject,
-						superstructure.forceState(SuperState.INTAKE),
-						new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2),
+						superstructure.forceState(SuperState.SPIT),
+						new WaitCommand(0.5),
+
 						path2.cmd()
 								.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
-										.alongWith(intake.setIntakeVoltage(12).asProxy())),
+										.alongWith(intake.setIntakeVoltage(12).asProxy())
+										.alongWith(Commands.sequence(
+												new WaitCommand(0.5),
+												superstructure.forceState(SuperState.INTAKE)).asProxy())),
 						// path3.cmd(),
 						dt.applyRequest(() -> brake).withTimeout(0.1),
 						dt.goToPose(ReefSide.LEFT)
 								.alongWith(superstructure.forceState(SuperState.PRE_L4)
-										.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2).beforeStarting(new WaitCommand(0.5)))),
+										.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)
+												.beforeStarting(new WaitCommand(0.5)))),
 						dt.goToPose(ReefSide.LEFT),
 
 						dt.applyRequest(() -> brake).withTimeout(0.1),

@@ -10,6 +10,7 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import com.ctre.phoenix.platform.can.AutocacheState;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
@@ -118,6 +119,7 @@ public class RobotContainer {
 		intake = new Intake();
 
 		dt.configMap();
+		dt.configField();
 
 		subsystemsAtSetpoints = new Trigger(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget()).debounce(0.1);
@@ -129,6 +131,8 @@ public class RobotContainer {
 		autoChooser.addRoutine("test auto", this::buildAuto);
 		autoChooser.addRoutine("preload auto", this::preloadAuto);
 		autoChooser.addCmd("systems check", this::checkAuto);
+		autoChooser.addRoutine("opposite color auto", this::oppositColorAuto);
+		autoChooser.addRoutine("same color auto", this::sameColorAuto);
 
 		superstructure = new Superstructure(
 				elevator,
@@ -168,11 +172,7 @@ public class RobotContainer {
 		driveFieldCentric = dt.applyRequest(
 
 				() -> {
-					if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
-						driveMultiplier = -1;
-					} else {
-						driveMultiplier = 1;
-					}
+					driveMultiplier = 1;
 					drive.withVelocityY(-driverController.getLeftX() * MAX_VELO * driveMultiplier)
 							.withVelocityX(-driverController.getLeftY() * MAX_VELO * driveMultiplier)
 							.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO);
@@ -237,9 +237,9 @@ public class RobotContainer {
 				.whileTrue(dt.applyRequest(() -> brake));
 
 		driverController.x().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target)))
-				.whileTrue(dt.goToPose(ReefSide.LEFT));
+				.whileTrue(dt.goToPose(ReefSide.LEFT)).onFalse(Commands.runOnce(() -> dt.stopAligning()));
 		driverController.b().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target)))
-				.whileTrue(dt.goToPose(ReefSide.RIGHT));
+				.whileTrue(dt.goToPose(ReefSide.RIGHT)).onFalse(Commands.runOnce(() -> dt.stopAligning()));
 
 		driverController.x().or(driverController.b()).and(() -> dt.getAtPose()).whileTrue(driveRobotCentric);
 
@@ -256,7 +256,7 @@ public class RobotContainer {
 
 	public Command getAutonomousCommand() {
 		if (Robot.isSimulation()) {
-			return testAuto().cmd();
+			return sameColorAuto().cmd();
 		}
 		return autoChooser.selectedCommand();
 
@@ -358,7 +358,7 @@ public class RobotContainer {
 								// dt.applyRequest(() -> brake).withTimeout(0.1),
 								dt.goToPose(ReefSide.LEFT)
 										.alongWith(superstructure.forceState(SuperState.PRE_L4)
-												.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+												.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))),
 								dt.goToPose(ReefSide.LEFT),
 
 								dt.applyRequest(() -> brake).withTimeout(0.1),
@@ -375,12 +375,12 @@ public class RobotContainer {
 								dt.applyRequest(() -> brake).withTimeout(0.1),
 								dt.goToPose(ReefSide.LEFT)
 										.alongWith(superstructure.forceState(SuperState.PRE_L4)
-												.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+												.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))),
 								dt.goToPose(ReefSide.LEFT),
 
 								dt.applyRequest(() -> brake).withTimeout(0.1),
 								superstructure.forceState(SuperState.SCORE_CORAL)
-										.andThen(new WaitUntilCommand(subsystemsAtSetpoints)),
+										.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
 								new WaitCommand(0.25),
 								superstructure.forceState(SuperState.SPIT))));
 
@@ -401,7 +401,7 @@ public class RobotContainer {
 				Commands.sequence(
 						dt.applyRequest(() -> brake).withTimeout(0.1),
 						dt.goToPose(ReefSide.LEFT).alongWith(superstructure.forceState(SuperState.PRE_L4)
-								.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))),
 						dt.goToPose(ReefSide.LEFT),
 						dt.applyRequest(() -> brake).withTimeout(0.1),
 						dunk,
@@ -421,7 +421,7 @@ public class RobotContainer {
 						dt.goToPose(ReefSide.LEFT),
 						dt.applyRequest(() -> brake).withTimeout(0.1),
 						superstructure.forceState(SuperState.SCORE_CORAL)
-								.andThen(new WaitUntilCommand(subsystemsAtSetpoints)),
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
 						new WaitCommand(0.25),
 						superstructure.forceState(SuperState.SPIT)));
 
@@ -429,45 +429,88 @@ public class RobotContainer {
 	}
 
 	public AutoRoutine oppositColorAuto() {
-		AutoRoutine autoRoutine = autoFactory.newRoutine("auto");
+		AutoRoutine autoRoutine = autoFactory.newRoutine("opp");
 		AutoTrajectory path = autoRoutine.trajectory("opposite_color_start", 0);
 		AutoTrajectory path2 = autoRoutine.trajectory("opposite_color_start", 1);
 		// AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
 
 		autoRoutine.active().onTrue(
-				path.resetOdometry().andThen(
-						Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
-								path.cmd(),
-								dt.applyRequest(() -> brake).withTimeout(0.1),
-								dt.goToPose(ReefSide.RIGHT)
-										.alongWith(superstructure.forceState(SuperState.PRE_L4)
-												.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
-								dt.applyRequest(() -> brake).withTimeout(0.1),
-								dunk,
-								new WaitCommand(0.25),
-								eject,
-								superstructure.forceState(SuperState.INTAKE),
-								new WaitUntilCommand(subsystemsAtSetpoints),
-								path2.cmd()
-										.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
-												.alongWith(intake.setIntakeVoltage(12).asProxy())),
-								// path3.cmd(),
-								dt.applyRequest(() -> brake).withTimeout(0.1),
-								dt.goToPose(ReefSide.LEFT)
-										.alongWith(superstructure.forceState(SuperState.PRE_L4)
-												.andThen(new WaitUntilCommand(subsystemsAtSetpoints))),
-								dt.goToPose(ReefSide.LEFT),
 
-								dt.applyRequest(() -> brake).withTimeout(0.1),
-								superstructure.forceState(SuperState.SCORE_CORAL)
-										.andThen(new WaitUntilCommand(subsystemsAtSetpoints)),
-								new WaitCommand(0.25),
-								superstructure.forceState(SuperState.SPIT))));
+				Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
+						path.resetOdometry(),
+						path.cmd(),
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						superstructure.forceState(SuperState.PRE_L4)
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))
+								.alongWith(dt.goToPose(ReefSide.LEFT).beforeStarting(new WaitCommand(0.75))),
+
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						dunk,
+						new WaitCommand(0.25),
+						eject,
+						superstructure.forceState(SuperState.INTAKE),
+						new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2),
+						path2.cmd()
+								.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
+										.alongWith(intake.setIntakeVoltage(12).asProxy())),
+						// path3.cmd(),
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						dt.goToPose(ReefSide.LEFT)
+								.alongWith(superstructure.forceState(SuperState.PRE_L4)
+										.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)).beforeStarting(new WaitCommand(0.5))),
+						dt.goToPose(ReefSide.LEFT),
+
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						superstructure.forceState(SuperState.SCORE_CORAL)
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
+						new WaitCommand(0.25),
+						superstructure.forceState(SuperState.SPIT)));
 
 		return autoRoutine;
 	}
 
-	public Command checkAuto(){
+	public AutoRoutine sameColorAuto() {
+		AutoRoutine autoRoutine = autoFactory.newRoutine("a");
+		AutoTrajectory path = autoRoutine.trajectory("same_color_start", 0);
+		AutoTrajectory path2 = autoRoutine.trajectory("same_color_start", 1);
+		// AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
+
+		autoRoutine.active().onTrue(
+
+				Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
+						path.resetOdometry(),
+						path.cmd(),
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						superstructure.forceState(SuperState.PRE_L4)
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))
+								.alongWith(dt.goToPose(ReefSide.LEFT).beforeStarting(new WaitCommand(0.75))),
+
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						dunk,
+						new WaitCommand(0.25),
+						eject,
+						superstructure.forceState(SuperState.INTAKE),
+						new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2),
+						path2.cmd()
+								.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
+										.alongWith(intake.setIntakeVoltage(12).asProxy())),
+						// path3.cmd(),
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						dt.goToPose(ReefSide.LEFT)
+								.alongWith(superstructure.forceState(SuperState.PRE_L4)
+										.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2).beforeStarting(new WaitCommand(0.5)))),
+						dt.goToPose(ReefSide.LEFT),
+
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						superstructure.forceState(SuperState.SCORE_CORAL)
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
+						new WaitCommand(0.25),
+						superstructure.forceState(SuperState.SPIT)));
+
+		return autoRoutine;
+	}
+
+	public Command checkAuto() {
 		AutoRoutine auto = autoFactory.newRoutine("check");
 
 		return intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).andThen(Commands.sequence(
@@ -478,7 +521,7 @@ public class RobotContainer {
 				superstructure.forceState(SuperState.STOW),
 				new WaitUntilCommand(subsystemsAtSetpoints),
 				superstructure.forceState(SuperState.PRE_L3),
-				
+
 				new WaitUntilCommand(subsystemsAtSetpoints),
 				superstructure.forceState(SuperState.STOW),
 				new WaitUntilCommand(subsystemsAtSetpoints),
@@ -488,9 +531,8 @@ public class RobotContainer {
 				new WaitUntilCommand(subsystemsAtSetpoints),
 				intake.rotateToPositionCommand(Intake.STOWED_ANGLE)
 
-			));
-	
-		
+		));
+
 	}
 
 }

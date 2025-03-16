@@ -44,7 +44,7 @@ public class Intake extends SubsystemBase {
 
     private double targetPosition = 0.0;
 
-    public static final Angle DEPLOYED_ANGLE = Degrees.of(-1.5),
+    public static final Angle DEPLOYED_ANGLE = Degrees.of(0),
             STOWED_ANGLE = Degrees.of(134);
 
     public Intake() {

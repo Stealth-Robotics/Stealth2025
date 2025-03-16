@@ -154,7 +154,7 @@ public class Superstructure {
 		// Idle -> stow
 		stateTriggers.get(SuperState.IDLE)
 				.whileTrue(transfer.setVoltage(() -> 0))
-				.whileTrue(rollers.setRollerVoltage(() -> 0))
+				.whileTrue(rollers.setRollerVoltage(() -> -4))
 				// stop subsystems when we are in idle state
 				// .whileTrue(elevator.stopElevator())
 				// if we choose to stow, go to stow state
@@ -205,7 +205,7 @@ public class Superstructure {
 		stateTriggers.get(SuperState.INTAKE)
 				.whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))
 				.and(() -> elevator.isElevatorAtTarget())
-				.whileTrue(transfer.setLeftRightVoltage(1.5, 1.5)) // todo: test voltage that works
+				.whileTrue(transfer.pulseVoltage(1)) // todo: test voltage that works
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.INTAKE_HP_DEGREES))
 				.and(() -> arm.isMotorAtTarget())
 				.whileTrue(elevator.goToPosition(() -> Elevator.INTAKE_HP_ROTATIONS))
@@ -246,7 +246,7 @@ public class Superstructure {
 				.onTrue(
 						transfer.setVoltage(() -> -1).andThen(
 								new WaitCommand(0.5),
-								transfer.setVoltage(() -> 1)))
+								transfer.pulseVoltage(1)))
 				.and(gamepieceDetectedInStagingArea.or(overrideBeamBreakTrigger))
 				.onTrue(transfer.setVoltage(() -> 0))
 				.onTrue(this.forceState(SuperState.GRAB_CORAL));
@@ -257,7 +257,7 @@ public class Superstructure {
 				.whileTrue(elevator.goToPosition(() -> 12.75))
 				.and(() -> elevator.isElevatorAtTarget())
 				.whileTrue(arm.rotateToPositionCommand(() -> -60))
-				.whileTrue(transfer.setVoltage(() -> -2))
+				.whileTrue(transfer.setVoltage(() -> -1.5))
 				.onTrue(Commands.sequence(new WaitCommand(0.5), transfer.setVoltage(() -> 0),
 						this.forceState(SuperState.INTAKE)));
 
@@ -304,6 +304,9 @@ public class Superstructure {
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_HIGH_DEGREES))
 				.and(() -> rollers.getHasGamepiece() || overrideBeamBreakTrigger.getAsBoolean())
 				.onTrue(this.forceState(SuperState.READY_SCORE_ALGAE)
+
+
+
 						// need to experiment with good voltage that will keep algae in
 						.alongWith(rollers.setRollerVoltage(8)));
 
@@ -442,6 +445,7 @@ public class Superstructure {
 				// .and(() -> elevator.isElevatorAtTarget())
 				// .and(() -> arm.isMotorAtTarget())
 				.and(outtakeTrigger)
+				.onTrue(elevator.goToPosition(() -> 13))
 				.onTrue(this.forceState(SuperState.SPIT));
 
 		stateTriggers.get(SuperState.SCORE_CORAL)
@@ -507,7 +511,7 @@ public class Superstructure {
 		stateTriggers.get(SuperState.PRE_NET)
 				.whileTrue(rollers.setRollerVoltage(12))
 				.whileTrue(elevator.goToPosition(() -> Elevator.PRE_NET_ROTATIONS))
-				.onTrue(arm.rotateToPositionCommand(() -> 60))
+				.onTrue(arm.rotateToPositionCommand(() -> 35))
 				.and(preScoreTrigger)
 				.onFalse(
 						this.forceState(SuperState.THROW));

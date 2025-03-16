@@ -38,9 +38,9 @@ public class Transfer extends SubsystemBase {
     public Command pulseVoltage(double voltage) {
         return Commands.repeatingSequence(
                 setVoltage(() -> voltage),
-                new WaitCommand(0.5),
+                new WaitCommand(0.75),
                 setVoltage(() -> 0),
-                new WaitCommand(0.1));
+                new WaitCommand(0.2));
     }
 
     public Command setLeftRightVoltage(double left, double right){

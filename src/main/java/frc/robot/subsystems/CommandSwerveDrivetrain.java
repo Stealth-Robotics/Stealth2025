@@ -46,6 +46,8 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -89,6 +91,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final ProfiledPIDController thetaController = new ProfiledPIDController(0.4, 0.06, 0,
             new Constraints(200, 300));
 
+            Field2d field = new Field2d();
+
+            
+
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
@@ -108,11 +114,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final Pose2d TAG_21 = new Pose2d(Inches.of(209.49), Inches.of(158.5), new Rotation2d(Degrees.of(0)));
     private final Pose2d TAG_22 = new Pose2d(Inches.of(193.1), Inches.of(130.17), new Rotation2d(Degrees.of(300)));
 
-    private final Map<Pose2d, Integer> poseTagMap = new HashMap<>();
-
-    boolean isAligning = false;
-
-    private int nearestTagId;
 
     private final List<Pose2d> tagPoses = Arrays.asList(
             TAG_6,
@@ -129,7 +130,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             TAG_22);
 
     private final Transform2d L4_APRILTAG_LEFT_TRANSFORM = new Transform2d(Units.inchesToMeters(25.5),
-            Units.inchesToMeters(-6.0), new Rotation2d());
+            Units.inchesToMeters(-5.0), new Rotation2d());
 
     private final Transform2d L4_APRILTAG_RIGHT_TRANSFORM = new Transform2d(Units.inchesToMeters(25.5),
             Units.inchesToMeters(7.5), new Rotation2d());
@@ -163,6 +164,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public enum ReefSide {
         LEFT,
         RIGHT
+    }
+
+    public void configField(){
+        SmartDashboard.putData(field);
     }
 
     Rotation2d zeroRotation = new Rotation2d();
@@ -429,6 +434,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 })));
     }
 
+
+    public void stopAligning(){
+        isAligning = false;
+    }
     public void configMap() {
         poseTagMap.put(TAG_6, 6);
         poseTagMap.put(TAG_7, 7);
@@ -618,6 +627,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         targetRight = solveClosestTagPose().transformBy(APRILTAG_RIGHT_TRANSFORM);
         targetLeft = solveClosestTagPose().transformBy(APRILTAG_LEFT_TRANSFORM);
 
+        // if(/*DriverStation.isAutonomous() && */DriverStation.isDisabled()){
+        //     if(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red){
+        //         this.resetRotation(Rotation2d.k180deg);
+        //     }
+        //     else{
+        //         this.resetRotation(Rotation2d.kZero);
+        //     }
+        // }
+
+
+
         double yaw = getPose().getRotation().getDegrees();
         LimelightHelpers.SetRobotOrientation("limelight-left", yaw, 0, 0, 0, 0, 0);
         LimelightHelpers.PoseEstimate leftEst = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
@@ -649,8 +669,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             }
         }
 
+        
+
         zeroRotation = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? Rotation2d.kZero
                 : Rotation2d.k180deg;
+
+                field.setRobotPose(getState().Pose);
 
     }
 

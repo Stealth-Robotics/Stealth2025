@@ -245,8 +245,7 @@ public class RobotContainer {
 		driverController.b().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target)))
 				.whileTrue(dt.goToPose(ReefSide.RIGHT)).onFalse(Commands.runOnce(() -> dt.stopAligning()));
 
-		driverController.a().whileTrue(
-				dt.drivePointedAtReef(() -> -driverController.getLeftY(), () -> -driverController.getLeftX()));
+		driverController.a().whileTrue(elevator.setElevatorVoltage(0.5)).onFalse(elevator.setElevatorVoltage(0));
 
 		driverController.x().or(driverController.b()).and(() -> dt.getAtPose()).whileTrue(driveRobotCentric);
 

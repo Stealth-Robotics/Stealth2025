@@ -32,7 +32,7 @@ public class Elevator extends SubsystemBase {
             kD = 0.0,
 
             kS = 0.0,
-            kV = 0.0,
+            kV = 0.12,
             kG = 0.0,
             // TODO tune
             MOTION_MAGIC_ACCELERATION = 250,
@@ -177,6 +177,10 @@ public class Elevator extends SubsystemBase {
 
     public Command stopElevator() {
         return this.runOnce(() -> motor1.setControl(new NeutralOut()));
+    }
+
+    public Command setElevatorVoltage(double voltage) {
+        return this.runOnce(() -> motor1.setVoltage(voltage));
     }
 
     private void setElevatorTargetPosition(double pos) {

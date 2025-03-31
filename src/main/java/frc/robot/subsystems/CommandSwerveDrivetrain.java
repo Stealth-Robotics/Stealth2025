@@ -2,10 +2,12 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -37,12 +39,14 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -59,6 +63,7 @@ import frc.robot.LimelightHelpers.RawFiducial;
 import frc.robot.Robot;
 import frc.robot.LimelightHelpers.RawFiducial;
 import frc.robot.RobotContainer.LevelTarget;
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
@@ -91,9 +96,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final ProfiledPIDController thetaController = new ProfiledPIDController(0.4, 0.06, 0,
             new Constraints(200, 300));
 
-            Field2d field = new Field2d();
-
-            
+    private final PIDController reefController = new PIDController(0.4, 0.06, 0);
+    Field2d field = new Field2d();
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -114,6 +118,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final Pose2d TAG_21 = new Pose2d(Inches.of(209.49), Inches.of(158.5), new Rotation2d(Degrees.of(0)));
     private final Pose2d TAG_22 = new Pose2d(Inches.of(193.1), Inches.of(130.17), new Rotation2d(Degrees.of(300)));
 
+    private final Pose2d RED_REEF = new Pose2d(Inches.of(514.13), Inches.of(158.5), new Rotation2d());
+    private final Pose2d BLUE_REEF = new Pose2d(Inches.of(176.7), Inches.of(158.5), new Rotation2d());
+
+    private Pose2d targetReef;
+
+    private Pose2d closestReefPole = new Pose2d();
+
+    double MAX_VELO = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+    double MAX_ANGULAR_VELO = RotationsPerSecond.of(1.5).in(RadiansPerSecond);
+
+    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+            .withDeadband(MAX_VELO * 0.1).withRotationalDeadband(MAX_ANGULAR_VELO * 0.1)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
     private final List<Pose2d> tagPoses = Arrays.asList(
             TAG_6,
@@ -128,6 +145,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             TAG_20,
             TAG_21,
             TAG_22);
+
+    private List<Pose2d> reefPoleLocations = new ArrayList<>();
 
     private final Transform2d L4_APRILTAG_LEFT_TRANSFORM = new Transform2d(Units.inchesToMeters(25.5),
             Units.inchesToMeters(-5.0), new Rotation2d());
@@ -166,7 +185,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         RIGHT
     }
 
-    public void configField(){
+    public void configField() {
         SmartDashboard.putData(field);
     }
 
@@ -434,10 +453,51 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 })));
     }
 
+    public Command goToNearestReefPole() {
 
-    public void stopAligning(){
+        return this.runOnce(() -> {
+            isAligning = true;
+        }).andThen(goToPose(() -> closestReefPole)).finallyDo(() -> {
+            isAligning = false;
+        });
+
+    }
+
+    public Command goToPose(Supplier<Pose2d> pose) {
+
+        return this.runOnce(() -> {
+            thetaController.enableContinuousInput(-180, 180);
+            thetaController.reset(getPose().getRotation().getDegrees());
+            xController.reset(getPose().getX());
+            yController.reset(getPose().getY());
+
+            targetPose2d = pose.get();
+
+            atPose = false;
+
+        }).andThen(this.run(
+                () -> {
+                    double xSpeed = xController.calculate(getPose().getX(), pose.get().getX());
+                    double ySpeed = yController.calculate(getPose().getY(), pose.get().getY());
+                    double angularSpeed = thetaController.calculate(getPose().getRotation().getDegrees(),
+                            pose.get().getRotation().minus(new Rotation2d(Degrees.of(0))).getDegrees());
+                    ChassisSpeeds speeds = new ChassisSpeeds(xSpeed,
+                            ySpeed, angularSpeed);
+                    setControl(applyRobotSpeeds.withSpeeds(speeds));
+                }).until(
+                        () -> (MathUtil.isNear(getPose().getX(), pose.get().getX(), Units.inchesToMeters(1))
+                                && MathUtil.isNear(getPose().getY(), pose.get().getY(),
+                                        Units.inchesToMeters(1)))
+                                && MathUtil.isNear(
+                                        getPose().getRotation().getDegrees(),
+                                        pose.get().getRotation().getDegrees(), 0.5))
+                .andThen(Commands.runOnce(() -> atPose = true)));
+    }
+
+    public void stopAligning() {
         isAligning = false;
     }
+
     public void configMap() {
         poseTagMap.put(TAG_6, 6);
         poseTagMap.put(TAG_7, 7);
@@ -452,6 +512,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         poseTagMap.put(TAG_21, 21);
         poseTagMap.put(TAG_22, 22);
 
+        for (Pose2d pose : tagPoses) {
+            reefPoleLocations.add(pose.transformBy(APRILTAG_LEFT_TRANSFORM));
+            reefPoleLocations.add(pose.transformBy(APRILTAG_RIGHT_TRANSFORM));
+        }
+
     }
 
     public Command goToPose(Pose2d pose) {
@@ -463,6 +528,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             yController.reset(getPose().getY());
 
             targetPose2d = pose;
+
             atPose = false;
 
         }).andThen(this.run(
@@ -475,13 +541,33 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                             ySpeed, angularSpeed);
                     setControl(applyRobotSpeeds.withSpeeds(speeds));
                 }).until(
-                        () -> (MathUtil.isNear(getPose().getX(), pose.getX(), Units.inchesToMeters(4))
+                        () -> (MathUtil.isNear(getPose().getX(), pose.getX(), Units.inchesToMeters(1))
                                 && MathUtil.isNear(getPose().getY(), pose.getY(),
-                                        Units.inchesToMeters(4)))
+                                        Units.inchesToMeters(1)))
                                 && MathUtil.isNear(
                                         getPose().getRotation().getDegrees(),
                                         pose.getRotation().getDegrees(), 0.5))
                 .andThen(Commands.runOnce(() -> atPose = true)));
+    }
+
+    public Command drivePointedAtReef(DoubleSupplier xDoubleSupplier, DoubleSupplier yDoubleSupplier) {
+        return this.runOnce(() -> {
+            reefController.reset();
+            reefController.enableContinuousInput(-180, 180);
+
+        }).andThen(this.run(() -> {
+            Transform2d reefOffset = getPose().minus(targetReef);
+            Angle targetAngle = Radians.of(Math.atan2(reefOffset.getY(), reefOffset.getX()));
+            double angularSpeed = reefController.calculate(getPose().getRotation().getDegrees(),
+                    targetAngle.in(Degrees));
+            setControl(drive.withVelocityY(yDoubleSupplier.getAsDouble() * MAX_VELO)
+                    .withVelocityX(xDoubleSupplier.getAsDouble() * MAX_VELO)
+                    .withRotationalRate(angularSpeed));
+        }));
+    }
+
+    public boolean nearReef() {
+        return getPose().getTranslation().getDistance(targetReef.getTranslation()) < Meters.of(3.5).baseUnitMagnitude();
     }
 
     public boolean getAtPose() {
@@ -572,7 +658,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return this.runOnce(() -> this.resetRotation(zeroRotation));
     }
 
-     @Override
+    @Override
     public void periodic() {
         /*
          * Periodically try to apply the operator perspective.
@@ -627,16 +713,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         targetRight = solveClosestTagPose().transformBy(APRILTAG_RIGHT_TRANSFORM);
         targetLeft = solveClosestTagPose().transformBy(APRILTAG_LEFT_TRANSFORM);
 
+        if (!isAligning) {
+            closestReefPole = getPose().nearest(reefPoleLocations);
+        }
+
+        if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red) {
+            targetReef = RED_REEF;
+        } else {
+            targetReef = BLUE_REEF;
+        }
+
         // if(/*DriverStation.isAutonomous() && */DriverStation.isDisabled()){
-        //     if(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red){
-        //         this.resetRotation(Rotation2d.k180deg);
-        //     }
-        //     else{
-        //         this.resetRotation(Rotation2d.kZero);
-        //     }
+        // if(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red){
+        // this.resetRotation(Rotation2d.k180deg);
         // }
-
-
+        // else{
+        // this.resetRotation(Rotation2d.kZero);
+        // }
+        // }
 
         double yaw = getPose().getRotation().getDegrees();
         LimelightHelpers.SetRobotOrientation("limelight-left", yaw, 0, 0, 0, 0, 0);
@@ -669,12 +763,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             }
         }
 
-        
-
         zeroRotation = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? Rotation2d.kZero
                 : Rotation2d.k180deg;
 
-                field.setRobotPose(getState().Pose);
+        field.setRobotPose(getState().Pose);
 
     }
 

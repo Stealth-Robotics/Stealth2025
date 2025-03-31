@@ -69,6 +69,8 @@ public class RobotContainer {
 			.withDriveRequestType(DriveRequestType.OpenLoopVoltage)
 			.withTargetDirection(new Rotation2d(Radians.of(90).in(Degrees)));
 
+
+
 	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
 	Superstructure superstructure;
@@ -234,12 +236,17 @@ public class RobotContainer {
 				.and(() -> Math.abs(driverController.getRightX()) < 0.1)
 				.and(driverController.x().negate())
 				.and(driverController.b().negate())
-				.whileTrue(dt.applyRequest(() -> brake));
+				.and(driverController.a().negate())
+				.and(() -> dt.nearReef())
+				.whileTrue(dt.goToNearestReefPole());
 
 		driverController.x().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target)))
-				.whileTrue(dt.goToPose(ReefSide.LEFT)).onFalse(Commands.runOnce(() -> dt.stopAligning()));
+				.whileTrue(dt.goToNearestReefPole()).onFalse(Commands.runOnce(() -> dt.stopAligning()));
 		driverController.b().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target)))
 				.whileTrue(dt.goToPose(ReefSide.RIGHT)).onFalse(Commands.runOnce(() -> dt.stopAligning()));
+
+		driverController.a().whileTrue(
+				dt.drivePointedAtReef(() -> -driverController.getLeftY(), () -> -driverController.getLeftX()));
 
 		driverController.x().or(driverController.b()).and(() -> dt.getAtPose()).whileTrue(driveRobotCentric);
 

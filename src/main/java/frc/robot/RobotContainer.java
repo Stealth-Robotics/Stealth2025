@@ -69,8 +69,6 @@ public class RobotContainer {
 			.withDriveRequestType(DriveRequestType.OpenLoopVoltage)
 			.withTargetDirection(new Rotation2d(Radians.of(90).in(Degrees)));
 
-
-
 	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
 	Superstructure superstructure;
@@ -230,6 +228,12 @@ public class RobotContainer {
 				.alongWith(Commands.runOnce(() -> leds.setLevel(target))));
 
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
+
+		Trigger prescore = new Trigger(
+				() -> (superstructure.getState() == SuperState.PRE_L1 ||
+						superstructure.getState() == SuperState.PRE_L2 ||
+						superstructure.getState() == SuperState.PRE_L3 ||
+						superstructure.getState() == SuperState.PRE_L4));
 		// brake when we aren't driving
 		new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)
 				.and(() -> Math.abs(driverController.getLeftY()) < 0.1)
@@ -238,6 +242,7 @@ public class RobotContainer {
 				.and(driverController.b().negate())
 				.and(driverController.a().negate())
 				.and(() -> dt.nearReef())
+				.and(prescore)
 				.whileTrue(dt.goToNearestReefPole());
 
 		driverController.x().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target)))
@@ -245,7 +250,9 @@ public class RobotContainer {
 		driverController.b().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target)))
 				.whileTrue(dt.goToPose(ReefSide.RIGHT)).onFalse(Commands.runOnce(() -> dt.stopAligning()));
 
-		driverController.a().whileTrue(elevator.setElevatorVoltage(0.5)).onFalse(elevator.setElevatorVoltage(0));
+		// driverController.a().whileTrue(elevator.setElevatorVoltage(0.25)).onFalse(elevator.setElevatorVoltage(0));
+		driverController.a().whileTrue(
+				dt.drivePointedAtReef(() -> -driverController.getLeftY(), () -> -driverController.getLeftX()));
 
 		driverController.x().or(driverController.b()).and(() -> dt.getAtPose()).whileTrue(driveRobotCentric);
 

@@ -278,8 +278,9 @@ public class Superstructure {
 				.onTrue(Commands.runOnce(() -> rumble.accept(0.5)).andThen(new WaitCommand(0.5),
 						Commands.runOnce(() -> rumble.accept(0))))
 				.onTrue(leds.blink())
+
 				.and(() -> elevator.isElevatorAtTarget())
-				.onTrue(new WaitCommand(0.25).andThen(rollers.setRollerVoltage(1.0)))
+				.onTrue(new WaitCommand(0.25).andThen(rollers.setRollerVoltage(0.75)))
 
 				.onTrue(this.forceState(SuperState.READY_SCORE_CORAL));
 
@@ -341,7 +342,7 @@ public class Superstructure {
 				.whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))
 				.and(() -> levelTarget.get() == LevelTarget.L1)
 				.and(preScoreTrigger)
-				.onFalse(this.forceState(SuperState.PRE_L1));
+				.onFalse(this.forceState(SuperState.PRE_L1));			
 
 		stateTriggers.get(SuperState.READY_SCORE_CORAL)
 				.whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))

@@ -746,18 +746,27 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             // only add vision measurement if we arent spinning quickly
             if (Math.abs(Units.radiansToDegrees(getState().Speeds.omegaRadiansPerSecond)) < 360) {
                 // we dont care a ton about the tag id if we are not aligning
-                if (!isAligning) {
-                    addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.4, .4, 9999999));
-                    return;
+
+                if (getPose().getTranslation().getDistance(closestReefPole.getTranslation()) > 1.5) {
+                    if (!isAligning) {
+                        addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.4, .4, 9999999));
+                        return;
+                    }
+
+                    RawFiducial[] rawFiducials = leftEst.rawFiducials;
+                    // if the pose estimate includes the tag we're aligning to
+                    for (RawFiducial rawFiducial : rawFiducials) {
+
+                        if (rawFiducial.id == nearestTagId) {
+                            addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds,
+                                    VecBuilder.fill(.4, .4, 9999999));
+                        }
+                    }
                 }
 
-                RawFiducial[] rawFiducials = leftEst.rawFiducials;
-                // if the pose estimate includes the tag we're aligning to
-                for (RawFiducial rawFiducial : rawFiducials) {
-
-                    if (rawFiducial.id == nearestTagId) {
-                        addVisionMeasurement(leftEst.pose, leftEst.timestampSeconds, VecBuilder.fill(.4, .4, 9999999));
-                    }
+                else{
+                    System.out.println("using mt1");
+                    addVisionMeasurement(leftMT1Estimate.pose, leftMT1Estimate.timestampSeconds, VecBuilder.fill(.6, .6, Units.degreesToRadians(3)));
                 }
 
             }

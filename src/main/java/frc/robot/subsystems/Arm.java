@@ -86,7 +86,7 @@ public class Arm extends SubsystemBase {
         armMotorConfiguration.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
         armMotorConfiguration.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
-        armMotorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        armMotorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         canCoderConfiguration.MagnetSensor.MagnetOffset = ZERO_OFFSET;
 

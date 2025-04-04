@@ -31,11 +31,10 @@ public class Elevator extends SubsystemBase {
             kI = 0.0,
             kD = 0.0,
 
-            kS = 0.0,
+            kS = 0.1,
             kV = 0.12,
-            kG = 0.0,
-            // TODO tune
-            MOTION_MAGIC_ACCELERATION = 250,
+            kG = 0.25,
+            MOTION_MAGIC_ACCELERATION = 350,
             MOTION_MAGIC_CRUISE_VELOCITY = 65;
 
     private final double TOLERANCE = 0.05; // todo tune
@@ -179,8 +178,8 @@ public class Elevator extends SubsystemBase {
         return this.runOnce(() -> motor1.setControl(new NeutralOut()));
     }
 
-    public Command setElevatorVoltage(double voltage) {
-        return this.runOnce(() -> motor1.setVoltage(voltage));
+    public double getVelo() {
+        return motor1.getVelocity().getValueAsDouble();
     }
 
     private void setElevatorTargetPosition(double pos) {

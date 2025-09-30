@@ -128,7 +128,7 @@ public class RobotContainer {
 		SmartDashboard.putData("Auto Chooser", autoChooser);
 		autoFactory = dt.createAutoFactory();
 
-		autoChooser.addRoutine("test auto", this::buildAuto);
+		autoChooser.addRoutine("test aut	o", this::buildAuto);
 		autoChooser.addRoutine("preload auto", this::preloadAuto);
 		autoChooser.addCmd("systems check", this::checkAuto);
 		autoChooser.addRoutine("opposite color auto", this::oppositColorAuto);
@@ -145,11 +145,10 @@ public class RobotContainer {
 				() -> algaeTarget,
 				driverController.leftBumper(),
 				driverController.leftBumper(),
-				new Trigger(() -> (driverController.getRightTriggerAxis() > 0.1)),
+				new Trigger(() -> (driverController.getRightTriggerAxis() > 0.1)),		
 				driverController.leftBumper(),
 				driverController.b(),
 				driverController.rightBumper(),
-				// TODO: BIND TO BUTTONS
 				operatorController.leftBumper(),
 				operatorController.rightBumper(),
 				driverController.povUp(),
@@ -170,7 +169,6 @@ public class RobotContainer {
 		rollers.configureStateSupplierTrigger();
 
 		driveFieldCentric = dt.applyRequest(
-
 				() -> {
 					driveMultiplier = 1;
 					drive.withVelocityY(-driverController.getLeftX() * MAX_VELO * driveMultiplier)
@@ -227,6 +225,8 @@ public class RobotContainer {
 		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4)
 				.alongWith(Commands.runOnce(() -> leds.setLevel(target))));
 
+		operatorController.povDown().onTrue(intake.smartResetDeployMotor());
+
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
 
 		Trigger prescore = new Trigger(
@@ -235,15 +235,16 @@ public class RobotContainer {
 						superstructure.getState() == SuperState.PRE_L3 ||
 						superstructure.getState() == SuperState.PRE_L4));
 		// brake when we aren't driving
-		new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)
-				.and(() -> Math.abs(driverController.getLeftY()) < 0.1)
-				.and(() -> Math.abs(driverController.getRightX()) < 0.1)
-				.and(driverController.x().negate())
-				.and(driverController.b().negate())
-				.and(driverController.a().negate())
-				.and(() -> dt.nearReef())
-				.and(prescore)
-				.whileTrue(dt.goToNearestReefPole());
+		// ! Remove hen i figure out hy auto align doesnt ork
+		// new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)
+		// 		.and(() -> Math.abs(driverController.getLeftY()) < 0.1)
+		// 		.and(() -> Math.abs(driverController.getRightX()) < 0.1)
+		// 		.and(driverController.x().negate())
+		// 		.and(driverController.b().negate())
+		// 		.and(driverController.a().negate())
+		// 		.and(() -> dt.nearReef())
+		// 		.and(prescore)
+		// 		.whileTrue(dt.goToNearestReefPole());
 
 		driverController.x().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target)))
 				.whileTrue(dt.goToNearestReefPole()).onFalse(Commands.runOnce(() -> dt.stopAligning()));
@@ -261,6 +262,7 @@ public class RobotContainer {
 
 		operatorController.povDown().onTrue(Commands.runOnce(() -> algaeTarget = AlgaeTarget.PROCESSOR));
 		operatorController.povUp().onTrue(Commands.runOnce(() -> algaeTarget = AlgaeTarget.NET));
+
 		// if we try to rotate the bot, go back to normal driving
 		// new Trigger(() -> Math.abs(driverController.getRightTriggerAxis()) >
 		// 0.05).onTrue(driveFieldCentric);

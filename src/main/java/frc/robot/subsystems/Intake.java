@@ -13,13 +13,17 @@ import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.TimeUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 
 @Logged
 public class Intake extends SubsystemBase {
@@ -42,6 +46,10 @@ public class Intake extends SubsystemBase {
 
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
+    private final double STALL_CURRENT_THRESHOLD = 5.0;
+    private final Debouncer currentDebouncer = new Debouncer(0.05);
+
+    private Angle deployOffset = Degrees.of(0);
     private double targetPosition = 0.0;
 
     public static final Angle DEPLOYED_ANGLE = Degrees.of(0),
@@ -72,14 +80,13 @@ public class Intake extends SubsystemBase {
         intakeMotor.getConfigurator().apply(intakeMotorConfiguration);
         deployMotor.getConfigurator().apply(deployMotorConfiguration);
 
-        deployMotor.setPosition(Degrees.of(134));
+        deployMotor.setPosition(STOWED_ANGLE);
     }
 
     public Command rotateToPositionCommand(Angle angle) {
-
         return this.runOnce(() -> {
             motionMagicVoltage.Position = angle.in(Rotations);
-            targetPosition = angle.in(Degrees);
+            targetPosition = angle.in(Degrees) + deployOffset.in(Degrees);
             deployMotor.setControl(motionMagicVoltage);
         });
     }
@@ -92,6 +99,16 @@ public class Intake extends SubsystemBase {
         return Units.rotationsToDegrees(deployMotor.getPosition().getValueAsDouble());
     }
 
+    public Command smartResetDeployMotor() {
+        return new SequentialCommandGroup(
+            new InstantCommand(() -> deployMotor.set(-0.25)),
+            new WaitUntilCommand(() -> currentDebouncer.calculate(deployMotor.getStatorCurrent().getValueAsDouble() > STALL_CURRENT_THRESHOLD)),
+            new InstantCommand(() -> deployMotor.set(0.0)),
+            new InstantCommand(() -> deployOffset = deployMotor.getPosition().getValue()),
+            rotateToPositionCommand(Intake.STOWED_ANGLE)
+        );
+    }
+
     public Command setIntakeVoltage(DoubleSupplier voltage) {
         return Commands.run(() -> intakeMotor.setVoltage(voltage.getAsDouble()));
     }
@@ -99,6 +116,4 @@ public class Intake extends SubsystemBase {
     public Command setIntakeVoltage(double voltage) {
         return Commands.runOnce(() -> intakeMotor.setVoltage(voltage));
     }
-
-
 }

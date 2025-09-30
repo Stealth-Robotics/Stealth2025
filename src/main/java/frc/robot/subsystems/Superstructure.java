@@ -94,7 +94,7 @@ public class Superstructure {
 			Supplier<LevelTarget> levelTarget,
 			Supplier<AlgaeTarget> algaeTarget,
 			Trigger preScoreTrigger,
-			Trigger scoreTrigger,
+			Trigger scoreTrigger,	
 			Trigger intakeTrigger,
 			Trigger outtakeTrigger,
 			Trigger missedScoreTrigger,
@@ -154,7 +154,7 @@ public class Superstructure {
 		// Idle -> stow
 		stateTriggers.get(SuperState.IDLE)
 				.whileTrue(transfer.setVoltage(() -> 0))
-				.whileTrue(rollers.setRollerVoltage(() -> -4))
+				// ! .whileTrue(rollers.setRollerVoltage(() -> -4))
 				// stop subsystems when we are in idle state
 				// .whileTrue(elevator.stopElevator())
 				// if we choose to stow, go to stow state

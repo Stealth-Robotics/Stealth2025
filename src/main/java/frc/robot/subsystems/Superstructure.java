@@ -24,6 +24,7 @@ public class Superstructure {
 
 	public enum SuperState {
 		INTAKE,
+		INTAKE_RESET,
 		GRAB_CORAL,
 		READY_SCORE_CORAL,
 		PRE_L1,
@@ -64,6 +65,8 @@ public class Superstructure {
 	private final Trigger overrideBeamBreakTrigger;
 	private final Trigger homeTrigger;
 	private final DoubleSupplier intakeSpeed;
+	private final Trigger intakeResetTrigger;
+
 	@Logged
 	private final Trigger gamepieceDetectedInStagingArea;
 
@@ -105,7 +108,8 @@ public class Superstructure {
 			Trigger overrideBeamBreakTrigger,
 			Trigger homeTrigger,
 			DoubleSupplier intakeSpeed,
-			DoubleConsumer rumble) {
+			DoubleConsumer rumble,
+			Trigger intakeResetTrigger) {
 		this.elevator = elevator;
 		this.rollers = rollers;
 		this.arm = arm;
@@ -128,6 +132,7 @@ public class Superstructure {
 		this.homeTrigger = homeTrigger;
 		this.intakeSpeed = intakeSpeed;
 		this.rumble = rumble;
+		this.intakeResetTrigger = intakeResetTrigger;
 
 		tof = new TimeOfFlight(0);
 		tof.setRangingMode(RangingMode.Short, 24);
@@ -231,10 +236,14 @@ public class Superstructure {
 				.onTrue(intake.rotateToPositionCommand(Intake.STOWED_ANGLE))
 				.and(() -> intake.atPosition());
 
+		stateTriggers.get(SuperState.INTAKE)
+				.and(() -> DriverStation.isTeleop())
+				.and(intakeResetTrigger)
+				.onTrue(forceState(SuperState.INTAKE_RESET));
+
 		// intake unjam state
 		stateTriggers.get(SuperState.INTAKE)
 				.and(missedScoreTrigger)
-
 				.onFalse(this.forceState(SuperState.UNJAM));
 
 		stateTriggers.get(SuperState.INTAKE)
@@ -534,6 +543,9 @@ public class Superstructure {
 				.and(stowTrigger)
 				.onTrue(this.forceState(SuperState.STOW).alongWith(rollers.setRollerVoltage(0)));
 
+
+		stateTriggers.get(SuperState.INTAKE_RESET)
+				.onTrue(intake.smartResetDeployMotor().andThen(forceState(SuperState.INTAKE)));
 	}
 
 	public SuperState getPrevState() {

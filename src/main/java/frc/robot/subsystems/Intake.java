@@ -46,8 +46,7 @@ public class Intake extends SubsystemBase {
 
     private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
-    private final double STALL_CURRENT_THRESHOLD = 5.0;
-    private final Debouncer currentDebouncer = new Debouncer(0.05);
+    private final double STALL_CURRENT_THRESHOLD = 20.0;
 
     private Angle deployOffset = Degrees.of(0);
     private double targetPosition = 0.0;
@@ -101,8 +100,8 @@ public class Intake extends SubsystemBase {
 
     public Command smartResetDeployMotor() {
         return new SequentialCommandGroup(
-            new InstantCommand(() -> deployMotor.set(-0.25)),
-            new WaitUntilCommand(() -> currentDebouncer.calculate(deployMotor.getStatorCurrent().getValueAsDouble() > STALL_CURRENT_THRESHOLD)),
+            new InstantCommand(() -> deployMotor.set(-0.1)),
+            new WaitUntilCommand(() -> deployMotor.getStatorCurrent().getValueAsDouble() > STALL_CURRENT_THRESHOLD),
             new InstantCommand(() -> deployMotor.set(0.0)),
             new InstantCommand(() -> deployOffset = deployMotor.getPosition().getValue()),
             rotateToPositionCommand(Intake.STOWED_ANGLE)

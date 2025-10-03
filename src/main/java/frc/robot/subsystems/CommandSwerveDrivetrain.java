@@ -25,7 +25,6 @@ import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.logging.EpilogueBackend;
 import edu.wpi.first.math.MathUtil;

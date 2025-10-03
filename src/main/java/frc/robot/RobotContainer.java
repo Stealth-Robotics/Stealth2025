@@ -155,7 +155,8 @@ public class RobotContainer {
 				driverController.povLeft(),
 				driverController.povRight(),
 				() -> (driverController.getRightTriggerAxis() - driverController.getLeftTriggerAxis()),
-				(rumble) -> setRumble(rumble));
+				(rumble) -> setRumble(rumble),
+				operatorController.povDown());
 
 		goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
 				new WaitUntilCommand(subsystemsAtSetpoints));
@@ -225,8 +226,6 @@ public class RobotContainer {
 		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4)
 				.alongWith(Commands.runOnce(() -> leds.setLevel(target))));
 
-		operatorController.povDown().onTrue(intake.smartResetDeployMotor());
-
 		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
 
 		Trigger prescore = new Trigger(
@@ -234,6 +233,7 @@ public class RobotContainer {
 						superstructure.getState() == SuperState.PRE_L2 ||
 						superstructure.getState() == SuperState.PRE_L3 ||
 						superstructure.getState() == SuperState.PRE_L4));
+
 		// brake when we aren't driving
 		// ! Remove hen i figure out hy auto align doesnt ork
 		// new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)

@@ -143,9 +143,9 @@ public class RobotContainer {
 				intake,
 				() -> target,
 				() -> algaeTarget,
-				driverController.leftBumper(),
-				driverController.leftBumper(),
-				new Trigger(() -> (driverController.getRightTriggerAxis() > 0.1)),		
+				(operatorController.a().or(operatorController.b()).or(operatorController.x()).or(operatorController.y())), //Prescore
+				driverController.leftBumper(), //Score
+				new Trigger(() -> (driverController.getRightTriggerAxis() > 0.1)),
 				driverController.leftBumper(),
 				driverController.b(),
 				driverController.rightBumper(),
@@ -156,7 +156,7 @@ public class RobotContainer {
 				driverController.povRight(),
 				() -> (driverController.getRightTriggerAxis() - driverController.getLeftTriggerAxis()),
 				(rumble) -> setRumble(rumble),
-				operatorController.povDown());
+				operatorController.povDown()); //Intake reset
 
 		goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
 				new WaitUntilCommand(subsystemsAtSetpoints));
@@ -259,7 +259,7 @@ public class RobotContainer {
 
 		// swap to driving at angle
 		driverController.y().onTrue(drivePointingAtAngle);
-
+		
 		operatorController.povDown().onTrue(Commands.runOnce(() -> algaeTarget = AlgaeTarget.PROCESSOR));
 		operatorController.povUp().onTrue(Commands.runOnce(() -> algaeTarget = AlgaeTarget.NET));
 

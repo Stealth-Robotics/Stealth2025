@@ -226,7 +226,7 @@ public class Superstructure {
 				.and(() -> DriverStation.isTeleop())
 				.and(() -> Math.abs(intakeSpeed.getAsDouble()) > 0.1)
 				.whileTrue(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE))
-				.and(() -> intake.atPosition())
+				// .and(() -> intake.atPosition())
 				.whileTrue(intake.setIntakeVoltage(() -> (intakeSpeed.getAsDouble() * 12)));
 
 		stateTriggers.get(SuperState.INTAKE)
@@ -235,7 +235,9 @@ public class Superstructure {
 				.onTrue(intake.setIntakeVoltage(() -> 0))
 				.onTrue(intake.rotateToPositionCommand(Intake.STOWED_ANGLE))
 				.and(() -> intake.atPosition());
+		
 
+		// ! Manual intake resetting
 		stateTriggers.get(SuperState.INTAKE)
 				.and(() -> DriverStation.isTeleop())
 				.and(intakeResetTrigger)
@@ -545,7 +547,7 @@ public class Superstructure {
 
 
 		stateTriggers.get(SuperState.INTAKE_RESET)
-				.onTrue(intake.smartResetDeployMotor().andThen(forceState(SuperState.INTAKE)));
+				.onTrue(intake.smartResetDeployMotor().andThen(forceState(SuperState.STOW)));
 	}
 
 	public SuperState getPrevState() {

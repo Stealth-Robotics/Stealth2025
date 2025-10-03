@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 
 @Logged
@@ -85,7 +86,7 @@ public class Intake extends SubsystemBase {
     public Command rotateToPositionCommand(Angle angle) {
         return this.runOnce(() -> {
             motionMagicVoltage.Position = angle.in(Rotations);
-            targetPosition = angle.in(Degrees) + deployOffset.in(Degrees);
+            targetPosition = angle.in(Degrees) - deployOffset.in(Degrees);
             deployMotor.setControl(motionMagicVoltage);
         });
     }
@@ -101,6 +102,7 @@ public class Intake extends SubsystemBase {
     public Command smartResetDeployMotor() {
         return new SequentialCommandGroup(
             new InstantCommand(() -> deployMotor.set(-0.1)),
+            new WaitCommand(0.5),
             new WaitUntilCommand(() -> deployMotor.getStatorCurrent().getValueAsDouble() > STALL_CURRENT_THRESHOLD),
             new InstantCommand(() -> deployMotor.set(0.0)),
             new InstantCommand(() -> deployOffset = deployMotor.getPosition().getValue()),

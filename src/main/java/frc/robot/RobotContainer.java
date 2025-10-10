@@ -238,7 +238,7 @@ public class RobotContainer {
 						superstructure.getState() == SuperState.PRE_L4));
 
 		driverController.x().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target)))
-				.whileTrue(dt.goToNearestReefPole()).onFalse(Commands.runOnce(() -> dt.stopAligning()));
+				.whileTrue(dt.goToPose(ReefSide.LEFT)).onFalse(Commands.runOnce(() -> dt.stopAligning()));
 		driverController.b().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target)))
 				.whileTrue(dt.goToPose(ReefSide.RIGHT)).onFalse(Commands.runOnce(() -> dt.stopAligning()));
 		

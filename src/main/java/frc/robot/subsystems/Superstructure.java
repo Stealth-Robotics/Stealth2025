@@ -162,12 +162,17 @@ public class Superstructure {
 		// Idle -> stow
 		stateTriggers.get(SuperState.IDLE)
 				.whileTrue(transfer.setVoltage(() -> 0))
-				// ! .whileTrue(rollers.setRollerVoltage(() -> -4))
-				// stop subsystems when we are in idle state
-				// .whileTrue(elevator.stopElevator())
-				// if we choose to stow, go to stow state
 				.and(stowTrigger)
 				.onFalse(this.forceState(SuperState.STOW));
+
+		// ! Auto only rollers for sucking up game piece
+		stateTriggers.get(SuperState.IDLE)
+				.and(() -> DriverStation.isAutonomous())
+				.whileTrue(rollers.setRollerVoltage(() -> -4));
+		
+		// ! Stop intake from falling down on startup
+		stateTriggers.get(SuperState.IDLE)
+				.onTrue(intake.rotateToPositionCommand(Intake.STOWED_ANGLE));
 
 		// Idle -> removing algae states
 		stateTriggers.get(SuperState.IDLE)
@@ -320,11 +325,7 @@ public class Superstructure {
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_HIGH_DEGREES))
 				.and(() -> rollers.getHasGamepiece() || overrideBeamBreakTrigger.getAsBoolean())
 				.onTrue(this.forceState(SuperState.READY_SCORE_ALGAE)
-
-
-
-						// need to experiment with good voltage that will keep algae in
-						.alongWith(rollers.setRollerVoltage(8)));
+				.alongWith(rollers.setRollerVoltage(8)));
 
 		stateTriggers.get(SuperState.REMOVE_ALGAE_LOW)
 				.whileTrue(elevator.goToPosition(() -> Elevator.REMOVE_ALGAE_LOW_ROTATIONS))
@@ -332,8 +333,7 @@ public class Superstructure {
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_LOW_DEGREES))
 				.and(() -> rollers.getHasGamepiece() || overrideBeamBreakTrigger.getAsBoolean())
 				.onTrue(this.forceState(SuperState.READY_SCORE_ALGAE)
-						// again, experiment
-						.alongWith(rollers.setRollerVoltage(8)));
+				.alongWith(rollers.setRollerVoltage(8)));
 
 		// flip flop between states
 		stateTriggers.get(SuperState.REMOVE_ALGAE_LOW)
@@ -496,7 +496,7 @@ public class Superstructure {
 		// ejecting gamepiece
 		stateTriggers.get(SuperState.SPIT)
 				.onTrue(rollers.setRollerVoltage(-1.5))
-				.and(stowTrigger)
+				.and(intakeTrigger)
 				.onFalse(this.forceState(SuperState.STOW));
 
 		// algae scoring
@@ -536,13 +536,6 @@ public class Superstructure {
 				.onTrue(arm.rotateToPositionCommand(() -> 80))
 				.and(() -> arm.getArmPosition() > 72)
 				.onTrue(this.forceState(SuperState.SPIT_ALGAE));
-
-		// stateTriggers.get(SuperState.PRE_NET)
-		// .whileTrue(rollers.setRollerVoltage(12))
-		// .whileTrue(elevator.goToPosition(() -> 43.5))
-		// .whileTrue(arm.rotateToPositionCommand(() -> 80))
-		// .and(scoreTrigger)
-		// .onFalse(this.forceState(SuperState.SPIT_ALGAE));
 
 		stateTriggers.get(SuperState.SPIT_ALGAE)
 				.onTrue(rollers.setRollerVoltage(-9))

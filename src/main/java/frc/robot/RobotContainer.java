@@ -147,7 +147,7 @@ public class RobotContainer {
 				driverController.leftBumper(), //Score
 				new Trigger(() -> (driverController.getRightTriggerAxis() > 0.1)), //Go to score position
 				driverController.leftBumper(),
-				driverController.a(),
+				driverController.y(),
 				driverController.rightBumper(),
 				operatorController.leftBumper(),
 				operatorController.rightBumper(),

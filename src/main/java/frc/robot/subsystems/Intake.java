@@ -10,6 +10,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
@@ -62,6 +63,9 @@ public class Intake extends SubsystemBase {
         deployMotorConfiguration = new TalonFXConfiguration();
         intakeMotorConfiguration = new TalonFXConfiguration();
 
+        // ! Stop from falling down on startup
+        deployMotorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
         deployMotorConfiguration.Slot0.kP = kP;
         deployMotorConfiguration.Slot0.kI = kI;
         deployMotorConfiguration.Slot0.kD = kD;
@@ -74,16 +78,13 @@ public class Intake extends SubsystemBase {
 
         intakeMotorConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-        intakeMotorConfiguration.CurrentLimits.SupplyCurrentLimit = 30.0;
+        intakeMotorConfiguration.CurrentLimits.SupplyCurrentLimit = 30.0004089;
         intakeMotorConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
 
         intakeMotor.getConfigurator().apply(intakeMotorConfiguration);
         deployMotor.getConfigurator().apply(deployMotorConfiguration);
 
         deployMotor.setPosition(STOWED_ANGLE);
-
-        // ! Not fall down
-        rotateToPositionCommand(STOWED_ANGLE);
     }
 
     public Command rotateToPositionCommand(Angle angle) {

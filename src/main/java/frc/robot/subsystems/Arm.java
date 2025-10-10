@@ -69,6 +69,7 @@ public class Arm extends SubsystemBase {
         // TODO: Find CAN IDs
         armMotor = new TalonFX(36);
         canCoder = new CANcoder(CANCODER_CAN_ID);
+
         armMotorConfiguration = new TalonFXConfiguration();
         canCoderConfiguration = new CANcoderConfiguration();
         neutralOut = new NeutralOut();
@@ -86,7 +87,7 @@ public class Arm extends SubsystemBase {
         armMotorConfiguration.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
         armMotorConfiguration.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
-        armMotorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        armMotorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         canCoderConfiguration.MagnetSensor.MagnetOffset = ZERO_OFFSET;
 
@@ -113,7 +114,6 @@ public class Arm extends SubsystemBase {
         armMotor.setPosition(Units.degreesToRotations(-92.0));
     }
 
-    // made public so this is logged
     public double getArmPosition() {
         return armMotor.getPosition().getValueAsDouble() * 360.0;
     }

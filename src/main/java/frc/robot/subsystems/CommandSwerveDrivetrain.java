@@ -90,8 +90,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private final SwerveRequest.ApplyFieldSpeeds applyRobotSpeeds = new SwerveRequest.ApplyFieldSpeeds();
 
-    private final ProfiledPIDController xController = new ProfiledPIDController(15, 3, 0, new Constraints(1.5, 1.0));
-    private final ProfiledPIDController yController = new ProfiledPIDController(15, 3, 0, new Constraints(1.5, 1.0));
+    private final ProfiledPIDController xController = new ProfiledPIDController(15, 3, 0, new Constraints(0.8, 0.8));
+    private final ProfiledPIDController yController = new ProfiledPIDController(15, 3, 0, new Constraints(0.8, 0.8));
     private final ProfiledPIDController thetaController = new ProfiledPIDController(0.4, 0.06, 0,
             new Constraints(200, 300));
 

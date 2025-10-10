@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -336,9 +337,9 @@ public class RobotContainer {
 				path.resetOdometry().andThen(
 						Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
 								path.cmd(),
-								dt.goToPose(ReefSide.LEFT)
-										.alongWith(superstructure.forceState(SuperState.PRE_L4)
-												.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))),
+								superstructure.forceState(SuperState.PRE_L4).andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2),
+								dt.goToPose(ReefSide.LEFT),
+								new WaitCommand(0.25),
 								dt.goToPose(ReefSide.LEFT),
 								dt.applyRequest(() -> brake).withTimeout(0.1),
 								superstructure.forceState(SuperState.SCORE_CORAL)
@@ -346,24 +347,24 @@ public class RobotContainer {
 								new WaitCommand(0.25),
 								superstructure.forceState(SuperState.SPIT),
 								new WaitCommand(0.5),
-								superstructure.forceState(SuperState.STOW),
-								path2.cmd()
-										.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
-												.alongWith(Commands.sequence(
-														new WaitCommand(0.5),
-														superstructure.forceState(SuperState.INTAKE)).asProxy())),
-								// path3.cmd(),
-								dt.applyRequest(() -> brake).withTimeout(0.1),
-								dt.goToPose(ReefSide.LEFT)
-										.alongWith(superstructure.forceState(SuperState.PRE_L4)
-												.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))),
-								dt.goToPose(ReefSide.LEFT),
+								superstructure.forceState(SuperState.STOW)))));
+								// path2.cmd()
+								// 		.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
+								// 				.alongWith(Commands.sequence(
+								// 						new WaitCommand(0.5),
+								// 						superstructure.forceState(SuperState.INTAKE)).asProxy())),
+								// // path3.cmd(),
+								// dt.applyRequest(() -> brake).withTimeout(0.1),
+								// dt.goToPose(ReefSide.LEFT)
+								// 		.alongWith(superstructure.forceState(SuperState.PRE_L4)
+								// 				.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))),
+								// dt.goToPose(ReefSide.LEFT),
 
-								dt.applyRequest(() -> brake).withTimeout(0.1),
-								superstructure.forceState(SuperState.SCORE_CORAL)
-										.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
-								new WaitCommand(0.25),
-								superstructure.forceState(SuperState.SPIT))));
+								// dt.applyRequest(() -> brake).withTimeout(0.1),
+								// superstructure.forceState(SuperState.SCORE_CORAL)
+								// 		.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
+								// new WaitCommand(0.25),
+								// superstructure.forceState(SuperState.SPIT))));
 
 		return autoRoutine;
 	}

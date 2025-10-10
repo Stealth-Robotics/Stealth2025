@@ -174,7 +174,7 @@ public class RobotContainer {
 		driveFieldCentric = dt.applyRequest(
 				() -> {
 					driveMultiplier = 1;
-					rotationMultiplier = 0.5; //TODO: Tune for preference
+					rotationMultiplier = 0.75;
 					drive.withVelocityY(-driverController.getLeftX() * MAX_VELO * driveMultiplier)
 							.withVelocityX(-driverController.getLeftY() * MAX_VELO * driveMultiplier)
 							.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO * rotationMultiplier);
@@ -182,18 +182,7 @@ public class RobotContainer {
 				})
 				.alongWith(Commands.runOnce(() -> driveAngled = false));
 
-		driveRobotCentric = dt.applyRequest(
-				() -> robotSpeeds.withVelocityY(0)
-						.withVelocityX(driverController.getLeftY() * MAX_VELO)
-						.withRotationalRate(0));
-
-		drivePointingAtAngle = dt.applyRequest(
-				() -> driveAngle.withVelocityY(-driverController.getLeftX() * MAX_VELO)
-						.withVelocityX(-driverController.getLeftY() * MAX_VELO))
-				.alongWith(Commands.runOnce(() -> driveAngled = true));
-
 		dt.setDefaultCommand(driveFieldCentric);
-
 	}
 
 	public enum LevelTarget {
@@ -228,8 +217,8 @@ public class RobotContainer {
 				.alongWith(Commands.runOnce(() -> leds.setLevel(target))));
 		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4)
 				.alongWith(Commands.runOnce(() -> leds.setLevel(target))));
-
-		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric())); //Reset field centric
+		
+		driverController.povDown().onTrue(dt.zeroGyro()); //Reset field centric (hopefully)
 
 		Trigger prescore = new Trigger(
 				() -> (superstructure.getState() == SuperState.PRE_L1 ||
@@ -347,12 +336,10 @@ public class RobotContainer {
 				path.resetOdometry().andThen(
 						Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
 								path.cmd(),
-								// dt.applyRequest(() -> brake).withTimeout(0.1),
 								dt.goToPose(ReefSide.LEFT)
 										.alongWith(superstructure.forceState(SuperState.PRE_L4)
 												.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))),
 								dt.goToPose(ReefSide.LEFT),
-
 								dt.applyRequest(() -> brake).withTimeout(0.1),
 								superstructure.forceState(SuperState.SCORE_CORAL)
 										.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),

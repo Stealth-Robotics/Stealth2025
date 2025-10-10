@@ -169,10 +169,6 @@ public class Superstructure {
 		stateTriggers.get(SuperState.IDLE)
 				.and(() -> DriverStation.isAutonomous())
 				.whileTrue(rollers.setRollerVoltage(() -> -4));
-		
-		// ! Stop intake from falling down on startup
-		stateTriggers.get(SuperState.IDLE)
-				.onTrue(intake.rotateToPositionCommand(Intake.STOWED_ANGLE));
 
 		// Idle -> removing algae states
 		stateTriggers.get(SuperState.IDLE)
@@ -307,7 +303,6 @@ public class Superstructure {
 		stateTriggers.get(SuperState.GRAB_CORAL)
 				.and(() -> elevator.getStatorCurrent() > 40).debounce(0.5)
 				.onTrue(this.forceState(SuperState.SAFE_MODE));
-
 		stateTriggers.get(SuperState.SAFE_MODE)
 				.whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))
 				.and(() -> elevator.getElevatorMotorPosition() > 11.5)
@@ -497,7 +492,7 @@ public class Superstructure {
 		stateTriggers.get(SuperState.SPIT)
 				.onTrue(rollers.setRollerVoltage(-1.5))
 				.and(intakeTrigger)
-				.onFalse(this.forceState(SuperState.STOW));
+				.onFalse(this.forceState(SuperState.INTAKE)); // ! Might be bad but skipping stow phase
 
 		// algae scoring
 		stateTriggers.get(SuperState.READY_SCORE_ALGAE)

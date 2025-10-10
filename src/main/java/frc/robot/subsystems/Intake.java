@@ -81,6 +81,9 @@ public class Intake extends SubsystemBase {
         deployMotor.getConfigurator().apply(deployMotorConfiguration);
 
         deployMotor.setPosition(STOWED_ANGLE);
+
+        // ! Not fall down
+        rotateToPositionCommand(STOWED_ANGLE);
     }
 
     public Command rotateToPositionCommand(Angle angle) {

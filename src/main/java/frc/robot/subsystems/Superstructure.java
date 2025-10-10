@@ -66,6 +66,7 @@ public class Superstructure {
 	private final Trigger homeTrigger;
 	private final DoubleSupplier intakeSpeed;
 	private final Trigger intakeResetTrigger;
+	private final Trigger redoLevelTrigger;
 
 	@Logged
 	private final Trigger gamepieceDetectedInStagingArea;
@@ -109,7 +110,8 @@ public class Superstructure {
 			Trigger homeTrigger,
 			DoubleSupplier intakeSpeed,
 			DoubleConsumer rumble,
-			Trigger intakeResetTrigger) {
+			Trigger intakeResetTrigger,
+			Trigger redoLevelTrigger) {
 		this.elevator = elevator;
 		this.rollers = rollers;
 		this.arm = arm;
@@ -133,6 +135,7 @@ public class Superstructure {
 		this.intakeSpeed = intakeSpeed;
 		this.rumble = rumble;
 		this.intakeResetTrigger = intakeResetTrigger;
+		this.redoLevelTrigger = redoLevelTrigger;
 
 		tof = new TimeOfFlight(0);
 		tof.setRangingMode(RangingMode.Short, 24);
@@ -275,6 +278,7 @@ public class Superstructure {
 		stateTriggers.get(SuperState.READY_SCORE_CORAL)
 				.and(gamepieceDetectedInStagingArea).debounce(0.5)
 				.onTrue(this.forceState(SuperState.GRAB_CORAL));
+		
 
 		stateTriggers.get(SuperState.READY_SCORE_CORAL)
 				.and(intakeTrigger)
@@ -415,19 +419,19 @@ public class Superstructure {
 
 		// pre-level back to ready score coral
 		stateTriggers.get(SuperState.PRE_L1)
-				.and(stowTrigger)
+				.and(redoLevelTrigger)
 				.onFalse(this.forceState(SuperState.READY_SCORE_CORAL));
 
 		stateTriggers.get(SuperState.PRE_L2)
-				.and(stowTrigger)
+				.and(redoLevelTrigger)
 				.onFalse(this.forceState(SuperState.READY_SCORE_CORAL));
 
 		stateTriggers.get(SuperState.PRE_L3)
-				.and(stowTrigger)
+				.and(redoLevelTrigger)
 				.onFalse(this.forceState(SuperState.READY_SCORE_CORAL));
 
 		stateTriggers.get(SuperState.PRE_L4)
-				.and(stowTrigger)
+				.and(redoLevelTrigger)
 				.onFalse(this.forceState(SuperState.READY_SCORE_CORAL));
 
 		// when driver presses button to score, we lower elevator/arm to scoring level,

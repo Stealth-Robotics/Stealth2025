@@ -78,7 +78,6 @@ public class RobotContainer {
 	Transfer transfer;
 	Leds leds;
 	Intake intake;
-	// Climber climber;
 	CommandSwerveDrivetrain dt = TunerConstants.createDrivetrain();
 	SwerveLogger logger = new SwerveLogger(dt);
 	AutoFactory autoFactory;
@@ -103,6 +102,7 @@ public class RobotContainer {
 	Trigger subsystemsAtSetpoints;
 
 	double driveMultiplier;
+	double rotationMultiplier;
 
 	@Logged
 	SwerveSample[] trajSamples;
@@ -143,11 +143,11 @@ public class RobotContainer {
 				intake,
 				() -> target,
 				() -> algaeTarget,
-				(operatorController.a().or(operatorController.b()).or(operatorController.x()).or(operatorController.y())), //Prescore
+				new Trigger(() -> (operatorController.getRightTriggerAxis() > 0.1)), //Prescore
 				driverController.leftBumper(), //Score
-				new Trigger(() -> (driverController.getRightTriggerAxis() > 0.1)),
+				new Trigger(() -> (driverController.getRightTriggerAxis() > 0.1)), //Go to score position
 				driverController.leftBumper(),
-				driverController.b(),
+				driverController.a(),
 				driverController.rightBumper(),
 				operatorController.leftBumper(),
 				operatorController.rightBumper(),
@@ -156,7 +156,9 @@ public class RobotContainer {
 				driverController.povRight(),
 				() -> (driverController.getRightTriggerAxis() - driverController.getLeftTriggerAxis()),
 				(rumble) -> setRumble(rumble),
-				operatorController.povDown()); //Intake reset
+				operatorController.povLeft(), //Intake reset
+				new Trigger(() -> (operatorController.getLeftTriggerAxis() > 0.1)) //Redo level
+				); 
 
 		goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
 				new WaitUntilCommand(subsystemsAtSetpoints));
@@ -172,9 +174,10 @@ public class RobotContainer {
 		driveFieldCentric = dt.applyRequest(
 				() -> {
 					driveMultiplier = 1;
+					rotationMultiplier = 0.5; //TODO: Tune for preference
 					drive.withVelocityY(-driverController.getLeftX() * MAX_VELO * driveMultiplier)
 							.withVelocityX(-driverController.getLeftY() * MAX_VELO * driveMultiplier)
-							.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO);
+							.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO * rotationMultiplier);
 					return drive;
 				})
 				.alongWith(Commands.runOnce(() -> driveAngled = false));
@@ -226,7 +229,7 @@ public class RobotContainer {
 		operatorController.y().onTrue(Commands.runOnce(() -> target = LevelTarget.L4)
 				.alongWith(Commands.runOnce(() -> leds.setLevel(target))));
 
-		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric()));
+		driverController.povDown().onTrue(Commands.runOnce(() -> dt.seedFieldCentric())); //Reset field centric
 
 		Trigger prescore = new Trigger(
 				() -> (superstructure.getState() == SuperState.PRE_L1 ||
@@ -234,39 +237,13 @@ public class RobotContainer {
 						superstructure.getState() == SuperState.PRE_L3 ||
 						superstructure.getState() == SuperState.PRE_L4));
 
-		// brake when we aren't driving
-		// ! Remove hen i figure out hy auto align doesnt ork
-		// new Trigger(() -> Math.abs(driverController.getLeftX()) < 0.1)
-		// 		.and(() -> Math.abs(driverController.getLeftY()) < 0.1)
-		// 		.and(() -> Math.abs(driverController.getRightX()) < 0.1)
-		// 		.and(driverController.x().negate())
-		// 		.and(driverController.b().negate())
-		// 		.and(driverController.a().negate())
-		// 		.and(() -> dt.nearReef())
-		// 		.and(prescore)
-		// 		.whileTrue(dt.goToNearestReefPole());
-
 		driverController.x().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target)))
 				.whileTrue(dt.goToNearestReefPole()).onFalse(Commands.runOnce(() -> dt.stopAligning()));
 		driverController.b().onTrue(Commands.runOnce(() -> dt.setTransforms(() -> target)))
 				.whileTrue(dt.goToPose(ReefSide.RIGHT)).onFalse(Commands.runOnce(() -> dt.stopAligning()));
-
-		// driverController.a().whileTrue(elevator.setElevatorVoltage(0.25)).onFalse(elevator.setElevatorVoltage(0));
-		driverController.a().whileTrue(
-				dt.drivePointedAtReef(() -> -driverController.getLeftY(), () -> -driverController.getLeftX()));
-
-		driverController.x().or(driverController.b()).and(() -> dt.getAtPose()).whileTrue(driveRobotCentric);
-
-		// swap to driving at angle
-		driverController.y().onTrue(drivePointingAtAngle);
 		
 		operatorController.povDown().onTrue(Commands.runOnce(() -> algaeTarget = AlgaeTarget.PROCESSOR));
 		operatorController.povUp().onTrue(Commands.runOnce(() -> algaeTarget = AlgaeTarget.NET));
-
-		// if we try to rotate the bot, go back to normal driving
-		// new Trigger(() -> Math.abs(driverController.getRightTriggerAxis()) >
-		// 0.05).onTrue(driveFieldCentric);
-
 	}
 
 	public Command getAutonomousCommand() {

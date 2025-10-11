@@ -87,6 +87,7 @@ public class Arm extends SubsystemBase {
         armMotorConfiguration.MotionMagic.MotionMagicCruiseVelocity = MOTION_MAGIC_CRUISE_VELOCITY;
         armMotorConfiguration.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
+        // ! Stop arm from falling down in auto
         armMotorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         canCoderConfiguration.MagnetSensor.MagnetOffset = ZERO_OFFSET;

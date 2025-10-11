@@ -129,11 +129,9 @@ public class RobotContainer {
 		SmartDashboard.putData("Auto Chooser", autoChooser);
 		autoFactory = dt.createAutoFactory();
 
-		autoChooser.addRoutine("test aut	o", this::buildAuto);
-		autoChooser.addRoutine("preload auto", this::preloadAuto);
-		autoChooser.addCmd("systems check", this::checkAuto);
-		autoChooser.addRoutine("opposite color auto", this::oppositColorAuto);
-		autoChooser.addRoutine("same color auto", this::sameColorAuto);
+		autoChooser.addRoutine("Center Start", this::CenterAuto);
+		autoChooser.addRoutine("Opposite Color Start", this::oppositeColorAuto);
+		autoChooser.addRoutine("Same Color Start", this::sameColorAuto);
 
 		superstructure = new Superstructure(
 				elevator,
@@ -327,19 +325,17 @@ public class RobotContainer {
 		return autoRoutine;
 	}
 
-	public AutoRoutine preloadAuto() {
+	public AutoRoutine CenterAuto() {
 		AutoRoutine autoRoutine = autoFactory.newRoutine("test");
 		AutoTrajectory path = autoRoutine.trajectory("center_start", 0);
 		AutoTrajectory path2 = autoRoutine.trajectory("center_start", 1);
-		// AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
 
 		autoRoutine.active().onTrue(
 				path.resetOdometry().andThen(
 						Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
 								path.cmd(),
-								superstructure.forceState(SuperState.PRE_L4).andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2),
 								dt.goToPose(ReefSide.LEFT),
-								new WaitCommand(0.25),
+								superstructure.forceState(SuperState.PRE_L4).andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2),
 								dt.goToPose(ReefSide.LEFT),
 								dt.applyRequest(() -> brake).withTimeout(0.1),
 								superstructure.forceState(SuperState.SCORE_CORAL)
@@ -369,54 +365,10 @@ public class RobotContainer {
 		return autoRoutine;
 	}
 
-	public AutoRoutine testAuto() {
-		AutoRoutine autoRoutine = autoFactory.newRoutine("test");
-		AutoTrajectory path = autoRoutine.trajectory("center_start", 0);
-		AutoTrajectory path2 = autoRoutine.trajectory("center_start", 1);
-		// AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
-
-		autoRoutine.active().onTrue(
-				Commands.sequence(Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)), path.resetOdometry(),
-						path.cmd()));
-
-		path.done().onTrue(
-				Commands.sequence(
-						dt.applyRequest(() -> brake).withTimeout(0.1),
-						dt.goToPose(ReefSide.LEFT).alongWith(superstructure.forceState(SuperState.PRE_L4)
-								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))),
-						dt.goToPose(ReefSide.LEFT),
-						dt.applyRequest(() -> brake).withTimeout(0.1),
-						superstructure.forceState(SuperState.SCORE_CORAL)
-								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
-						new WaitCommand(0.25),
-						superstructure.forceState(SuperState.SCORE_CORAL),
-						superstructure.forceState(SuperState.SPIT),
-						path2.cmd()));
-
-		path2.active().onTrue(
-				Commands.sequence(new WaitCommand(0.5),
-						superstructure.forceState(SuperState.INTAKE),
-						intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE)));
-
-		path2.done().onTrue(
-				Commands.sequence(
-						dt.applyRequest(() -> brake).withTimeout(0.1),
-						dt.goToPose(ReefSide.LEFT).alongWith(goToL4),
-						dt.goToPose(ReefSide.LEFT),
-						dt.applyRequest(() -> brake).withTimeout(0.1),
-						superstructure.forceState(SuperState.SCORE_CORAL)
-								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
-						new WaitCommand(0.25),
-						superstructure.forceState(SuperState.SPIT)));
-
-		return autoRoutine;
-	}
-
-	public AutoRoutine oppositColorAuto() {
+	public AutoRoutine oppositeColorAuto() {
 		AutoRoutine autoRoutine = autoFactory.newRoutine("opp");
 		AutoTrajectory path = autoRoutine.trajectory("opposite_color_start", 0);
 		AutoTrajectory path2 = autoRoutine.trajectory("opposite_color_start", 1);
-		// AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
 
 		autoRoutine.active().onTrue(
 
@@ -462,7 +414,6 @@ public class RobotContainer {
 		AutoRoutine autoRoutine = autoFactory.newRoutine("a");
 		AutoTrajectory path = autoRoutine.trajectory("same_color_start", 0);
 		AutoTrajectory path2 = autoRoutine.trajectory("same_color_start", 1);
-		// AutoTrajectory path3 = autoRoutine.trajectory("preload", 2);
 
 		autoRoutine.active().onTrue(
 
@@ -504,30 +455,4 @@ public class RobotContainer {
 
 		return autoRoutine;
 	}
-
-	public Command checkAuto() {
-		AutoRoutine auto = autoFactory.newRoutine("check");
-
-		return intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).andThen(Commands.sequence(
-				superstructure.forceState(SuperState.STOW),
-				new WaitUntilCommand(subsystemsAtSetpoints),
-				superstructure.forceState(SuperState.PRE_L2),
-				new WaitUntilCommand(subsystemsAtSetpoints),
-				superstructure.forceState(SuperState.STOW),
-				new WaitUntilCommand(subsystemsAtSetpoints),
-				superstructure.forceState(SuperState.PRE_L3),
-
-				new WaitUntilCommand(subsystemsAtSetpoints),
-				superstructure.forceState(SuperState.STOW),
-				new WaitUntilCommand(subsystemsAtSetpoints),
-				superstructure.forceState(SuperState.PRE_L4),
-				new WaitUntilCommand(subsystemsAtSetpoints),
-				superstructure.forceState(SuperState.STOW),
-				new WaitUntilCommand(subsystemsAtSetpoints),
-				intake.rotateToPositionCommand(Intake.STOWED_ANGLE)
-
-		));
-
-	}
-
 }

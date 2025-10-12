@@ -156,7 +156,8 @@ public class RobotContainer {
 				() -> (driverController.getRightTriggerAxis() - driverController.getLeftTriggerAxis()),
 				(rumble) -> setRumble(rumble),
 				operatorController.povLeft(), //Intake reset
-				new Trigger(() -> (operatorController.getLeftTriggerAxis() > 0.1)) //Redo level
+				new Trigger(() -> (operatorController.getLeftTriggerAxis() > 0.1)), //Redo level
+				operatorController.povRight()
 				); 
 
 		goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
@@ -172,8 +173,17 @@ public class RobotContainer {
 
 		driveFieldCentric = dt.applyRequest(
 				() -> {
-					driveMultiplier = 1;
-					rotationMultiplier = 0.75;
+					driveMultiplier = (superstructure.getState() == SuperState.PRE_L4 
+					|| superstructure.getState() == SuperState.INTAKE
+					|| superstructure.getState() == SuperState.PRE_L3
+					|| superstructure.getState() == SuperState.PRE_L2
+					|| superstructure.getState() == SuperState.PRE_L1) ? 0.4 : 1;
+
+					rotationMultiplier = (superstructure.getState() == SuperState.PRE_L4 
+					|| superstructure.getState() == SuperState.PRE_L3
+					|| superstructure.getState() == SuperState.PRE_L2
+					|| superstructure.getState() == SuperState.PRE_L1) ? 0.5 : 0.8;
+					
 					drive.withVelocityY(-driverController.getLeftX() * MAX_VELO * driveMultiplier)
 							.withVelocityX(-driverController.getLeftY() * MAX_VELO * driveMultiplier)
 							.withRotationalRate(-driverController.getRightX() * MAX_ANGULAR_VELO * rotationMultiplier);
@@ -333,17 +343,19 @@ public class RobotContainer {
 		autoRoutine.active().onTrue(
 				path.resetOdometry().andThen(
 						Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
-								path.cmd(),
-								dt.goToPose(ReefSide.LEFT),
-								superstructure.forceState(SuperState.PRE_L4).andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2),
-								dt.goToPose(ReefSide.LEFT),
-								dt.applyRequest(() -> brake).withTimeout(0.1),
-								superstructure.forceState(SuperState.SCORE_CORAL)
-										.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
-								new WaitCommand(0.25),
-								superstructure.forceState(SuperState.SPIT),
-								new WaitCommand(0.5),
-								superstructure.forceState(SuperState.STOW)))));
+							path.resetOdometry(),
+							path.cmd(),
+							dt.applyRequest(() -> brake).withTimeout(0.1),
+							superstructure.forceState(SuperState.PRE_L4)
+									.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))
+									.alongWith(dt.goToPose(ReefSide.LEFT).beforeStarting(new WaitCommand(0.75))),
+
+							dt.applyRequest(() -> brake).withTimeout(0.1),
+							superstructure.forceState(SuperState.SCORE_CORAL)
+									.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
+							superstructure.forceState(SuperState.SCORE_CORAL),
+							new WaitCommand(0.25),
+							superstructure.forceState(SuperState.SPIT))));
 								// path2.cmd()
 								// 		.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
 								// 				.alongWith(Commands.sequence(
@@ -371,7 +383,6 @@ public class RobotContainer {
 		AutoTrajectory path2 = autoRoutine.trajectory("opposite_color_start", 1);
 
 		autoRoutine.active().onTrue(
-
 				Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
 						path.resetOdometry(),
 						path.cmd(),
@@ -393,8 +404,8 @@ public class RobotContainer {
 										.alongWith(Commands.sequence(
 												new WaitCommand(0.5),
 												superstructure.forceState(SuperState.INTAKE)).asProxy())),
-						// path3.cmd(),
 						dt.applyRequest(() -> brake).withTimeout(0.1),
+						superstructure.forceState(SuperState.PRE_L2),
 						dt.goToPose(ReefSide.LEFT)
 								.alongWith(superstructure.forceState(SuperState.PRE_L4)
 										.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))

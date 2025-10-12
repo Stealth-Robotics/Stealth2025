@@ -45,7 +45,7 @@ public class Superstructure {
 		SPIT_ALGAE,
 		SAFE_MODE,
 		TRANSFER,
-		THROW
+		THROW,
 	}
 
 	private final Supplier<LevelTarget> levelTarget;
@@ -67,6 +67,7 @@ public class Superstructure {
 	private final DoubleSupplier intakeSpeed;
 	private final Trigger intakeResetTrigger;
 	private final Trigger redoLevelTrigger;
+	private final Trigger reverseRollersTrigger;
 
 	@Logged
 	private final Trigger gamepieceDetectedInStagingArea;
@@ -111,7 +112,8 @@ public class Superstructure {
 			DoubleSupplier intakeSpeed,
 			DoubleConsumer rumble,
 			Trigger intakeResetTrigger,
-			Trigger redoLevelTrigger) {
+			Trigger redoLevelTrigger,
+			Trigger reverseRollersTrigger) {
 		this.elevator = elevator;
 		this.rollers = rollers;
 		this.arm = arm;
@@ -136,6 +138,7 @@ public class Superstructure {
 		this.rumble = rumble;
 		this.intakeResetTrigger = intakeResetTrigger;
 		this.redoLevelTrigger = redoLevelTrigger;
+		this.reverseRollersTrigger = reverseRollersTrigger;
 
 		tof = new TimeOfFlight(0);
 		tof.setRangingMode(RangingMode.Short, 24);
@@ -159,16 +162,19 @@ public class Superstructure {
 						.alongWith(arm.neutral())
 						.alongWith(rollers.setRollerVoltage(-1.5)));
 
-		// Idle -> stow
+		// ! HAHAHAHHAHAHAHAHAHA
+		stowTrigger.onTrue(forceState(SuperState.STOW));
+
+
 		stateTriggers.get(SuperState.IDLE)
 				.whileTrue(transfer.setVoltage(() -> 0))
+				.whileTrue(rollers.setRollerVoltage(() -> -4));
+
+		// Idle -> stow
+		stateTriggers.get(SuperState.IDLE)
 				.and(stowTrigger)
 				.onFalse(this.forceState(SuperState.STOW));
-
-		// ! Auto only rollers for sucking up game piece
-		stateTriggers.get(SuperState.IDLE)
-				.and(() -> DriverStation.isAutonomous())
-				.whileTrue(rollers.setRollerVoltage(() -> -4));
+				
 
 		// Idle -> removing algae states
 		stateTriggers.get(SuperState.IDLE)
@@ -196,10 +202,10 @@ public class Superstructure {
 		stateTriggers.get(SuperState.STOW)
 				.whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))
 				.and(() -> elevator.getElevatorMotorPosition() > 11.5)
-				.onTrue(arm.rotateToPositionCommand(() -> Arm.STOWED_DEGREES))
-				// if we are stowing, we dont really care if we reach stow position before going
-				// to intake
-				// so, we just check intake trigger if we need to intake
+				.onTrue(arm.rotateToPositionCommand(() -> Arm.STOWED_DEGREES));
+
+		// ! Intake trigger from stoW
+		stateTriggers.get(SuperState.STOW)
 				.and(intakeTrigger)
 				.onTrue(this.forceState(SuperState.INTAKE));
 
@@ -210,6 +216,28 @@ public class Superstructure {
 		stateTriggers.get(SuperState.STOW)
 				.and(removeAlgaeLowTrigger)
 				.onTrue(this.forceState(SuperState.REMOVE_ALGAE_LOW));
+
+		
+		// ! Stow -> scoring directly
+		stateTriggers.get(SuperState.STOW)
+				.and(() -> levelTarget.get() == LevelTarget.L1)
+				.and(preScoreTrigger)
+				.onFalse(this.forceState(SuperState.PRE_L1));			
+
+		stateTriggers.get(SuperState.STOW)
+				.and(() -> levelTarget.get() == LevelTarget.L2)
+				.and(preScoreTrigger)
+				.onFalse(this.forceState(SuperState.PRE_L2));
+
+		stateTriggers.get(SuperState.STOW)
+				.and(() -> levelTarget.get() == LevelTarget.L3)
+				.and(preScoreTrigger)
+				.onFalse(this.forceState(SuperState.PRE_L3));
+
+		stateTriggers.get(SuperState.STOW)
+				.and(() -> levelTarget.get() == LevelTarget.L4)
+				.and(preScoreTrigger)
+				.onFalse(this.forceState(SuperState.PRE_L4));
 
 		stateTriggers.get(SuperState.INTAKE)
 				.whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))
@@ -251,6 +279,14 @@ public class Superstructure {
 		stateTriggers.get(SuperState.INTAKE)
 				.and(missedScoreTrigger)
 				.onFalse(this.forceState(SuperState.UNJAM));
+
+		stateTriggers.get(SuperState.INTAKE)
+				.and(removeAlgaeHighTrigger)
+				.onTrue(this.forceState(SuperState.REMOVE_ALGAE_HIGH));
+
+		stateTriggers.get(SuperState.INTAKE)
+				.and(removeAlgaeLowTrigger)
+				.onTrue(this.forceState(SuperState.REMOVE_ALGAE_LOW));
 
 		stateTriggers.get(SuperState.INTAKE)
 				.and(() -> transfer.getLeftStatorCurrent() > 30 || transfer.getRightStatorCurrent() > 30).debounce(0.15)
@@ -316,7 +352,6 @@ public class Superstructure {
 
 		stateTriggers.get(SuperState.REMOVE_ALGAE_HIGH)
 				.whileTrue(elevator.goToPosition(() -> Elevator.REMOVE_ALGAE_HIGH_ROTATIONS))
-				.whileTrue(rollers.setRollerVoltage(12))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_HIGH_DEGREES))
 				.and(() -> rollers.getHasGamepiece() || overrideBeamBreakTrigger.getAsBoolean())
 				.onTrue(this.forceState(SuperState.READY_SCORE_ALGAE)
@@ -324,11 +359,20 @@ public class Superstructure {
 
 		stateTriggers.get(SuperState.REMOVE_ALGAE_LOW)
 				.whileTrue(elevator.goToPosition(() -> Elevator.REMOVE_ALGAE_LOW_ROTATIONS))
-				.whileTrue(rollers.setRollerVoltage(12))
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.REMOVE_ALGAE_LOW_DEGREES))
 				.and(() -> rollers.getHasGamepiece() || overrideBeamBreakTrigger.getAsBoolean())
 				.onTrue(this.forceState(SuperState.READY_SCORE_ALGAE)
 				.alongWith(rollers.setRollerVoltage(8)));
+
+		stateTriggers.get(SuperState.REMOVE_ALGAE_LOW)
+				.and(reverseRollersTrigger)
+				.whileTrue(rollers.setRollerVoltage(-8))
+				.whileFalse(rollers.setRollerVoltage(8));
+
+		stateTriggers.get(SuperState.REMOVE_ALGAE_HIGH)
+				.and(reverseRollersTrigger)
+				.whileTrue(rollers.setRollerVoltage(-8))
+				.whileFalse(rollers.setRollerVoltage(8));
 
 		// flip flop between states
 		stateTriggers.get(SuperState.REMOVE_ALGAE_LOW)
@@ -338,6 +382,15 @@ public class Superstructure {
 		stateTriggers.get(SuperState.REMOVE_ALGAE_HIGH)
 				.and(removeAlgaeLowTrigger)
 				.onTrue(this.forceState(SuperState.REMOVE_ALGAE_LOW));
+
+
+		stateTriggers.get(SuperState.REMOVE_ALGAE_LOW)
+				.and(intakeTrigger)
+				.onTrue(this.forceState(SuperState.INTAKE));
+
+		stateTriggers.get(SuperState.REMOVE_ALGAE_HIGH)
+				.and(intakeTrigger)
+				.onTrue(this.forceState(SuperState.INTAKE));
 
 		// when we are in ready mode, meaning arm has a coral, we now need to check for
 		// when driver presses button to actually go to scoring location
@@ -377,10 +430,10 @@ public class Superstructure {
 		 * when driver presses scoring button
 		 */
 		stateTriggers.get(SuperState.PRE_L1)
+				.onTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L1_DEGREES))
+				.and(() -> arm.getArmPosition() > 40)
 				.whileTrue(elevator.goToPosition(() -> Elevator.PRE_L1_ROTATIONS))
-				.whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_L1_DEGREES))
 				.and(() -> elevator.isElevatorAtTarget())
-				.and(() -> arm.isMotorAtTarget())
 				.and(scoreTrigger)
 				.onFalse(this.forceState(SuperState.SCORE_CORAL));
 
@@ -516,7 +569,7 @@ public class Superstructure {
 				.whileTrue(arm.rotateToPositionCommand(() -> Arm.PRE_PROCESSOR_DEGREES))
 				.and(() -> elevator.isElevatorAtTarget())
 				.and(() -> arm.isMotorAtTarget())
-				.and(scoreTrigger)
+				.and(preScoreTrigger)
 				.onFalse(this.forceState(SuperState.SPIT_ALGAE));
 
 		stateTriggers.get(SuperState.PRE_NET)

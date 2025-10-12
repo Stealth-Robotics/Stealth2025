@@ -153,10 +153,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final Transform2d L4_APRILTAG_RIGHT_TRANSFORM = new Transform2d(Units.inchesToMeters(25.5),
             Units.inchesToMeters(7.5), new Rotation2d());
 
-    private final Transform2d LOWER_APRILTAG_LEFT_TRANSFORM = new Transform2d(Units.inchesToMeters(18),
-            Units.inchesToMeters(-6.5), new Rotation2d());
-    private final Transform2d LOWER_APRILTAG_RIGHT_TRANSFORM = new Transform2d(Units.inchesToMeters(18),
-            Units.inchesToMeters(6.5), new Rotation2d());
+    private final Transform2d LOWER_APRILTAG_LEFT_TRANSFORM = new Transform2d(Units.inchesToMeters(22),
+            Units.inchesToMeters(-5.0), new Rotation2d());
+    private final Transform2d LOWER_APRILTAG_RIGHT_TRANSFORM = new Transform2d(Units.inchesToMeters(22),
+            Units.inchesToMeters(7.5), new Rotation2d());
 
     Transform2d APRILTAG_LEFT_TRANSFORM = L4_APRILTAG_LEFT_TRANSFORM;
     Transform2d APRILTAG_RIGHT_TRANSFORM = L4_APRILTAG_RIGHT_TRANSFORM;

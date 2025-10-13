@@ -157,7 +157,8 @@ public class RobotContainer {
 				(rumble) -> setRumble(rumble),
 				operatorController.povLeft(), //Intake reset
 				new Trigger(() -> (operatorController.getLeftTriggerAxis() > 0.1)), //Redo level
-				operatorController.povRight()
+				operatorController.povRight(),
+				operatorController.rightStick() //Ground algae intake
 				); 
 
 		goToL4 = Commands.sequence(superstructure.forceState(SuperState.PRE_L4),
@@ -381,10 +382,12 @@ public class RobotContainer {
 		AutoRoutine autoRoutine = autoFactory.newRoutine("opp");
 		AutoTrajectory path = autoRoutine.trajectory("opposite_color_start", 0);
 		AutoTrajectory path2 = autoRoutine.trajectory("opposite_color_start", 1);
+		AutoTrajectory path3 = autoRoutine.trajectory("opposite_color_start", 2);
 
 		autoRoutine.active().onTrue(
 				Commands.runOnce(() -> dt.setTransforms(() -> LevelTarget.L4)).andThen(
 						path.resetOdometry(),
+						//First coral
 						path.cmd(),
 						dt.applyRequest(() -> brake).withTimeout(0.1),
 						superstructure.forceState(SuperState.PRE_L4)
@@ -393,11 +396,11 @@ public class RobotContainer {
 
 						dt.applyRequest(() -> brake).withTimeout(0.1),
 						superstructure.forceState(SuperState.SCORE_CORAL)
-								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
-						superstructure.forceState(SuperState.SCORE_CORAL),
-						new WaitCommand(0.25),
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(1)),
+						new WaitCommand(0.15),
 						superstructure.forceState(SuperState.SPIT),
-						new WaitCommand(0.5),
+						new WaitCommand(0.25),
+						//Second coral
 						path2.cmd()
 								.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
 										.alongWith(intake.setIntakeVoltage(12).asProxy())
@@ -405,18 +408,35 @@ public class RobotContainer {
 												new WaitCommand(0.5),
 												superstructure.forceState(SuperState.INTAKE)).asProxy())),
 						dt.applyRequest(() -> brake).withTimeout(0.1),
-						superstructure.forceState(SuperState.PRE_L2),
-						dt.goToPose(ReefSide.LEFT)
-								.alongWith(superstructure.forceState(SuperState.PRE_L4)
-										.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2))
-										.beforeStarting(new WaitCommand(0.5))),
+						new WaitCommand(0.25),
+						superstructure.forceState(SuperState.PRE_L4),
+						dt.goToPose(ReefSide.LEFT).andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
 						dt.goToPose(ReefSide.LEFT),
-
 						dt.applyRequest(() -> brake).withTimeout(0.1),
 						superstructure.forceState(SuperState.SCORE_CORAL)
-								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(1)),
+						new WaitCommand(0.15),
+						superstructure.forceState(SuperState.SPIT),
+						//Third coral
 						new WaitCommand(0.25),
-						superstructure.forceState(SuperState.SPIT)));
+						path3.cmd()
+								.alongWith(intake.rotateToPositionCommand(Intake.DEPLOYED_ANGLE).asProxy()
+										.alongWith(intake.setIntakeVoltage(12).asProxy())
+										.alongWith(Commands.sequence(
+												new WaitCommand(0.5),
+												superstructure.forceState(SuperState.INTAKE)).asProxy())),
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						new WaitCommand(0.25),
+						superstructure.forceState(SuperState.PRE_L4),
+						dt.goToPose(ReefSide.RIGHT).andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(2)),
+						dt.goToPose(ReefSide.RIGHT),
+						dt.applyRequest(() -> brake).withTimeout(0.1),
+						superstructure.forceState(SuperState.SCORE_CORAL)
+								.andThen(new WaitUntilCommand(subsystemsAtSetpoints).withTimeout(1)),
+						new WaitCommand(0.15),
+						superstructure.forceState(SuperState.SPIT))
+
+		);
 
 		return autoRoutine;
 	}

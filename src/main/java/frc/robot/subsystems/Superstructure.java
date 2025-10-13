@@ -36,6 +36,7 @@ public class Superstructure {
 		REMOVE_ALGAE_LOW,
 		REMOVE_ALGAE_HIGH,
 		READY_SCORE_ALGAE,
+		INTAKE_GROUND_ALGAE,
 		PRE_PROCESSOR,
 		PRE_NET,
 		STOW,
@@ -68,6 +69,7 @@ public class Superstructure {
 	private final Trigger intakeResetTrigger;
 	private final Trigger redoLevelTrigger;
 	private final Trigger reverseRollersTrigger;
+	private final Trigger intakeGroundAlgaeTrigger;
 
 	@Logged
 	private final Trigger gamepieceDetectedInStagingArea;
@@ -113,7 +115,8 @@ public class Superstructure {
 			DoubleConsumer rumble,
 			Trigger intakeResetTrigger,
 			Trigger redoLevelTrigger,
-			Trigger reverseRollersTrigger) {
+			Trigger reverseRollersTrigger,
+			Trigger intakeGroundAlgaeTrigger) {
 		this.elevator = elevator;
 		this.rollers = rollers;
 		this.arm = arm;
@@ -139,6 +142,7 @@ public class Superstructure {
 		this.intakeResetTrigger = intakeResetTrigger;
 		this.redoLevelTrigger = redoLevelTrigger;
 		this.reverseRollersTrigger = reverseRollersTrigger;
+		this.intakeGroundAlgaeTrigger = intakeGroundAlgaeTrigger;
 
 		tof = new TimeOfFlight(0);
 		tof.setRangingMode(RangingMode.Short, 24);
@@ -203,6 +207,21 @@ public class Superstructure {
 				.whileTrue(elevator.goToPosition(() -> Elevator.STOWED_ROTATIONS))
 				.and(() -> elevator.getElevatorMotorPosition() > 11.5)
 				.onTrue(arm.rotateToPositionCommand(() -> Arm.STOWED_DEGREES));
+		
+		// ? GROUND ALGAE STATE
+		// stateTriggers.get(SuperState.STOW)
+		// 		.and(intakeGroundAlgaeTrigger)
+		// 		.onTrue(this.forceState(SuperState.INTAKE_GROUND_ALGAE));
+
+		// stateTriggers.get(SuperState.INTAKE_GROUND_ALGAE)
+		// 		.onTrue(arm.rotateToPositionCommand(() -> Arm.GROUND_ALGAE_DEGREES).alongWith(rollers.setRollerVoltage(8)))
+		// 		.and(() -> arm.getArmPosition() > 40)
+		// 		.whileTrue(elevator.goToPosition(() -> Elevator.GROUND_ALGAE_ROTATIONS))
+		// 		.and(() -> elevator.isElevatorAtTarget());
+
+		// stateTriggers.get(SuperState.INTAKE_GROUND_ALGAE)
+		// 		.and(preScoreTrigger)
+		// 		.onTrue(this.forceState(SuperState.READY_SCORE_ALGAE));
 
 		// ! Intake trigger from stoW
 		stateTriggers.get(SuperState.STOW)

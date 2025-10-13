@@ -54,7 +54,8 @@ public class Elevator extends SubsystemBase {
             PRE_PROCESSOR_ROTATIONS = 0.75, // todo tune
             PRE_NET_ROTATIONS = 43.5, // todo tune
             GRAB_CORAL_ROTATIONS = 7.38, // todo tune
-            STOWED_ROTATIONS = 18; // todo tune
+            STOWED_ROTATIONS = 18, // todo tune
+            GROUND_ALGAE_ROTATIONS = 0.0;
 
     @NotLogged
     private final double MAX_EXTENSION_IN_INCHES = 60.0,

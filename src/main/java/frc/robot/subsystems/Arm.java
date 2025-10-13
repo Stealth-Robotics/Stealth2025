@@ -61,7 +61,8 @@ public class Arm extends SubsystemBase {
             PRE_PROCESSOR_DEGREES = -5.0, 
             PRE_NET_DEGREES = 80, 
             READY_SCORE_ALGAE = 70.0,
-            STOWED_DEGREES = 80; 
+            STOWED_DEGREES = 80,
+            GROUND_ALGAE_DEGREES = -24;
 
     public static double INTAKE_HP_DEGREES = -92.5; 
 
